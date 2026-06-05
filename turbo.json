@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["NEXT_PUBLIC_API_URL"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -20,6 +21,10 @@
     },
     "typecheck": {
       "dependsOn": ["^typecheck"]
+    },
+    "generate": {
+      "inputs": ["openapi.json", "orval.config.ts"],
+      "outputs": ["src/generated/**"]
     },
     "dev": {
       "cache": false,

@@ -1,0 +1,29 @@
+{
+  "name": "@workspace/storage",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "sideEffects": [
+    "./src/storage.ts",
+    "./src/storage.native.ts"
+  ],
+  "scripts": {
+    "lint": "eslint",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "js-cookie": "catalog:",
+    "react-native-mmkv": "catalog:"
+  },
+  "devDependencies": {
+    "@types/js-cookie": "catalog:",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

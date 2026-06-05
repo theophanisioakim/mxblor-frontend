@@ -8,6 +8,7 @@
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck",
+    "generate": "turbo run generate",
     "update-shadcn": "pnpm dlx shadcn@latest add -c packages/web-ui --all --overwrite",
     "outdated-deps": "pnpm outdated -r",
     "update-deps": "pnpm update -r --interactive --latest",
