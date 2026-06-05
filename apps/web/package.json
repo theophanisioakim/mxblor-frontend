@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@workspace/ui": "workspace:*",
+    "@workspace/web-ui": "workspace:*",
     "lucide-react": "^1.17.0",
     "next": "16.2.6",
     "next-themes": "^0.4.6",

@@ -44,9 +44,9 @@ importers:
 
   apps/web:
     dependencies:
-      '@workspace/ui':
+      '@workspace/web-ui':
         specifier: workspace:*
-        version: link:../../packages/ui
+        version: link:../../packages/web-ui
       lucide-react:
         specifier: ^1.17.0
         version: 1.17.0(react@19.2.4)
@@ -132,7 +132,7 @@ importers:
 
   packages/typescript-config: {}
 
-  packages/ui:
+  packages/web-ui:
     dependencies:
       class-variance-authority:
         specifier: ^0.7.1
