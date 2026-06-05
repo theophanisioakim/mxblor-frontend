@@ -1,7 +1,7 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@workspace/web-ui"],
+  transpilePackages: ["@workspace/ui", "@workspace/web-ui"],
 }
 
 export default nextConfig

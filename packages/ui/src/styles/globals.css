@@ -1,0 +1,5 @@
+@import "@workspace/web-ui/globals.css";
+
+/* Make Tailwind scan this package's own components in addition to the
+   sources already declared by @workspace/web-ui's globals.css. */
+@source "../**/*.{ts,tsx}";
