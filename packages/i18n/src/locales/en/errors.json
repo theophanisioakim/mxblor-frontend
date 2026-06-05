@@ -1,0 +1,11 @@
+{
+  "generic": "Something went wrong. Please try again.",
+  "network": "Network error. Please check your connection.",
+  "notFound": "The requested resource was not found.",
+  "unauthorized": "You are not authorized to perform this action.",
+  "validation": "Please check your input and try again.",
+  "required": "This field is required.",
+  "invalidEmail": "Please enter a valid email address.",
+  "minLength": "Must be at least {{min}} characters.",
+  "maxLength": "Must be no more than {{max}} characters."
+}

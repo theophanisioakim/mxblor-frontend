@@ -1,0 +1,30 @@
+{
+  "welcome": "Welcome",
+  "loading": "Loading...",
+  "error": "An error occurred",
+  "retry": "Retry",
+  "cancel": "Cancel",
+  "save": "Save",
+  "edit": "Edit",
+  "delete": "Delete",
+  "back": "Back",
+  "next": "Next",
+  "submit": "Submit",
+  "language": "Language",
+  "english": "English",
+  "greek": "Greek",
+  "logout": "Logout",
+  "required": "Required",
+  "validations": {
+    "integer": "Must be a whole number",
+    "number": "Must be a valid number",
+    "maxLength": "Maximum length",
+    "minLength": "Minimum length",
+    "maxValue": "Maximum value: {{maxValue}}",
+    "minValue": "Minimum value: {{minValue}}",
+    "invalidDate": "Must be a valid date",
+    "minDate": "Date must be after {{minDate}}",
+    "maxDate": "Date must be before {{maxDate}}",
+    "disabledDate": "This date is not available"
+  }
+}

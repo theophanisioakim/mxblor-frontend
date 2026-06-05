@@ -1,0 +1,31 @@
+{
+  "name": "@workspace/i18n",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "sideEffects": [
+    "./src/index.ts"
+  ],
+  "scripts": {
+    "lint": "eslint",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@workspace/storage": "workspace:*",
+    "i18next": "catalog:",
+    "intl-pluralrules": "catalog:",
+    "react": "catalog:",
+    "react-i18next": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
