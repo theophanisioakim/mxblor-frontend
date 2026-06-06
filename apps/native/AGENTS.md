@@ -30,8 +30,10 @@ input), `metro.config.js`, `tailwind.config.js` (v3 + nativewind preset), `babel
   Windows path-length limits. Don't undo it.
 - **Tailwind content globs** in `tailwind.config.js` must include any new workspace package whose
   classes need compiling (currently `ui`, `native-ui`, `app`). NativeWind input is `src/global.css`.
-- A single React / React Native version is enforced via the catalog + `overrides.react-native`
-  (`pnpm-workspace.yaml`) — never introduce a second copy.
+- A single React / React Native version is enforced via the catalog + `overrides`
+  (`react`, `react-dom`, `react-native` in `pnpm-workspace.yaml`) — never introduce a second copy.
+  The `react` override exists because `react-native-mmkv` / `react-native-nitro-modules` otherwise
+  pull a newer nested React; keep the overrides in lockstep with the catalog versions.
 - `pnpm --filter native start` (Metro); `prebuild` / `android` / `ios` for native builds;
   `pnpm --filter native typecheck` before done (lint/format run repo-wide via `pnpm lint` /
   `pnpm format` — Biome from the root, not per-package).

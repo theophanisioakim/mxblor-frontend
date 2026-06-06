@@ -7,15 +7,12 @@
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "icon": "./assets/expo.icon",
-      "newArchEnabled": true,
       "supportsTablet": true,
-      "bundleIdentifier": "com.native.app"
+      "bundleIdentifier": "com.reactmonocore.app"
     },
     "android": {
-      "newArchEnabled": true,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -24,7 +21,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.native.app"
+      "package": "com.reactmonocore.app"
     },
     "web": {
       "output": "static",

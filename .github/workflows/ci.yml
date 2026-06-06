@@ -5,25 +5,35 @@ on:
   push:
     branches: [main]
 
-# Cancel superseded runs on the same ref (e.g. rapid PR pushes).
+# Least privilege: this workflow only reads the repo (the generated-API drift
+# check inspects `git status`; nothing here writes back). Override per-step if a
+# future job needs more.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref (e.g. rapid PR pushes) — but never cancel
+# a run on main, so every main commit is fully verified and populates the cache.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   check:
-    name: check (generate · biome · typecheck · build)
+    name: check (generate · biome · typecheck · expo · build)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      # Actions track their latest major tag (auto-receive patches/minors); Dependabot
+      # opens PRs for new majors (.github/dependabot.yml).
+      - uses: actions/checkout@v6
 
       # pnpm version is read from the root package.json `packageManager` field.
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       # Node version is read from the root package.json `engines.node` field.
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: package.json
           cache: pnpm
@@ -32,7 +42,7 @@ jobs:
       # workspaces skip build/typecheck. Each run writes a fresh sha-keyed entry
       # and restores the most recent prior one via the restore-keys prefix.
       - name: Cache Turborepo
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .turbo
           key: ${{ runner.os }}-turbo-${{ github.sha }}
@@ -42,7 +52,7 @@ jobs:
       # Next.js manages .next/cache itself (it's excluded from Turbo outputs),
       # so cache it separately to speed up the apps/web build.
       - name: Cache Next.js build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: apps/web/.next/cache
           key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/**/*.[jt]s', 'apps/web/**/*.[jt]sx') }}
@@ -74,6 +84,14 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      # The native app emits no artifact from `turbo build` (Expo builds via prebuild/EAS),
+      # so it's otherwise only typechecked. expo-doctor runs Expo's full project audit —
+      # SDK-vs-dependency version alignment, app.json schema, Metro config, duplicate
+      # native modules — catching native breaks that typecheck can't see.
+      - name: Expo Doctor (native)
+        working-directory: apps/native
+        run: npx --yes expo-doctor
 
       - name: Build
         run: pnpm build

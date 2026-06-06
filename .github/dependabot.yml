@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Keep the GitHub Actions used in .github/workflows current. Major-tag refs
+  # (e.g. actions/checkout@v6) auto-receive patches/minors; Dependabot opens PRs
+  # for new majors so they land as a reviewed change, not silently.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci

@@ -363,10 +363,14 @@ Don't bypass with `--no-verify` (root §8.6) — CI runs the same checks and wil
 
 ### CI — GitHub Actions (`.github/workflows/ci.yml`)
 
-Runs on every **pull request** and on **push to `main`** (concurrency-cancels superseded runs). One
-`check` job: install (`--frozen-lockfile`) → **generated-API drift check** (`pnpm generate`, fail if
-`api-client/src/generated` changed) → **`biome:ci`** → **`typecheck`** → **`build`**. Node version is
-read from `engines.node`; pnpm from the `packageManager` field.
+Runs on every **pull request** and on **push to `main`** (superseded PR runs are cancelled; main runs
+always finish, so each commit is fully verified and populates the cache). The job declares
+least-privilege `permissions: contents: read` and a `timeout-minutes` cap, and uses latest-major
+action tags (Dependabot, `.github/dependabot.yml`, PRs new majors). One `check` job: install
+(`--frozen-lockfile`) → **generated-API drift check** (`pnpm generate`, fail if
+`api-client/src/generated` changed) → **`biome:ci`** → **`typecheck`** → **expo-doctor** (native
+project audit — SDK/dependency alignment, `app.json` schema, Metro config, duplicate native modules)
+→ **`build`**. Node version is read from `engines.node`; pnpm from the `packageManager` field.
 
 ### Why `biome:ci` (not `format:check` + `lint`)
 
