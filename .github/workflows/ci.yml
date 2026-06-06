@@ -77,3 +77,10 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      # On runs where Turbo replays the web build from its cache, `next build`
+      # never executes and writes nothing to .next/cache, so the post-job save
+      # would warn "path does not exist". Ensure the dir exists to silence that
+      # benign warning; it stays populated on Turbo-miss runs that rebuild web.
+      - name: Ensure Next.js cache dir exists
+        run: mkdir -p apps/web/.next/cache
