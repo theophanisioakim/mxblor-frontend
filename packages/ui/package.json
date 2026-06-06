@@ -10,9 +10,22 @@
   },
   "dependencies": {
     "@workspace/api-client": "workspace:*",
+    "@workspace/native-ui": "workspace:*",
     "@workspace/web-ui": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "nativewind": "catalog:",
+    "react-native": "*"
+  },
+  "peerDependenciesMeta": {
+    "nativewind": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",
@@ -22,10 +35,13 @@
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "eslint": "catalog:",
+    "nativewind": "catalog:",
+    "react-native": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },
   "exports": {
+    ".": "./src/index.ts",
     "./globals.css": "./src/styles/globals.css",
     "./postcss.config": "./postcss.config.mjs",
     "./lib/*": "./src/lib/*.ts",

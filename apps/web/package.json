@@ -14,6 +14,7 @@
   "dependencies": {
     "@tanstack/react-query": "catalog:",
     "@workspace/api-client": "workspace:*",
+    "@workspace/app": "workspace:*",
     "@workspace/ui": "workspace:*",
     "lucide-react": "catalog:",
     "next": "catalog:",

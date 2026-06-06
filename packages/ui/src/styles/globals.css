@@ -3,3 +3,7 @@
 /* Make Tailwind scan this package's own components in addition to the
    sources already declared by @workspace/web-ui's globals.css. */
 @source "../**/*.{ts,tsx}";
+
+/* Scan the shared cross-platform screens in @workspace/app so their
+   utility classes are generated for the web build. */
+@source "../../../app/src/**/*.{ts,tsx}";

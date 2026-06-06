@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.js",
+    "css": "global.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "@workspace/native-ui/components",
+    "ui": "@workspace/native-ui/components/ui",
+    "lib": "@workspace/native-ui/lib",
+    "utils": "@workspace/native-ui/lib/utils",
+    "hooks": "@workspace/native-ui/hooks"
+  }
+}

@@ -9,7 +9,9 @@
     "format": "turbo format",
     "typecheck": "turbo typecheck",
     "generate": "turbo run generate",
-    "update-shadcn": "pnpm dlx shadcn@latest add -c packages/web-ui --all --overwrite",
+    "check:all": "pnpm generate && pnpm format && pnpm typecheck && pnpm lint && pnpm build",
+    "shadcn-update": "pnpm dlx shadcn@latest add -c packages/web-ui --all --overwrite",
+    "rnr-update": "pnpm dlx @react-native-reusables/cli@latest add -c packages/native-ui --all --overwrite",
     "outdated-deps": "pnpm outdated -r",
     "update-deps": "pnpm update -r --interactive --latest",
     "dedupe-deps": "pnpm dedupe -r"

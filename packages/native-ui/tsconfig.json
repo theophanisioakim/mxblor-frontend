@@ -1,0 +1,16 @@
+{
+  "extends": "@workspace/typescript-config/react-library.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    // Consumed as source (never emits .d.ts), so skip declaration emit. This
+    // also avoids TS2742 on RNR components that re-export @rn-primitives types.
+    "declaration": false,
+    "declarationMap": false,
+    "paths": {
+      "@workspace/native-ui/*": ["./src/*"]
+    }
+  },
+  "include": [".", "nativewind-env.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}

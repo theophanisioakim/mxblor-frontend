@@ -1,0 +1,22 @@
+import * as React from "react"
+import {
+  Button as NativeUiButton,
+  buttonVariants,
+  type ButtonProps as NativeUiButtonProps,
+} from "@workspace/native-ui/components/ui/button"
+
+type ButtonProps = NativeUiButtonProps
+
+/**
+ * Cross-platform Button — native variant.
+ *
+ * Renders the react-native-reusables button from `@workspace/native-ui`.
+ * The web variant lives in `button.tsx` and wraps `@workspace/web-ui`.
+ * Metro picks this file on native; webpack/Next picks `button.tsx` on web.
+ */
+function Button(props: ButtonProps) {
+  return <NativeUiButton {...props} />
+}
+
+export { Button, buttonVariants }
+export type { ButtonProps }
