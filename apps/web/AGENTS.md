@@ -23,4 +23,5 @@ Layout: `app/` (routes, `layout.tsx`, `page.tsx`), `components/` (app-local prov
 - The app's own `components.json` adds shadcn components into the **app** (`@/components`) when they're
   app-specific; shared components belong in `@workspace/ui` (wrapping `web-ui`).
 - Web theme tokens come from `@workspace/ui/globals.css` (imported in `app/layout.tsx`).
-- `pnpm --filter web dev` to run; `pnpm --filter web typecheck` / `lint` before done.
+- `pnpm --filter web dev` to run; `pnpm --filter web typecheck` (lint/format run repo-wide via
+  `pnpm lint` / `pnpm format` — Biome from the root, not per-package) before done.

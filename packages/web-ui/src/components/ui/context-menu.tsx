@@ -1,10 +1,9 @@
 "use client"
 
-import * as React from "react"
-import { ContextMenu as ContextMenuPrimitive } from "radix-ui"
-
 import { cn } from "@workspace/web-ui/lib/utils"
-import { ChevronRightIcon, CheckIcon } from "lucide-react"
+import { CheckIcon, ChevronRightIcon } from "lucide-react"
+import { ContextMenu as ContextMenuPrimitive } from "radix-ui"
+import type * as React from "react"
 
 function ContextMenu({
   ...props
@@ -250,18 +249,18 @@ function ContextMenuShortcut({
 
 export {
   ContextMenu,
-  ContextMenuTrigger,
-  ContextMenuContent,
-  ContextMenuItem,
   ContextMenuCheckboxItem,
-  ContextMenuRadioItem,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
   ContextMenuLabel,
+  ContextMenuPortal,
+  ContextMenuRadioGroup,
+  ContextMenuRadioItem,
   ContextMenuSeparator,
   ContextMenuShortcut,
-  ContextMenuGroup,
-  ContextMenuPortal,
   ContextMenuSub,
   ContextMenuSubContent,
   ContextMenuSubTrigger,
-  ContextMenuRadioGroup,
+  ContextMenuTrigger,
 }

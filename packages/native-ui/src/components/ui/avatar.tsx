@@ -1,5 +1,5 @@
-import { cn } from "@workspace/native-ui/lib/utils"
 import * as AvatarPrimitive from "@rn-primitives/avatar"
+import { cn } from "@workspace/native-ui/lib/utils"
 
 function Avatar({
   className,

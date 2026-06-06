@@ -1,5 +1,5 @@
-import { cn } from "@workspace/native-ui/lib/utils"
 import * as SwitchPrimitives from "@rn-primitives/switch"
+import { cn } from "@workspace/native-ui/lib/utils"
 import { Platform } from "react-native"
 
 function Switch({

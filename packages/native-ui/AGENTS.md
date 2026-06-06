@@ -32,4 +32,5 @@ unstyled primitives. `Text` exposes `TextClassContext` so wrappers (e.g. `Button
   `Pressable`/`View`/rnr `Text`, `TextClassContext` for label colors, `role`/accessibility props.
 - Import the helper as `@workspace/native-ui/lib/utils` (`cn`). Tailwind classes must be valid for
   NativeWind (Tailwind v3) — prefer the design tokens defined in `apps/native/tailwind.config.js`.
-- Prettier: no semicolons, double quotes. Run `pnpm format`.
+- Biome: no semicolons, double quotes, Tailwind class sorting. Run `pnpm format`. (Component files
+  under `src/components/**` are formatted but not linted — they're vendored; AGENTS.md §4.)

@@ -1,6 +1,6 @@
+import * as TabsPrimitive from "@rn-primitives/tabs"
 import { TextClassContext } from "@workspace/native-ui/components/ui/text"
 import { cn } from "@workspace/native-ui/lib/utils"
-import * as TabsPrimitive from "@rn-primitives/tabs"
 import { Platform } from "react-native"
 
 function Tabs({

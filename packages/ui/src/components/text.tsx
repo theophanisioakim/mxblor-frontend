@@ -1,4 +1,4 @@
-import * as React from "react"
+import type * as React from "react"
 
 type TextProps = React.ComponentProps<"span">
 
@@ -13,5 +13,5 @@ function Text(props: TextProps) {
   return <span {...props} />
 }
 
-export { Text }
 export type { TextProps }
+export { Text }

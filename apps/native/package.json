@@ -6,15 +6,13 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android2": "expo start --android",
+    "android": "expo start --android",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "prebuild": "pnpm expo prebuild",
     "prebuild:clean": "pnpm expo prebuild --clean",
-    "android": "pnpm expo run:android --device",
+    "run:android": "pnpm expo run:android --device",
     "expo:fix": "pnpm expo install --fix",
     "expo:check": "npx expo install --check"
   },
@@ -54,8 +52,7 @@
   },
   "devDependencies": {
     "@types/react": "catalog:",
-    "@workspace/eslint-config": "workspace:*",
-    "eslint": "catalog:",
+    "@biomejs/biome": "catalog:",
     "tailwindcss": "catalog:tailwind3",
     "tailwindcss-animate": "catalog:",
     "typescript": "catalog:"

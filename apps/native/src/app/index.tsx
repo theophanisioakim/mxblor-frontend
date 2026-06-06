@@ -1,6 +1,5 @@
-import { SafeAreaView } from "react-native-safe-area-context"
-
 import { HomeScreen } from "@workspace/app"
+import { SafeAreaView } from "react-native-safe-area-context"
 
 /**
  * Native home route. Renders the exact same `HomeScreen` that the Next.js

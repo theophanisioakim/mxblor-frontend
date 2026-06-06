@@ -51,10 +51,9 @@ function createWebStorage(storage: Storage | null): ITypedStorage {
 
     getAllKeys(): StorageKey[] {
       if (!storage) return []
-      const keys = Array.from(
-        { length: storage.length },
-        (_, i) => storage.key(i)!
-      ).filter(Boolean)
+      const keys = Array.from({ length: storage.length }, (_, i) =>
+        storage.key(i)
+      ).filter((key): key is string => Boolean(key))
       return keys as StorageKey[]
     },
 

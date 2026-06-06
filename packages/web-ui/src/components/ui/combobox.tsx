@@ -1,9 +1,6 @@
 "use client"
 
-import * as React from "react"
 import { Combobox as ComboboxPrimitive } from "@base-ui/react"
-
-import { cn } from "@workspace/web-ui/lib/utils"
 import { Button } from "@workspace/web-ui/components/ui/button"
 import {
   InputGroup,
@@ -11,7 +8,9 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@workspace/web-ui/components/ui/input-group"
-import { ChevronDownIcon, XIcon, CheckIcon } from "lucide-react"
+import { cn } from "@workspace/web-ui/lib/utils"
+import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react"
+import * as React from "react"
 
 const Combobox = ComboboxPrimitive.Root
 
@@ -284,18 +283,18 @@ function useComboboxAnchor() {
 
 export {
   Combobox,
-  ComboboxInput,
-  ComboboxContent,
-  ComboboxList,
-  ComboboxItem,
-  ComboboxGroup,
-  ComboboxLabel,
-  ComboboxCollection,
-  ComboboxEmpty,
-  ComboboxSeparator,
-  ComboboxChips,
   ComboboxChip,
+  ComboboxChips,
   ComboboxChipsInput,
+  ComboboxCollection,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxLabel,
+  ComboboxList,
+  ComboboxSeparator,
   ComboboxTrigger,
   ComboboxValue,
   useComboboxAnchor,

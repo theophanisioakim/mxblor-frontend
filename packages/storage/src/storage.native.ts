@@ -1,5 +1,5 @@
 import { createMMKV, type MMKV } from "react-native-mmkv"
-import { StorageKey } from "./keys"
+import type { StorageKey } from "./keys"
 import type { ITypedStorage } from "./types"
 
 const localInstance = createMMKV({ id: "app-local-storage" })

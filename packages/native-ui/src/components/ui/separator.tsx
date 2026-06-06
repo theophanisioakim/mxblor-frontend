@@ -1,5 +1,5 @@
-import { cn } from "@workspace/native-ui/lib/utils"
 import * as SeparatorPrimitive from "@rn-primitives/separator"
+import { cn } from "@workspace/native-ui/lib/utils"
 
 function Separator({
   className,

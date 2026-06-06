@@ -6,10 +6,10 @@
     "prepare": "husky",
     "build": "turbo build",
     "dev": "turbo dev",
-    "lint": "turbo lint",
-    "lint:strict": "turbo lint -- --max-warnings 0",
-    "format": "turbo format",
-    "format:check": "prettier --check \"**/*.{ts,tsx}\"",
+    "lint": "biome lint .",
+    "lint:strict": "biome lint --error-on-warnings .",
+    "format": "biome check --write --unsafe .",
+    "format:check": "biome format .",
     "typecheck": "turbo typecheck",
     "generate": "turbo run generate",
     "check:all": "pnpm generate && pnpm format && pnpm typecheck && pnpm lint && pnpm build",
@@ -20,17 +20,15 @@
     "dedupe-deps": "pnpm dedupe -r"
   },
   "devDependencies": {
-    "@workspace/eslint-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@workspace/typescript-config": "workspace:*",
     "husky": "catalog:",
     "lint-staged": "catalog:",
-    "prettier": "catalog:",
-    "prettier-plugin-tailwindcss": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,md}": "prettier --write"
+    "*.{ts,tsx,js,jsx,json,jsonc}": "biome check --write --no-errors-on-unmatched"
   },
   "packageManager": "pnpm@11.5.1",
   "engines": {

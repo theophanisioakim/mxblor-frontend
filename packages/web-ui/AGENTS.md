@@ -33,4 +33,5 @@ Components are under `src/components/ui/`; the `cn` helper under `src/lib/`.
   merging, `radix-ui` / `@base-ui/react` primitives.
 - Import the helper as `@workspace/web-ui/lib/utils` (`cn`). Use the `exports` subpaths, not relative
   cross-package paths.
-- Prettier: no semicolons, double quotes, Tailwind class sorting. Run `pnpm format`.
+- Biome: no semicolons, double quotes, Tailwind class sorting. Run `pnpm format`. (Component files
+  under `src/components/**` are formatted but not linted — they're vendored; AGENTS.md §4.)

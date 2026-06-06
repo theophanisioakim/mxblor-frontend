@@ -1,12 +1,12 @@
 // English translations
-import enCommon from "./locales/en/common.json"
-import enScreens from "./locales/en/screens.json"
-import enErrors from "./locales/en/errors.json"
 
 // Greek translations
 import elCommon from "./locales/el/common.json"
-import elScreens from "./locales/el/screens.json"
 import elErrors from "./locales/el/errors.json"
+import elScreens from "./locales/el/screens.json"
+import enCommon from "./locales/en/common.json"
+import enErrors from "./locales/en/errors.json"
+import enScreens from "./locales/en/screens.json"
 
 export const defaultNS = "common"
 

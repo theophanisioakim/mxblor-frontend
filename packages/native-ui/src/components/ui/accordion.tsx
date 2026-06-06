@@ -1,7 +1,7 @@
+import * as AccordionPrimitive from "@rn-primitives/accordion"
 import { Icon } from "@workspace/native-ui/components/ui/icon"
 import { TextClassContext } from "@workspace/native-ui/components/ui/text"
 import { cn } from "@workspace/native-ui/lib/utils"
-import * as AccordionPrimitive from "@rn-primitives/accordion"
 import { ChevronDown } from "lucide-react-native"
 import { Platform, Pressable, View } from "react-native"
 import Animated, {
@@ -102,7 +102,7 @@ function AccordionTrigger({
               className
             )}
           >
-            <>{children}</>
+            {children}
             <Animated.View style={chevronStyle}>
               <Icon
                 as={ChevronDown}

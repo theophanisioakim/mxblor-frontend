@@ -1,6 +1,6 @@
+import { Slot } from "@rn-primitives/slot"
 import { TextClassContext } from "@workspace/native-ui/components/ui/text"
 import { cn } from "@workspace/native-ui/lib/utils"
-import { Slot } from "@rn-primitives/slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Platform, View } from "react-native"
 
@@ -68,5 +68,5 @@ function Badge({ className, variant, asChild, ...props }: BadgeProps) {
   )
 }
 
-export { Badge, badgeTextVariants, badgeVariants }
 export type { BadgeProps }
+export { Badge, badgeTextVariants, badgeVariants }

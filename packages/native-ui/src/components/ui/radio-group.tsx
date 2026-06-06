@@ -1,5 +1,5 @@
-import { cn } from "@workspace/native-ui/lib/utils"
 import * as RadioGroupPrimitive from "@rn-primitives/radio-group"
+import { cn } from "@workspace/native-ui/lib/utils"
 import { Platform } from "react-native"
 
 function RadioGroup({

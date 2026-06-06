@@ -1,7 +1,7 @@
+import * as DialogPrimitive from "@rn-primitives/dialog"
 import { Icon } from "@workspace/native-ui/components/ui/icon"
 import { NativeOnlyAnimatedView } from "@workspace/native-ui/components/ui/native-only-animated-view"
 import { cn } from "@workspace/native-ui/lib/utils"
-import * as DialogPrimitive from "@rn-primitives/dialog"
 import { X } from "lucide-react-native"
 import * as React from "react"
 import { Platform, Text, View, type ViewProps } from "react-native"
@@ -47,7 +47,7 @@ function DialogOverlay({
             entering={FadeIn.delay(50)}
             exiting={FadeOut.duration(150)}
           >
-            <>{children}</>
+            {children}
           </NativeOnlyAnimatedView>
         </NativeOnlyAnimatedView>
       </DialogPrimitive.Overlay>
@@ -75,7 +75,7 @@ function DialogContent({
           )}
           {...props}
         >
-          <>{children}</>
+          {children}
           <DialogPrimitive.Close
             className={cn(
               "absolute top-4 right-4 rounded opacity-70 active:opacity-100",

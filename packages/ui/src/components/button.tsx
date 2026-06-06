@@ -1,8 +1,8 @@
-import * as React from "react"
 import {
-  Button as WebUiButton,
   buttonVariants,
+  Button as WebUiButton,
 } from "@workspace/web-ui/components/button"
+import type * as React from "react"
 
 type ButtonProps = React.ComponentProps<typeof WebUiButton>
 
@@ -17,5 +17,5 @@ function Button(props: ButtonProps) {
   return <WebUiButton {...props} />
 }
 
-export { Button, buttonVariants }
 export type { ButtonProps }
+export { Button, buttonVariants }

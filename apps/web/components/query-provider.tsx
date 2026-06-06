@@ -1,8 +1,8 @@
 "use client"
 
-import * as React from "react"
-import { axiosInstance } from "@workspace/api-client/mutator"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { axiosInstance } from "@workspace/api-client/mutator"
+import * as React from "react"
 
 // Point the generated API client at the backend. Configure other axios
 // defaults (auth headers, interceptors) here as well.

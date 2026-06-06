@@ -1,7 +1,7 @@
+import * as HoverCardPrimitive from "@rn-primitives/hover-card"
 import { NativeOnlyAnimatedView } from "@workspace/native-ui/components/ui/native-only-animated-view"
 import { TextClassContext } from "@workspace/native-ui/components/ui/text"
 import { cn } from "@workspace/native-ui/lib/utils"
-import * as HoverCardPrimitive from "@rn-primitives/hover-card"
 import * as React from "react"
 import { Platform, StyleSheet } from "react-native"
 import { FadeIn, FadeOut } from "react-native-reanimated"

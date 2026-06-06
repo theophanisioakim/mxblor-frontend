@@ -5,8 +5,6 @@
   "private": true,
   "scripts": {
     "generate": "orval --config ./orval.config.ts",
-    "lint": "eslint",
-    "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -19,9 +17,8 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/react": "catalog:",
-    "@workspace/eslint-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@workspace/typescript-config": "workspace:*",
-    "eslint": "catalog:",
     "orval": "catalog:",
     "typescript": "catalog:"
   },

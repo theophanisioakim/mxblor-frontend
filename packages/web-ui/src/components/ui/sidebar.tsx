@@ -1,11 +1,5 @@
 "use client"
 
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Slot } from "radix-ui"
-
-import { useIsMobile } from "@workspace/web-ui/hooks/use-mobile"
-import { cn } from "@workspace/web-ui/lib/utils"
 import { Button } from "@workspace/web-ui/components/ui/button"
 import { Input } from "@workspace/web-ui/components/ui/input"
 import { Separator } from "@workspace/web-ui/components/ui/separator"
@@ -22,7 +16,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@workspace/web-ui/components/ui/tooltip"
+import { useIsMobile } from "@workspace/web-ui/hooks/use-mobile"
+import { cn } from "@workspace/web-ui/lib/utils"
+import { cva, type VariantProps } from "class-variance-authority"
 import { PanelLeftIcon } from "lucide-react"
+import { Slot } from "radix-ui"
+import * as React from "react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7

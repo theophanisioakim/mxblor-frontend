@@ -11,7 +11,7 @@ import { Button, Text, View } from "@workspace/ui"
 export function HomeScreen() {
   return (
     <View className="flex-1 items-center justify-center gap-4 p-6">
-      <Text className="text-2xl font-bold text-foreground">Project ready!</Text>
+      <Text className="font-bold text-2xl text-foreground">Project ready!</Text>
       <Text className="text-muted-foreground">
         One screen, shared by the web and native apps.
       </Text>

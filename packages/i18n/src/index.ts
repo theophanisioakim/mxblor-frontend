@@ -8,16 +8,16 @@ import {
 import { detectLanguage } from "./detect-language"
 import {
   defaultNS,
-  resources,
   type Namespace,
+  resources,
   type SupportedLanguage,
 } from "./resources"
 
 // Re-export types for consumers
 export {
   defaultNS,
-  resources,
   type Namespace,
+  resources,
   type SupportedLanguage,
 } from "./resources"
 export type {

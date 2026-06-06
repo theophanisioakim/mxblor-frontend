@@ -1,8 +1,8 @@
+import * as SelectPrimitive from "@rn-primitives/select"
 import { Icon } from "@workspace/native-ui/components/ui/icon"
 import { NativeOnlyAnimatedView } from "@workspace/native-ui/components/ui/native-only-animated-view"
 import { TextClassContext } from "@workspace/native-ui/components/ui/text"
 import { cn } from "@workspace/native-ui/lib/utils"
-import * as SelectPrimitive from "@rn-primitives/select"
 import {
   Check,
   ChevronDown,
@@ -65,7 +65,7 @@ function SelectTrigger({
       )}
       {...props}
     >
-      <>{children}</>
+      {children}
       <Icon
         as={ChevronDown}
         aria-hidden={true}
@@ -255,6 +255,7 @@ function SelectScrollDownButton({
 }
 
 export {
+  type Option,
   Select,
   SelectContent,
   SelectGroup,
@@ -265,5 +266,4 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-  type Option,
 }

@@ -1,7 +1,6 @@
-import * as React from "react"
 import {
-  Button as NativeUiButton,
   buttonVariants,
+  Button as NativeUiButton,
   type ButtonProps as NativeUiButtonProps,
 } from "@workspace/native-ui/components/ui/button"
 
@@ -18,5 +17,5 @@ function Button(props: ButtonProps) {
   return <NativeUiButton {...props} />
 }
 
-export { Button, buttonVariants }
 export type { ButtonProps }
+export { Button, buttonVariants }

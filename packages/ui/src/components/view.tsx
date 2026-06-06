@@ -1,6 +1,5 @@
-import * as React from "react"
-
 import { cn } from "@workspace/ui/lib/utils"
+import type * as React from "react"
 
 type ViewProps = React.ComponentProps<"div">
 
@@ -18,5 +17,5 @@ function View({ className, ...props }: ViewProps) {
   return <div className={cn("flex flex-col", className)} {...props} />
 }
 
-export { View }
 export type { ViewProps }
+export { View }

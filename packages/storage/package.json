@@ -8,8 +8,6 @@
     "./src/storage.native.ts"
   ],
   "scripts": {
-    "lint": "eslint",
-    "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -18,9 +16,8 @@
   },
   "devDependencies": {
     "@types/js-cookie": "catalog:",
-    "@workspace/eslint-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@workspace/typescript-config": "workspace:*",
-    "eslint": "catalog:",
     "typescript": "catalog:"
   },
   "exports": {

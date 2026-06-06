@@ -1,8 +1,8 @@
+import * as DropdownMenuPrimitive from "@rn-primitives/dropdown-menu"
 import { Icon } from "@workspace/native-ui/components/ui/icon"
 import { NativeOnlyAnimatedView } from "@workspace/native-ui/components/ui/native-only-animated-view"
 import { TextClassContext } from "@workspace/native-ui/components/ui/text"
 import { cn } from "@workspace/native-ui/lib/utils"
-import * as DropdownMenuPrimitive from "@rn-primitives/dropdown-menu"
 import {
   Check,
   ChevronDown,
@@ -66,7 +66,7 @@ function DropdownMenuSubTrigger({
         )}
         {...props}
       >
-        <>{children}</>
+        {children}
         <Icon
           as={icon}
           className={cn(
@@ -223,7 +223,7 @@ function DropdownMenuCheckboxItem({
             />
           </DropdownMenuPrimitive.ItemIndicator>
         </View>
-        <>{children}</>
+        {children}
       </DropdownMenuPrimitive.CheckboxItem>
     </TextClassContext.Provider>
   )
@@ -254,7 +254,7 @@ function DropdownMenuRadioItem({
             <View className="h-2 w-2 rounded-full bg-foreground" />
           </DropdownMenuPrimitive.ItemIndicator>
         </View>
-        <>{children}</>
+        {children}
       </DropdownMenuPrimitive.RadioItem>
     </TextClassContext.Provider>
   )

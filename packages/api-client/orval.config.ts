@@ -7,7 +7,6 @@ export default defineConfig({
     },
     output: {
       clean: true,
-      prettier: true,
       workspace: "./src/generated",
       target: "./",
       client: "react-query",
@@ -26,6 +25,16 @@ export default defineConfig({
           signal: true,
         },
       },
+    },
+
+    // Format the generated output with Biome. `--vcs-enabled=false` is required
+    // because `src/generated` is gitignored (packages/api-client/.gitignore) and
+    // Biome's `vcs.useIgnoreFile` would otherwise skip every file, making
+    // `biome check` exit 1 ("no files processed"). This replaces the `biome: true`
+    // output option, which runs Biome without that flag and so fails.
+    hooks: {
+      afterAllFilesWrite:
+        "biome check --write --vcs-enabled=false ./src/generated",
     },
   },
 })

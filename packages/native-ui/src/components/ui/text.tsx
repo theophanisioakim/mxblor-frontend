@@ -1,5 +1,5 @@
-import { cn } from "@workspace/native-ui/lib/utils"
 import { Slot } from "@rn-primitives/slot"
+import { cn } from "@workspace/native-ui/lib/utils"
 import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
 import { Platform, Text as RNText, type Role } from "react-native"

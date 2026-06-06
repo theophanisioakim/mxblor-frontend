@@ -1,5 +1,5 @@
-import { cn } from "@workspace/native-ui/lib/utils"
 import * as ProgressPrimitive from "@rn-primitives/progress"
+import { cn } from "@workspace/native-ui/lib/utils"
 import { Platform, View } from "react-native"
 import Animated, {
   Extrapolation,

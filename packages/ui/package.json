@@ -4,8 +4,6 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "lint": "eslint",
-    "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -32,9 +30,8 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@workspace/eslint-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@workspace/typescript-config": "workspace:*",
-    "eslint": "catalog:",
     "nativewind": "catalog:",
     "react-native": "catalog:",
     "tailwindcss": "catalog:",

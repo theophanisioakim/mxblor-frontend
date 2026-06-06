@@ -42,16 +42,16 @@ jobs:
             exit 1
           fi
 
-      # Prettier in check mode (no writes) — scoped to the ts/tsx the project formats
-      # (see the per-package `format` scripts). Generated shims are in .prettierignore.
+      # Biome in format-check mode (no writes), scoped by biome.json (vendored/generated
+      # and build output are excluded there). Class order + lint are enforced by lint:strict.
       - name: Format check
         run: pnpm format:check
 
       - name: Typecheck
         run: pnpm typecheck
 
-      # --max-warnings 0 makes the boundary rule (and every other warning, since
-      # eslint-plugin-only-warn downgrades errors to warnings) fail the build.
+      # biome lint --error-on-warnings makes warnings (unused vars, Tailwind class order, …)
+      # fail the build, on top of errors like the web-ui/native-ui import boundary.
       - name: Lint (zero warnings)
         run: pnpm lint:strict
 

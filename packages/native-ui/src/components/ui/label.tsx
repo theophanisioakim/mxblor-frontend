@@ -1,5 +1,5 @@
-import { cn } from "@workspace/native-ui/lib/utils"
 import * as LabelPrimitive from "@rn-primitives/label"
+import { cn } from "@workspace/native-ui/lib/utils"
 import { Platform } from "react-native"
 
 function Label({

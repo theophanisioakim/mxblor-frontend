@@ -1,7 +1,7 @@
+import * as TogglePrimitive from "@rn-primitives/toggle"
 import { Icon } from "@workspace/native-ui/components/ui/icon"
 import { TextClassContext } from "@workspace/native-ui/components/ui/text"
 import { cn } from "@workspace/native-ui/lib/utils"
-import * as TogglePrimitive from "@rn-primitives/toggle"
 import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
 import { Platform } from "react-native"

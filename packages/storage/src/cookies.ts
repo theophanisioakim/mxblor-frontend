@@ -1,5 +1,5 @@
 import Cookies from "js-cookie"
-import { COOKIE_NAME_MAP, StorageKeys, type StorageKey } from "./keys"
+import { COOKIE_NAME_MAP, type StorageKey, StorageKeys } from "./keys"
 
 const isServer = globalThis.window === undefined
 

@@ -47,4 +47,5 @@ overwritten by the update CLIs; root `AGENTS.md` §4).
 - Import vendored components via their `exports` subpaths
   (`@workspace/web-ui/components/...`, `@workspace/native-ui/components/ui/...`).
 - Keep wrappers thin — pass props through; add only the cross-platform glue.
-- Prettier (no semicolons, double quotes) + `pnpm typecheck` for this package after changes.
+- Biome (no semicolons, double quotes) + `pnpm typecheck` for this package after changes — run
+  `pnpm format`.

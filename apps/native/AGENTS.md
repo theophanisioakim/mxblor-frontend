@@ -33,4 +33,5 @@ input), `metro.config.js`, `tailwind.config.js` (v3 + nativewind preset), `babel
 - A single React / React Native version is enforced via the catalog + `overrides.react-native`
   (`pnpm-workspace.yaml`) — never introduce a second copy.
 - `pnpm --filter native start` (Metro); `prebuild` / `android` / `ios` for native builds;
-  `pnpm --filter native typecheck` / `lint` before done.
+  `pnpm --filter native typecheck` before done (lint/format run repo-wide via `pnpm lint` /
+  `pnpm format` — Biome from the root, not per-package).

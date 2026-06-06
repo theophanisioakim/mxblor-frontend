@@ -1,3 +1,7 @@
+import type {
+  OtpRequiredException,
+  UnauthorizedException,
+} from "@workspace/api-client/generated"
 import { myLocalStorage, StorageKeys } from "@workspace/storage"
 import type {
   AxiosError,
@@ -8,10 +12,6 @@ import type {
 } from "axios"
 import Axios from "axios"
 import { getChannelId } from "./channel"
-import {
-  OtpRequiredException,
-  UnauthorizedException,
-} from "@workspace/api-client/generated"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://192.168.68.68:21001"
 

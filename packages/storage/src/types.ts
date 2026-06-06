@@ -1,4 +1,4 @@
-import { StorageKey } from "./keys"
+import type { StorageKey } from "./keys"
 
 export interface IStorage {
   getItem(key: StorageKey): string | null

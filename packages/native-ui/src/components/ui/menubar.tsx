@@ -1,9 +1,9 @@
+import * as MenubarPrimitive from "@rn-primitives/menubar"
+import { Portal } from "@rn-primitives/portal"
 import { Icon } from "@workspace/native-ui/components/ui/icon"
 import { NativeOnlyAnimatedView } from "@workspace/native-ui/components/ui/native-only-animated-view"
 import { TextClassContext } from "@workspace/native-ui/components/ui/text"
 import { cn } from "@workspace/native-ui/lib/utils"
-import * as MenubarPrimitive from "@rn-primitives/menubar"
-import { Portal } from "@rn-primitives/portal"
 import {
   Check,
   ChevronDown,
@@ -127,7 +127,7 @@ function MenubarSubTrigger({
         )}
         {...props}
       >
-        <>{children}</>
+        {children}
         <Icon
           as={icon}
           className={cn(
@@ -274,7 +274,7 @@ function MenubarCheckboxItem({
             />
           </MenubarPrimitive.ItemIndicator>
         </View>
-        <>{children}</>
+        {children}
       </MenubarPrimitive.CheckboxItem>
     </TextClassContext.Provider>
   )
@@ -305,7 +305,7 @@ function MenubarRadioItem({
             <View className="h-2 w-2 rounded-full bg-foreground" />
           </MenubarPrimitive.ItemIndicator>
         </View>
-        <>{children}</>
+        {children}
       </MenubarPrimitive.RadioItem>
     </TextClassContext.Provider>
   )

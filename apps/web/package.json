@@ -7,8 +7,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -27,9 +25,8 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@workspace/eslint-config": "workspace:^",
+    "@biomejs/biome": "catalog:",
     "@workspace/typescript-config": "workspace:*",
-    "eslint": "catalog:",
     "typescript": "catalog:"
   }
 }

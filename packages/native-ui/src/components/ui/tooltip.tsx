@@ -1,7 +1,7 @@
+import * as TooltipPrimitive from "@rn-primitives/tooltip"
 import { NativeOnlyAnimatedView } from "@workspace/native-ui/components/ui/native-only-animated-view"
 import { TextClassContext } from "@workspace/native-ui/components/ui/text"
 import { cn } from "@workspace/native-ui/lib/utils"
-import * as TooltipPrimitive from "@rn-primitives/tooltip"
 import * as React from "react"
 import { Platform, StyleSheet } from "react-native"
 import { FadeInDown, FadeInUp, FadeOut } from "react-native-reanimated"
