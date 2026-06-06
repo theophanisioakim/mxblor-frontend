@@ -1,10 +1,12 @@
-import { getCookie, removeCookie, setCookie } from './cookies'
-import { SSR_COOKIE_KEYS, type StorageKey } from './keys'
-import type { ITypedStorage } from './types'
+import { getCookie, removeCookie, setCookie } from "./cookies"
+import { SSR_COOKIE_KEYS, type StorageKey } from "./keys"
+import type { ITypedStorage } from "./types"
 
 const isServer = globalThis.window === undefined
 
-function getWebStorage(type: 'localStorage' | 'sessionStorage'): Storage | null {
+function getWebStorage(
+  type: "localStorage" | "sessionStorage"
+): Storage | null {
   try {
     if (!isServer && window[type]) {
       return window[type]
@@ -49,7 +51,10 @@ function createWebStorage(storage: Storage | null): ITypedStorage {
 
     getAllKeys(): StorageKey[] {
       if (!storage) return []
-      const keys = Array.from({ length: storage.length }, (_, i) => storage.key(i)!).filter(Boolean)
+      const keys = Array.from(
+        { length: storage.length },
+        (_, i) => storage.key(i)!
+      ).filter(Boolean)
       return keys as StorageKey[]
     },
 
@@ -69,12 +74,16 @@ function createWebStorage(storage: Storage | null): ITypedStorage {
   }
 }
 
-export const myLocalStorage: ITypedStorage = createWebStorage(getWebStorage('localStorage'))
-export const mySessionStorage: ITypedStorage = createWebStorage(getWebStorage('sessionStorage'))
+export const myLocalStorage: ITypedStorage = createWebStorage(
+  getWebStorage("localStorage")
+)
+export const mySessionStorage: ITypedStorage = createWebStorage(
+  getWebStorage("sessionStorage")
+)
 
 // One-time migration: seed cookies from localStorage for SSR-critical keys
 if (!isServer) {
-  const ls = getWebStorage('localStorage')
+  const ls = getWebStorage("localStorage")
   if (ls) {
     for (const key of SSR_COOKIE_KEYS) {
       const value = ls.getItem(key)

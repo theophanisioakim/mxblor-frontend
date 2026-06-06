@@ -1,5 +1,5 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import type { ReactNode } from "react"
 
 export const queryClientOptions = {
   defaultOptions: {
@@ -22,6 +22,10 @@ export const createQueryClient = () => new QueryClient(queryClientOptions)
 
 export const queryClient = createQueryClient()
 
-export function ApiQueryClientProvider({ children }: Readonly<{ children: ReactNode }>) {
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+export function ApiQueryClientProvider({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  )
 }

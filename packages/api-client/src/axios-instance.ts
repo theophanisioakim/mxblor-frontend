@@ -1,25 +1,25 @@
-import { myLocalStorage, StorageKeys } from '@workspace/storage'
+import { myLocalStorage, StorageKeys } from "@workspace/storage"
 import type {
   AxiosError,
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
   InternalAxiosRequestConfig,
-} from 'axios'
-import Axios from 'axios'
-import { getChannelId } from './channel'
+} from "axios"
+import Axios from "axios"
+import { getChannelId } from "./channel"
 import {
   OtpRequiredException,
   UnauthorizedException,
 } from "@workspace/api-client/generated"
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://192.168.68.68:21001'
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://192.168.68.68:21001"
 
 export const axiosInstance = Axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
+    "Content-Type": "application/json",
+    Accept: "application/json",
   },
   timeout: 30000,
 })
@@ -38,7 +38,10 @@ axiosInstance.interceptors.response.use(
     return response
   },
   async (error: AxiosError) => {
-    if ((error.response?.data as OtpRequiredException)?.errorCode === 'OTP_REQUIRED') {
+    if (
+      (error.response?.data as OtpRequiredException)?.errorCode ===
+      "OTP_REQUIRED"
+    ) {
       if (!onOtpRequired) {
         throw error
       }
@@ -51,7 +54,7 @@ axiosInstance.interceptors.response.use(
     }
     if (error.response?.status === 401) {
       const errorData = error.response?.data as UnauthorizedException
-      if (errorData.errorCode === 'UNAUTHORIZED') {
+      if (errorData.errorCode === "UNAUTHORIZED") {
         onUnauthorized?.()
         throw error
       }
@@ -78,7 +81,10 @@ export const setOnOtpRequired = (
         axiosInstance: AxiosInstance,
         otpRequiredException: OtpRequiredException,
         originalConfig: InternalAxiosRequestConfig | undefined
-      ) => Promise<{ error: AxiosError | null; response: AxiosResponse | null }>)
+      ) => Promise<{
+        error: AxiosError | null
+        response: AxiosResponse | null
+      }>)
     | null
 ): void => {
   onOtpRequired = callback
@@ -93,9 +99,9 @@ export const customInstance = <T>(config: AxiosRequestConfig): Promise<T> => {
     config.headers = { ...config.headers, Authorization: `Bearer ${token}` }
   }
   if (schema) {
-    config.headers = { ...config.headers, 'x-schema-id': schema }
+    config.headers = { ...config.headers, "x-schema-id": schema }
   }
-  config.headers = { ...config.headers, 'x-channel-id': getChannelId() }
+  config.headers = { ...config.headers, "x-channel-id": getChannelId() }
 
   const source = Axios.CancelToken.source()
 
@@ -106,7 +112,7 @@ export const customInstance = <T>(config: AxiosRequestConfig): Promise<T> => {
 
   // @ts-expect-error -- attach cancel for React Query
   promise.cancel = () => {
-    source.cancel('Query was cancelled')
+    source.cancel("Query was cancelled")
   }
 
   return promise

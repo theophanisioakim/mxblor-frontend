@@ -1,5 +1,5 @@
-export { StorageKeys } from './keys'
-export type { StorageKey } from './keys'
-export { myLocalStorage, mySessionStorage } from './storage'
-export type { IStorage, ITypedStorage } from './types'
-export { setServerCookies, clearServerCookies } from './cookies'
+export { StorageKeys } from "./keys"
+export type { StorageKey } from "./keys"
+export { myLocalStorage, mySessionStorage } from "./storage"
+export type { IStorage, ITypedStorage } from "./types"
+export { setServerCookies, clearServerCookies } from "./cookies"

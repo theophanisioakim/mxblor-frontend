@@ -1,13 +1,32 @@
-import { myLocalStorage, StorageKeys } from '@workspace/storage'
-import i18n from 'i18next'
-import 'intl-pluralrules'
-import { initReactI18next, useTranslation as useTranslationBase } from 'react-i18next'
-import { detectLanguage } from './detect-language'
-import { defaultNS, resources, type Namespace, type SupportedLanguage } from './resources'
+import { myLocalStorage, StorageKeys } from "@workspace/storage"
+import i18n from "i18next"
+import "intl-pluralrules"
+import {
+  initReactI18next,
+  useTranslation as useTranslationBase,
+} from "react-i18next"
+import { detectLanguage } from "./detect-language"
+import {
+  defaultNS,
+  resources,
+  type Namespace,
+  type SupportedLanguage,
+} from "./resources"
 
 // Re-export types for consumers
-export { defaultNS, resources, type Namespace, type SupportedLanguage } from './resources'
-export type { CommonKey, ErrorsKey, NestedKeyOf, ScreensKey, TranslationKey } from './types'
+export {
+  defaultNS,
+  resources,
+  type Namespace,
+  type SupportedLanguage,
+} from "./resources"
+export type {
+  CommonKey,
+  ErrorsKey,
+  NestedKeyOf,
+  ScreensKey,
+  TranslationKey,
+} from "./types"
 
 const getStoredLanguage = (): string | null => {
   return myLocalStorage.getItem(StorageKeys.LANGUAGE)
@@ -33,9 +52,9 @@ export function ensureI18nInitialized(language?: string): void {
     i18n.use(initReactI18next).init({
       resources,
       lng,
-      fallbackLng: 'en',
+      fallbackLng: "en",
       defaultNS,
-      ns: ['common', 'screens', 'errors'],
+      ns: ["common", "screens", "errors"],
       interpolation: {
         escapeValue: false,
       },
@@ -54,7 +73,11 @@ ensureI18nInitialized()
 export { i18n }
 
 // Type-safe useTranslation hook
-export const useTranslation = <NS extends Namespace | Namespace[] = typeof defaultNS>(ns?: NS) => {
+export const useTranslation = <
+  NS extends Namespace | Namespace[] = typeof defaultNS,
+>(
+  ns?: NS
+) => {
   return useTranslationBase(ns)
 }
 
@@ -66,11 +89,15 @@ export const changeLanguage = async (language: SupportedLanguage) => {
 
 // Get current language
 export const getCurrentLanguage = (): SupportedLanguage => {
-  return (i18n.language || 'en') as SupportedLanguage
+  return (i18n.language || "en") as SupportedLanguage
 }
 
 // Get supported languages
-export const supportedLanguages: { code: SupportedLanguage; name: string; nativeName: string }[] = [
-  { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'el', name: 'Greek', nativeName: 'Ελληνικά' },
+export const supportedLanguages: {
+  code: SupportedLanguage
+  name: string
+  nativeName: string
+}[] = [
+  { code: "en", name: "English", nativeName: "English" },
+  { code: "el", name: "Greek", nativeName: "Ελληνικά" },
 ]

@@ -1,5 +1,5 @@
-import Cookies from 'js-cookie'
-import { COOKIE_NAME_MAP, StorageKeys, type StorageKey } from './keys'
+import Cookies from "js-cookie"
+import { COOKIE_NAME_MAP, StorageKeys, type StorageKey } from "./keys"
 
 const isServer = globalThis.window === undefined
 
@@ -34,9 +34,9 @@ export function setCookie(key: StorageKey, value: string): void {
 
   const isJwt = key === StorageKeys.JWT_TOKEN
   Cookies.set(cookieName, value, {
-    path: '/',
-    sameSite: isJwt ? 'Strict' : 'Lax',
-    secure: globalThis.location.protocol === 'https:',
+    path: "/",
+    sameSite: isJwt ? "Strict" : "Lax",
+    secure: globalThis.location.protocol === "https:",
     expires: isJwt ? 7 : 365,
   })
 }
@@ -44,5 +44,5 @@ export function setCookie(key: StorageKey, value: string): void {
 export function removeCookie(key: StorageKey): void {
   const cookieName = getCookieName(key)
   if (!cookieName || isServer) return
-  Cookies.remove(cookieName, { path: '/' })
+  Cookies.remove(cookieName, { path: "/" })
 }

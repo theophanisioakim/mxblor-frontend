@@ -1,9 +1,9 @@
-import { createMMKV, type MMKV } from 'react-native-mmkv'
-import { StorageKey } from './keys'
-import type { ITypedStorage } from './types'
+import { createMMKV, type MMKV } from "react-native-mmkv"
+import { StorageKey } from "./keys"
+import type { ITypedStorage } from "./types"
 
-const localInstance = createMMKV({ id: 'app-local-storage' })
-const sessionInstance = createMMKV({ id: 'app-session-storage' })
+const localInstance = createMMKV({ id: "app-local-storage" })
+const sessionInstance = createMMKV({ id: "app-session-storage" })
 
 // Clear session storage on app cold start (simulates web sessionStorage behavior)
 sessionInstance.clearAll()
@@ -42,4 +42,5 @@ function createMMKVStorage(mmkv: MMKV): ITypedStorage {
 }
 
 export const myLocalStorage: ITypedStorage = createMMKVStorage(localInstance)
-export const mySessionStorage: ITypedStorage = createMMKVStorage(sessionInstance)
+export const mySessionStorage: ITypedStorage =
+  createMMKVStorage(sessionInstance)
