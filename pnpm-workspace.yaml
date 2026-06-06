@@ -24,7 +24,10 @@ overrides:
 
 catalog:
   '@base-ui/react': "^1.5.0"
-  '@biomejs/biome': "^2.4.16"
+  # Pinned to the patch range: useSortedClasses is a nursery rule and nursery rules can
+  # be renamed/moved/changed across minors — bump Biome deliberately (and update biome.json
+  # "$schema" in lockstep), not via an automatic minor.
+  '@biomejs/biome': "~2.4.16"
   '@tailwindcss/postcss': "^4"
   '@tanstack/react-query': "^5.62.0"
   '@turbo/gen': "^2.9.16"

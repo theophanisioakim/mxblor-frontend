@@ -1,14 +1,11 @@
 # Pre-push gate — mirrors the CI "check" job's read-only checks
 # (see .github/workflows/ci.yml). Bypass in an emergency with
 # `git push --no-verify` (discouraged — CI runs the same checks).
-echo "[pre-push] format check…"
-pnpm format:check
+echo "[pre-push] biome (format · lint · assist, zero warnings)…"
+pnpm biome:ci
 
 echo "[pre-push] typecheck…"
 pnpm typecheck
-
-echo "[pre-push] lint (zero warnings)…"
-pnpm lint:strict
 
 echo "[pre-push] build…"
 pnpm build

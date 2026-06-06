@@ -113,7 +113,8 @@ Always go through **pnpm** (which drives **Turbo**). On this Windows machine use
 | Dev (all apps, watch)                       | `pnpm dev`                                                        |
 | Lint / Format / Typecheck (all)             | `pnpm lint` · `pnpm format` · `pnpm typecheck`                    |
 | Lint, fail on any warning (CI/gate)         | `pnpm lint:strict`                                                |
-| Biome format check, no writes (CI/gate)     | `pnpm format:check`                                               |
+| Biome format check, no writes               | `pnpm format:check`                                               |
+| Biome CI gate (format + lint + assist)      | `pnpm biome:ci`                                                   |
 | Regenerate the API client (Orval)           | `pnpm generate`                                                   |
 | One workspace only                          | `pnpm --filter web dev` / `pnpm --filter @workspace/ui typecheck` |
 | Web app dev                                 | `pnpm --filter web dev`                                           |
@@ -123,7 +124,7 @@ Always go through **pnpm** (which drives **Turbo**). On this Windows machine use
 | Regenerate **all** rnr native components ⚠️ | `pnpm rnr-update`                                                 |
 | Dependency hygiene                          | `pnpm outdated-deps` · `pnpm update-deps` · `pnpm dedupe-deps`    |
 
-`pnpm check:all` runs the gate in order: **`generate → format → typecheck → lint → build`**. Run it
+`pnpm check:all` runs the gate in order: **`generate → format → typecheck → lint:strict → build`**. Run it
 (or at least `typecheck` + `lint` for the workspaces you touched) before declaring work done, and
 report real results — if something fails, say so.
 
@@ -303,7 +304,7 @@ react-mono-core/
 ├── CLAUDE.md                 ← imports AGENTS.md + Claude-specific notes
 ├── .claude/                  ← Claude Code config (settings, commands, agents, hooks, rules, skills)
 ├── .husky/                   ← git hooks (pre-commit: lint-staged; pre-push: the full gate) — §11
-├── .github/workflows/ci.yml  ← CI: generate-drift + format:check + typecheck + lint:strict + build
+├── .github/workflows/ci.yml  ← CI: generate-drift + biome:ci + typecheck + build
 ├── package.json              ← root scripts (turbo build/typecheck + biome lint/format) + engines + catalog dev deps + lint-staged
 ├── pnpm-workspace.yaml       ← workspaces, catalog (single-sourced versions), nodeLinker, overrides
 ├── turbo.json                ← task graph (build/dev/typecheck/generate; lint/format run via Biome, not Turbo)
@@ -355,8 +356,8 @@ Registered automatically by the root `package.json` `"prepare": "husky"` script,
   organize imports) on staged `*.{ts,tsx,js,jsx,json,jsonc}` — formats only what you're committing
   (fast). It does **not** apply unsafe fixes (Tailwind class sorting), so run `pnpm format` if
   `lint:strict` later flags class order.
-- **`pre-push`** → the full read-only gate: **`format:check → typecheck → lint:strict → build`**
-  (mirrors CI). Blocks the push if anything fails.
+- **`pre-push`** → the full read-only gate: **`biome:ci → typecheck → build`** (mirrors CI). Blocks
+  the push if anything fails.
 
 Don't bypass with `--no-verify` (root §8.6) — CI runs the same checks and will fail the PR anyway.
 
@@ -364,13 +365,15 @@ Don't bypass with `--no-verify` (root §8.6) — CI runs the same checks and wil
 
 Runs on every **pull request** and on **push to `main`** (concurrency-cancels superseded runs). One
 `check` job: install (`--frozen-lockfile`) → **generated-API drift check** (`pnpm generate`, fail if
-`api-client/src/generated` changed) → **`format:check`** → **`typecheck`** → **`lint:strict`** →
-**`build`**. Node version is read from `engines.node`; pnpm from the `packageManager` field.
+`api-client/src/generated` changed) → **`biome:ci`** → **`typecheck`** → **`build`**. Node version is
+read from `engines.node`; pnpm from the `packageManager` field.
 
-### Why `lint:strict` (not `lint`)
+### Why `biome:ci` (not `format:check` + `lint`)
 
-`pnpm lint` (`biome lint`) fails on **errors** but not warnings. Both the pre-push hook and CI run
-**`pnpm lint:strict`** (`biome lint --error-on-warnings`) so **warnings also fail** the build (e.g.
-unused vars, Tailwind class order). The **`web-ui`/`native-ui` import boundary** (§2) is a Biome
+`pnpm biome:ci` (`biome ci --error-on-warnings`) runs **format + lint + assist** checks in one
+no-write pass, so **warnings also fail** the build (e.g. unused vars, Tailwind class order) and
+**import organization is enforced** — an assist action that plain `biome format` and `biome lint`
+each miss on their own. The **`web-ui`/`native-ui` import boundary** (§2) is a Biome
 `noRestrictedImports` **error** in `biome.json`, relaxed only inside `ui`/`web-ui`/`native-ui` via the
-config `overrides` — so it fails plain `pnpm lint` too.
+config `overrides`. (`pnpm lint:strict` / `pnpm format:check` remain available for narrower local
+runs.)
