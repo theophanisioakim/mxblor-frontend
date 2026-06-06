@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel superseded runs on the same ref (e.g. rapid PR pushes).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check (generate · format · typecheck · lint · build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm version is read from the root package.json `packageManager` field.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      # Node version is read from the root package.json `engines.node` field.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Verify the generated API client is committed in-sync with openapi.json:
+      # regenerate, then fail if anything changed (no drift between spec and code).
+      - name: Verify generated API client is up to date
+        run: |
+          pnpm generate
+          if [ -n "$(git status --porcelain packages/api-client/src/generated)" ]; then
+            echo "::error::api-client/src/generated is out of date. Run 'pnpm generate' and commit the result."
+            git --no-pager diff --stat packages/api-client/src/generated
+            exit 1
+          fi
+
+      # Prettier in check mode (no writes) — scoped to the ts/tsx the project formats
+      # (see the per-package `format` scripts). Generated shims are in .prettierignore.
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # --max-warnings 0 makes the boundary rule (and every other warning, since
+      # eslint-plugin-only-warn downgrades errors to warnings) fail the build.
+      - name: Lint (zero warnings)
+        run: pnpm lint:strict
+
+      - name: Build
+        run: pnpm build

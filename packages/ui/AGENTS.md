@@ -1,0 +1,50 @@
+# `@workspace/ui` — cross-platform abstraction layer (the public UI API)
+
+> Layer rules for this package. The root **`AGENTS.md`** (§2, §4) is authoritative; this adds the
+> package-specific detail. Read the root guide first.
+
+## What this is
+
+The **single sanctioned UI API** for the whole repo. It is the abstraction over the two vendored
+component libraries: it wraps `@workspace/web-ui` (shadcn) on web and `@workspace/native-ui` (rnr) on
+native, exposing one consistent component surface to `@workspace/app` and the apps. **This is the
+only package allowed to import `web-ui` / `native-ui`.**
+
+Layout:
+
+- `src/components/<name>.tsx` — **web** variant (wraps `web-ui`)
+- `src/components/<name>.native.tsx` — **native** variant (wraps `native-ui`)
+- `src/index.ts` — re-exports every primitive (consumers do `import { Button } from "@workspace/ui"`)
+- `src/lib/utils.ts` — re-exports `cn`; `src/styles/globals.css` — web theme tokens
+
+## ⛔ The synchronized-pair contract (mandatory)
+
+Every exported primitive **must** ship both variants and stay in sync:
+
+1. **Add/modify both `*.tsx` and `*.native.tsx` together.** A primitive that resolves on only one
+   platform is a bug. Register it in `index.ts`.
+2. **Identical public API** across the pair — same exported component & helper names (e.g. `Button`,
+   `buttonVariants`), same prop names and meaning. Type _sources_ may differ per platform (web:
+   `React.ComponentProps<typeof WebUiButton>`; native: the rnr `ButtonProps`) but the contract the
+   screen sees must match.
+3. **Same business logic wherever the platform allows.** State, event handling, variant selection,
+   conditional rendering — write the behavior once per concept; only the irreducibly platform-specific
+   bits differ (DOM element vs. `Pressable`, `<span>` vs. rnr `Text`, hover vs. press).
+4. **Theme-token Tailwind classes** that are valid in both Tailwind v4 (web) and NativeWind/Tailwind
+   v3 (native): `bg-primary`, `text-foreground`, `border-border`, etc.
+
+Canonical examples: `button.tsx` / `button.native.tsx`, `text.tsx` / `text.native.tsx`,
+`view.tsx` / `view.native.tsx`.
+
+## Customizing vendored components
+
+When a shadcn/rnr component needs different behavior or styling, do it **here** (wrap, compose,
+override props/classes) — never by editing the vendored `web-ui`/`native-ui` source (which gets
+overwritten by the update CLIs; root `AGENTS.md` §4).
+
+## Conventions
+
+- Import vendored components via their `exports` subpaths
+  (`@workspace/web-ui/components/...`, `@workspace/native-ui/components/ui/...`).
+- Keep wrappers thin — pass props through; add only the cross-platform glue.
+- Prettier (no semicolons, double quotes) + `pnpm typecheck` for this package after changes.

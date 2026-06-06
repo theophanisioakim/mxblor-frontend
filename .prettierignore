@@ -1,7 +1,13 @@
 dist/
+build/
 node_modules/
 .next/
 .turbo/
+.expo/
 coverage/
 pnpm-lock.yaml
 .pnpm-store/
+
+# Generated type shims (Expo / Next) — owned by their tooling.
+*-env.d.ts
+**/.expo/**
