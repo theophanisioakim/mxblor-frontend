@@ -34,7 +34,8 @@ packages — app and screen code never branches on platform.
 
 - **Package manager:** pnpm **11.5.1** (workspaces + **catalog** for single-sourced versions)
 - **Node:** **26.2.0** (pinned in root `engines`)
-- **Task runner:** **Turborepo** (`turbo.json`) — `build`, `dev`, `typecheck`, `generate`. Lint and
+- **Task runner:** **Turborepo** (`turbo.json`) — `build`, `dev`, `typecheck`, `test`, `test:e2e`,
+  `generate`. Lint and
   format are **not** Turbo tasks: they run **Biome directly from the repo root** over the whole
   workspace (one `biome.json`), so they cover root-level files (`biome.json`, `tsconfig.json`,
   `typescript-config/*`) that a per-package fan-out can't reach
@@ -111,6 +112,8 @@ Always go through **pnpm** (which drives **Turbo**). On this Windows machine use
 | Run everything (the full CI gate)           | `pnpm check:all`                                                  |
 | Build all                                   | `pnpm build`                                                      |
 | Dev (all apps, watch)                       | `pnpm dev`                                                        |
+| Test all                                    | `pnpm test`                                                       |
+| E2E tests                                   | `pnpm test:e2e`                                                   |
 | Lint / Format / Typecheck (all)             | `pnpm lint` · `pnpm format` · `pnpm typecheck`                    |
 | Lint, fail on any warning (CI/gate)         | `pnpm lint:strict`                                                |
 | Biome format check, no writes               | `pnpm format:check`                                               |
@@ -118,15 +121,22 @@ Always go through **pnpm** (which drives **Turbo**). On this Windows machine use
 | Regenerate the API client (Orval)           | `pnpm generate`                                                   |
 | One workspace only                          | `pnpm --filter web dev` / `pnpm --filter @workspace/ui typecheck` |
 | Web app dev                                 | `pnpm --filter web dev`                                           |
+| Web E2E tests                               | `pnpm --filter web test:e2e`                                      |
 | Native app (Metro)                          | `pnpm --filter native start`                                      |
+| Native tests                                | `pnpm --filter native test`                                       |
+| Native E2E tests                            | `pnpm --filter native test:e2e`                                   |
 | Native: prebuild / run Android / iOS        | `pnpm --filter native prebuild` · `... android` · `... ios`       |
 | Regenerate **all** shadcn web components ⚠️ | `pnpm shadcn-update`                                              |
 | Regenerate **all** rnr native components ⚠️ | `pnpm rnr-update`                                                 |
 | Dependency hygiene                          | `pnpm outdated-deps` · `pnpm update-deps` · `pnpm dedupe-deps`    |
 
-`pnpm check:all` runs the gate in order: **`generate → format → typecheck → lint:strict → build`**. Run it
+`pnpm check:all` runs the gate in order: **`generate → format → typecheck → lint:strict → test → build`**. Run it
 (or at least `typecheck` + `lint` for the workspaces you touched) before declaring work done, and
 report real results — if something fails, say so.
+
+E2E tests are intentionally explicit rather than part of `check:all`: web E2E requires Playwright
+browsers (`pnpm --filter web exec playwright install chromium`), and native E2E requires a built app
+installed on an emulator/simulator plus the Maestro CLI.
 
 > **Lint enforcement note.** `pnpm lint` (`biome lint`) fails on **errors** — including the
 > `web-ui`/`native-ui` import boundary (§2), configured as an error. CI and the git hooks run
@@ -304,10 +314,10 @@ react-mono-core/
 ├── CLAUDE.md                 ← imports AGENTS.md + Claude-specific notes
 ├── .claude/                  ← Claude Code config (settings, commands, agents, hooks, rules, skills)
 ├── .husky/                   ← git hooks (pre-commit: lint-staged; pre-push: the full gate) — §11
-├── .github/workflows/ci.yml  ← CI: generate-drift + biome:ci + typecheck + build
-├── package.json              ← root scripts (turbo build/typecheck + biome lint/format) + engines + catalog dev deps + lint-staged
+├── .github/workflows/ci.yml  ← CI: generate-drift + biome:ci + typecheck + test + build + web E2E
+├── package.json              ← root scripts (turbo build/typecheck/test/test:e2e + biome lint/format) + engines + catalog dev deps + lint-staged
 ├── pnpm-workspace.yaml       ← workspaces, catalog (single-sourced versions), nodeLinker, overrides
-├── turbo.json                ← task graph (build/dev/typecheck/generate; lint/format run via Biome, not Turbo)
+├── turbo.json                ← task graph (build/dev/typecheck/test/test:e2e/generate; lint/format run via Biome, not Turbo)
 ├── biome.json                ← Biome config — format + lint, single source for the workspace
 ├── apps/
 │   ├── web/        ← Next.js 16 app (App Router)                 (AGENTS.md)
@@ -356,8 +366,9 @@ Registered automatically by the root `package.json` `"prepare": "husky"` script,
   organize imports) on staged `*.{ts,tsx,js,jsx,json,jsonc}` — formats only what you're committing
   (fast). It does **not** apply unsafe fixes (Tailwind class sorting), so run `pnpm format` if
   `lint:strict` later flags class order.
-- **`pre-push`** → the full read-only gate: **`biome:ci → typecheck → build`** (mirrors CI). Blocks
-  the push if anything fails.
+- **`pre-push`** → the full read-only gate:
+  **`biome:ci → typecheck → test → build → web E2E`** (mirrors CI except native Maestro E2E, which
+  requires a built app installed on an emulator/simulator). Blocks the push if anything fails.
 
 Don't bypass with `--no-verify` (root §8.6) — CI runs the same checks and will fail the PR anyway.
 
@@ -368,9 +379,10 @@ always finish, so each commit is fully verified and populates the cache). The jo
 least-privilege `permissions: contents: read` and a `timeout-minutes` cap, and uses latest-major
 action tags (Dependabot, `.github/dependabot.yml`, PRs new majors). One `check` job: install
 (`--frozen-lockfile`) → **generated-API drift check** (`pnpm generate`, fail if
-`api-client/src/generated` changed) → **`biome:ci`** → **`typecheck`** → **expo-doctor** (native
-project audit — SDK/dependency alignment, `app.json` schema, Metro config, duplicate native modules)
-→ **`build`**. Node version is read from `engines.node`; pnpm from the `packageManager` field.
+`api-client/src/generated` changed) → **`biome:ci`** → **`typecheck`** → **`test`** → **expo-doctor**
+(native project audit — SDK/dependency alignment, `app.json` schema, Metro config, duplicate native
+modules) → **`build`** → **Playwright Chromium install** → **web E2E**. Node version is read from
+`engines.node`; pnpm from the `packageManager` field.
 
 ### Why `biome:ci` (not `format:check` + `lint`)
 

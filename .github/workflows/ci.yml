@@ -19,9 +19,9 @@ concurrency:
 
 jobs:
   check:
-    name: check (generate · biome · typecheck · expo · build)
+    name: check (generate · biome · typecheck · test · expo · build · web-e2e)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       # Actions track their latest major tag (auto-receive patches/minors); Dependabot
       # opens PRs for new majors (.github/dependabot.yml).
@@ -85,6 +85,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Test
+        run: pnpm test
+
       # The native app emits no artifact from `turbo build` (Expo builds via prebuild/EAS),
       # so it's otherwise only typechecked. expo-doctor runs Expo's full project audit —
       # SDK-vs-dependency version alignment, app.json schema, Metro config, duplicate
@@ -95,6 +98,12 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: Web E2E (Playwright)
+        run: pnpm --filter web test:e2e
 
       # On runs where Turbo replays the web build from its cache, `next build`
       # never executes and writes nothing to .next/cache, so the post-job save

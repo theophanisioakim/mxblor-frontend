@@ -11,8 +11,9 @@ The web consumer (App Router, React 19, Tailwind v4). It renders the shared scre
 `@workspace/app`; UI comes through `@workspace/ui`; data through `@workspace/api-client`.
 
 Layout: `app/` (routes, `layout.tsx`, `page.tsx`), `components/` (app-local providers —
-`query-provider`, `theme-provider`), `next.config.ts`, `components.json` (shadcn aliases pointing at
-`@workspace/ui`), `postcss.config.mjs`.
+`query-provider`, `theme-provider`), `e2e/` (Playwright browser E2E), `playwright.config.ts`,
+`next.config.ts`, `components.json` (shadcn aliases pointing at `@workspace/ui`),
+`postcss.config.mjs`.
 
 ## Rules
 
@@ -23,5 +24,7 @@ Layout: `app/` (routes, `layout.tsx`, `page.tsx`), `components/` (app-local prov
 - The app's own `components.json` adds shadcn components into the **app** (`@/components`) when they're
   app-specific; shared components belong in `@workspace/ui` (wrapping `web-ui`).
 - Web theme tokens come from `@workspace/ui/globals.css` (imported in `app/layout.tsx`).
-- `pnpm --filter web dev` to run; `pnpm --filter web typecheck` (lint/format run repo-wide via
-  `pnpm lint` / `pnpm format` — Biome from the root, not per-package) before done.
+- `pnpm --filter web dev` to run; `pnpm --filter web test:e2e` for Playwright E2E (install browsers
+  first with `pnpm --filter web exec playwright install chromium`); `pnpm --filter web typecheck`
+  (lint/format run repo-wide via `pnpm lint` / `pnpm format` — Biome from the root, not per-package)
+  before done.

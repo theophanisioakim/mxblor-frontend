@@ -1,0 +1,6 @@
+appId: com.reactmonocore.app
+---
+- launchApp
+- assertVisible: "Project ready!"
+- assertVisible: "One screen, shared by the web and native apps."
+- assertVisible: "Button"

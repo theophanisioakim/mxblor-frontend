@@ -5,6 +5,8 @@
   "private": true,
   "scripts": {
     "start": "expo start",
+    "test": "jest",
+    "test:e2e": "maestro test ../../.maestro/native-startup.yml",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo run:ios",
@@ -51,10 +53,15 @@
     "react-native-worklets": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "catalog:",
+    "@testing-library/react-native": "catalog:",
     "@biomejs/biome": "catalog:",
+    "@types/jest": "catalog:",
+    "@types/react": "catalog:",
+    "jest": "catalog:",
+    "jest-expo": "catalog:",
     "tailwindcss": "catalog:tailwind3",
     "tailwindcss-animate": "catalog:",
+    "test-renderer": "catalog:",
     "typescript": "catalog:"
   }
 }

@@ -7,7 +7,13 @@ pnpm biome:ci
 echo "[pre-push] typecheck…"
 pnpm typecheck
 
+echo "[pre-push] test…"
+pnpm test
+
 echo "[pre-push] build…"
 pnpm build
+
+echo "[pre-push] web e2e…"
+pnpm --filter web test:e2e
 
 echo "[pre-push] OK"

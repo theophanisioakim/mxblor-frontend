@@ -15,8 +15,10 @@ renders the same shared screens from `@workspace/app`; UI comes through `@worksp
 `@workspace/api-client`.
 
 Layout: `src/app/` (expo-router routes — `_layout.tsx`, `index.tsx`), `src/global.css` (NativeWind
-input), `metro.config.js`, `tailwind.config.js` (v3 + nativewind preset), `babel.config.js`,
-`app.json`, `plugins/withMonorepoRoot.js`, `components.json`.
+input), `__tests__/` (Jest + React Native Testing Library startup/component tests),
+`jest.config.js`, root `.maestro/` flows (Maestro E2E), `metro.config.js`, `tailwind.config.js`
+(v3 + nativewind preset), `babel.config.js`, `app.json`, `plugins/withMonorepoRoot.js`,
+`components.json`.
 
 ## Rules
 
@@ -34,6 +36,8 @@ input), `metro.config.js`, `tailwind.config.js` (v3 + nativewind preset), `babel
   (`react`, `react-dom`, `react-native` in `pnpm-workspace.yaml`) — never introduce a second copy.
   The `react` override exists because `react-native-mmkv` / `react-native-nitro-modules` otherwise
   pull a newer nested React; keep the overrides in lockstep with the catalog versions.
-- `pnpm --filter native start` (Metro); `prebuild` / `android` / `ios` for native builds;
+- `pnpm --filter native start` (Metro); `pnpm --filter native test` (Jest startup/component tests);
+  `pnpm --filter native test:e2e` (Maestro; requires the app installed on an emulator/simulator and
+  the Maestro CLI); `prebuild` / `android` / `ios` for native builds;
   `pnpm --filter native typecheck` before done (lint/format run repo-wide via `pnpm lint` /
   `pnpm format` — Biome from the root, not per-package).

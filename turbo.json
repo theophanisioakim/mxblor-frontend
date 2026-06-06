@@ -16,6 +16,14 @@
     "typecheck": {
       "dependsOn": ["^typecheck"]
     },
+    "test": {
+      "dependsOn": ["^test"],
+      "outputs": []
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
     "generate": {
       "inputs": ["openapi.json", "orval.config.ts"],
       "outputs": ["src/generated/**"]
