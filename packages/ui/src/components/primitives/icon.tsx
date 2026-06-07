@@ -21,6 +21,32 @@ function Icon({ as: As, className, size = 16, ...props }: IconProps) {
   )
 }
 
-export { Check, ChevronDown, Eye, EyeOff, Minus, Search, X } from "lucide-react"
+export {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  ChevronUp,
+  CircleOff,
+  Eye,
+  EyeOff,
+  FileX,
+  Filter,
+  Minus,
+  Pencil,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Save,
+  Search,
+  Trash2,
+  Undo2,
+  X,
+} from "lucide-react"
 export type { IconProps }
 export { Icon }

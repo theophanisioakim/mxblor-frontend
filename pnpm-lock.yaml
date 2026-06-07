@@ -862,6 +862,9 @@ importers:
       '@workspace/native-ui':
         specifier: workspace:*
         version: link:../native-ui
+      '@workspace/storage':
+        specifier: workspace:*
+        version: link:../storage
       '@workspace/web-ui':
         specifier: workspace:*
         version: link:../web-ui

@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
     "@workspace/i18n",
     "@workspace/providers",
     "@workspace/router",
+    "@workspace/storage",
     "@workspace/ui",
     "@workspace/web-ui",
   ],

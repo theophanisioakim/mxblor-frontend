@@ -15,13 +15,34 @@ Layout:
 - `src/components/primitives/<name>.tsx` — **web** variant (wraps `web-ui`)
 - `src/components/primitives/<name>.native.tsx` — **native** variant (wraps `native-ui`)
 - `src/components/form-components/` — react-hook-form field set (see below)
+- `src/components/overlays/` — `RncDialog` + `RncBottomSheet` (web fixed-overlay / native RN `Modal`
+  variants + a shared `*-model.ts`), built from primitives (no vendored dialog/sheet)
+- `src/components/grid-components/` — the cross-platform data grid (`RncGrid`); see below
+- `src/hooks/` — cross-platform hooks: `use-is-mobile` (web `matchMedia` / native
+  `useWindowDimensions`) and `use-container-width` (web `ResizeObserver` / native `onLayout`), each a
+  `.ts`/`.native.ts` pair with a shared types file
 - `src/index.ts` — re-exports every primitive (consumers do `import { Button } from "@workspace/ui"`)
 - `src/lib/utils.ts` — re-exports `cn`; `src/styles/globals.css` — web theme tokens
 
-Current primitives: `Button`, `Text`, `View`, `Input`, `Label`, `Checkbox`, `Switch`, `Spinner`,
-`Icon` (+ the lucide glyphs the form fields use). `Input`/`Checkbox`/`Switch` expose a single
+Current primitives: `Button`, `Text`, `View`, `Pressable`, `Input`, `Label`, `Checkbox`, `Switch`,
+`Spinner`, `Icon` (+ the lucide glyphs consumers use). `Input`/`Checkbox`/`Switch` expose a single
 **React-Native-flavored** contract (`onChangeText`, `secureTextEntry`, `checked: boolean |
-"indeterminate"`, …) that the web variant maps onto the DOM.
+"indeterminate"`, …) that the web variant maps onto the DOM. `Pressable` mirrors RN's `Pressable`
+(`onPress`) so shared composite components (the grid's rows/cells/icon-buttons) can be interactive on
+both platforms from a single file; on web it renders an accessible `<div role="button">` with
+keyboard handling.
+
+### `src/components/grid-components/` — `RncGrid`
+
+A feature-rich, mostly platform-free data grid (sorting, client-side filtering, pagination, selection
++ bulk actions, row actions, modal/inline editing, responsive column collapse with an expandable
+detail row, a toolbar, and mobile bottom-sheet filter/sort). It is composed from `@workspace/ui`
+primitives + the form fields + the overlays, so the sub-components are single `.tsx` files (the
+platform split lives in the primitives/overlays they use). **`ui` must not import
+`@workspace/router`** (router depends on `ui`); the grid's `route`-based edit/add actions call an
+injected `onNavigate?: (href: string) => void` prop that the consumer wires with
+`useRouter().push`. The grid persists its last search to `@workspace/storage`
+(`StorageKeys.GRID_LATEST_SEARCH`).
 
 ### `src/components/form-components/` — react-hook-form field set
 

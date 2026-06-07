@@ -10,6 +10,7 @@
     "@workspace/api-client": "workspace:*",
     "@workspace/i18n": "workspace:*",
     "@workspace/native-ui": "workspace:*",
+    "@workspace/storage": "workspace:*",
     "@workspace/web-ui": "workspace:*",
     "lucide-react": "catalog:",
     "lucide-react-native": "catalog:",

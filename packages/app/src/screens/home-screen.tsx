@@ -23,6 +23,7 @@ export function HomeScreen() {
         <Text>Button</Text>
       </Button>
       <LinkButton href="/forms">View form components</LinkButton>
+      <LinkButton href="/grid">View data grid</LinkButton>
     </View>
   )
 }

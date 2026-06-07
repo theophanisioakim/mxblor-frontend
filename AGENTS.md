@@ -81,7 +81,7 @@ in this repo is the **three-tier UI structure**:
 | `@workspace/providers`         | api-client, i18n, router, storage                     | cross-platform app-shell providers (auth, OTP, menus, breadcrumbs, theme state)       | apps                            |
 | `@workspace/web-ui`            | _(external: shadcn / radix / base-ui)_                | shadcn/ui components — **web only**                                                   | **`@workspace/ui` only**        |
 | `@workspace/native-ui`         | _(external: react-native-reusables / @rn-primitives)_ | rnr components — **native only**                                                      | **`@workspace/ui` only**        |
-| `@workspace/ui`                | web-ui, native-ui, api-client, i18n                   | cross-platform primitives + react-hook-form form fields (`Rnc*`)                      | app, apps                       |
+| `@workspace/ui`                | web-ui, native-ui, api-client, i18n, storage          | cross-platform primitives + form fields (`Rnc*`) + overlays (`RncDialog`, `RncBottomSheet`) + data grid (`RncGrid`) | app, apps                       |
 | `@workspace/router`            | ui (+ peer next / expo-router adapters)               | cross-platform routing API (`Link`, `LinkButton`, `useRouter`) — **no Solito**        | app, apps                       |
 | `@workspace/app`               | ui, router (+ api-client, i18n)                       | shared, cross-platform **screens**                                                    | apps                            |
 | `@workspace/typescript-config` | —                                                     | shared `tsconfig` bases (`base`, `nextjs`, `react-library`)                           | all (dev)                       |
@@ -100,8 +100,11 @@ in this repo is the **three-tier UI structure**:
    from both, re-exported through `packages/ui/src/index.ts`. The two variants must be behaviorally
    equivalent — same business logic wherever the platform allows (§4).
 
-Data/util packages follow the same downward-only flow: `storage` is the leaf; `api-client` and
-`i18n` build on it; `ui` and `app` sit above; `apps` are the top and depend on nobody.
+Data/util packages follow the same downward-only flow: `storage` is the leaf; `api-client`,
+`i18n`, and `ui` build on it; `ui` and `app` sit above; `apps` are the top and depend on nobody.
+Note `ui` must **not** depend on `@workspace/router` (router depends on `ui` — that would invert the
+graph). Components that need navigation (e.g. `RncGrid`'s `route`-based actions) take an injected
+`onNavigate` callback that the consumer wires with `useRouter().push`.
 
 ---
 

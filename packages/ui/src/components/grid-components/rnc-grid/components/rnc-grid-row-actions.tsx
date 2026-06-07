@@ -1,0 +1,133 @@
+import { cn } from "@workspace/ui/lib/utils"
+import { useRncFormContext } from "../../../form-components/rnc-form/rnc-form-context"
+import { Check, Icon, Pencil, Trash2, Undo2, X } from "../../../primitives/icon"
+import { Pressable } from "../../../primitives/pressable"
+import type { PressableEvent } from "../../../primitives/pressable.shared"
+import { useRncGridContext } from "../rnc-grid-context"
+
+const ICON_BTN = "size-[30px] items-center justify-center rounded-md"
+
+function RncGridSaveButton() {
+  const { submit } = useRncFormContext()
+  return (
+    <Pressable
+      className={cn(ICON_BTN, "cursor-pointer hover:bg-green-100")}
+      onPress={() => submit()}
+      aria-label="Save"
+    >
+      <Icon as={Check} size={16} className="text-green-600" />
+    </Pressable>
+  )
+}
+
+export function RncGridRowActions<T>({
+  row,
+  rowIndex,
+  editing,
+}: Readonly<{ row: T; rowIndex: number; editing: boolean }>) {
+  const {
+    hasActions,
+    hasOverflow,
+    actionsWidth,
+    rowClickable,
+    addEditMode,
+    inlineEdit,
+    actions,
+    handleEditPress,
+    handleDeletePress,
+    cancelEditingRow,
+    keyExtractor,
+    isRowDirty,
+    discardRow,
+  } = useRncGridContext()
+
+  const isEditAll = addEditMode === "inline" && inlineEdit?.mode === "all"
+  if (!hasActions && !isEditAll) return null
+  if (hasOverflow && !isEditAll) return null
+
+  const stopPress = rowClickable
+    ? (e?: PressableEvent) => e?.stopPropagation?.()
+    : undefined
+  const key = keyExtractor(row, rowIndex)
+
+  // In mode 'all', show per-row discard when dirty
+  if (isEditAll) {
+    const dirty = isRowDirty(key)
+    return (
+      <Pressable
+        className="flex-row items-center gap-1"
+        style={{ width: actionsWidth || 40 }}
+        onPress={stopPress}
+      >
+        {dirty && (
+          <Pressable
+            className={cn(ICON_BTN, "cursor-pointer hover:bg-accent")}
+            onPress={() => discardRow(key)}
+            aria-label="Discard"
+          >
+            <Icon as={Undo2} size={16} className="text-muted-foreground" />
+          </Pressable>
+        )}
+      </Pressable>
+    )
+  }
+
+  if (!hasActions) return null
+
+  // In mode 'row', show save/cancel when editing
+  if (editing && addEditMode === "inline") {
+    return (
+      <Pressable
+        className="flex-row items-center gap-1"
+        style={{ width: actionsWidth }}
+        onPress={stopPress}
+      >
+        <RncGridSaveButton />
+        <Pressable
+          className={cn(ICON_BTN, "cursor-pointer hover:bg-accent")}
+          onPress={() => cancelEditingRow(row, rowIndex)}
+          aria-label="Cancel"
+        >
+          <Icon as={X} size={16} className="text-muted-foreground" />
+        </Pressable>
+      </Pressable>
+    )
+  }
+
+  return (
+    <Pressable
+      className="flex-row items-center gap-1"
+      style={{ width: actionsWidth }}
+      onPress={stopPress}
+    >
+      {actions?.edit && (
+        <Pressable
+          className={cn(ICON_BTN, "cursor-pointer hover:bg-accent")}
+          onPress={() => handleEditPress(row)}
+          aria-label="Edit"
+        >
+          <Icon as={Pencil} size={16} className="text-muted-foreground" />
+        </Pressable>
+      )}
+      {actions?.delete && (
+        <Pressable
+          className={cn(ICON_BTN, "cursor-pointer hover:bg-red-100")}
+          onPress={() => handleDeletePress(row)}
+          aria-label="Delete"
+        >
+          <Icon as={Trash2} size={16} className="text-red-600" />
+        </Pressable>
+      )}
+      {actions?.custom?.map((action) => (
+        <Pressable
+          key={action.key}
+          className="size-9 cursor-pointer items-center justify-center rounded-md hover:bg-accent"
+          onPress={() => action.onPress(row)}
+          aria-label={action.label}
+        >
+          {action.icon}
+        </Pressable>
+      ))}
+    </Pressable>
+  )
+}
