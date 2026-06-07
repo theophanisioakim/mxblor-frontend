@@ -82,6 +82,7 @@ catalog:
   'i18next': "^26.3.1"
   'react-i18next': "^17.0.8"
   'intl-pluralrules': "^2.0.1"
+  'react-hook-form': "^7.54.2"
   # Expo SDK 55 (native app)
   'expo': "~55.0.26"
   'expo-constants': "~55.0.16"

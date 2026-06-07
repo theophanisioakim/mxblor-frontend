@@ -8,10 +8,14 @@
   },
   "dependencies": {
     "@workspace/api-client": "workspace:*",
+    "@workspace/i18n": "workspace:*",
     "@workspace/native-ui": "workspace:*",
     "@workspace/web-ui": "workspace:*",
+    "lucide-react": "catalog:",
+    "lucide-react-native": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "react-hook-form": "catalog:"
   },
   "peerDependencies": {
     "nativewind": "catalog:",

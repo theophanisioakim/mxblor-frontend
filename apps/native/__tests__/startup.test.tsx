@@ -1,7 +1,11 @@
 import { describe, expect, it, jest } from "@jest/globals"
 import { render } from "@testing-library/react-native"
+import type React from "react"
+import RootLayout from "../src/app/_layout"
+import Index from "../src/app/index"
 
 jest.mock("expo-router", () => ({
+  Link: ({ children }: { children: React.ReactNode }) => children,
   Stack: () => {
     const { View } = require("react-native")
     return <View testID="expo-router-stack" />
@@ -14,9 +18,6 @@ jest.mock("@rn-primitives/portal", () => ({
     return <View testID="portal-host" />
   },
 }))
-
-import RootLayout from "../src/app/_layout"
-import Index from "../src/app/index"
 
 describe("native startup", () => {
   it("mounts the Expo Router root layout", async () => {

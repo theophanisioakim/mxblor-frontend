@@ -1,4 +1,6 @@
 import { HomeScreen } from "@workspace/app"
+import { Button, Text } from "@workspace/ui"
+import { Link } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 /**
@@ -10,7 +12,15 @@ import { SafeAreaView } from "react-native-safe-area-context"
 export default function Index() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <HomeScreen />
+      <HomeScreen
+        footer={
+          <Link href="/forms" asChild>
+            <Button variant="outline">
+              <Text>View form components</Text>
+            </Button>
+          </Link>
+        }
+      />
     </SafeAreaView>
   )
 }

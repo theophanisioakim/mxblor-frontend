@@ -26,5 +26,10 @@
     "minDate": "Date must be after {{minDate}}",
     "maxDate": "Date must be before {{maxDate}}",
     "disabledDate": "This date is not available"
+  },
+  "select": {
+    "search": "Search...",
+    "noOptions": "No options found",
+    "selectAll": "Select All"
   }
 }

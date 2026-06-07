@@ -12,10 +12,27 @@ only package allowed to import `web-ui` / `native-ui`.**
 
 Layout:
 
-- `src/components/<name>.tsx` — **web** variant (wraps `web-ui`)
-- `src/components/<name>.native.tsx` — **native** variant (wraps `native-ui`)
+- `src/components/primitives/<name>.tsx` — **web** variant (wraps `web-ui`)
+- `src/components/primitives/<name>.native.tsx` — **native** variant (wraps `native-ui`)
+- `src/components/form-components/` — react-hook-form field set (see below)
 - `src/index.ts` — re-exports every primitive (consumers do `import { Button } from "@workspace/ui"`)
 - `src/lib/utils.ts` — re-exports `cn`; `src/styles/globals.css` — web theme tokens
+
+Current primitives: `Button`, `Text`, `View`, `Input`, `Label`, `Checkbox`, `Switch`, `Spinner`,
+`Icon` (+ the lucide glyphs the form fields use). `Input`/`Checkbox`/`Switch` expose a single
+**React-Native-flavored** contract (`onChangeText`, `secureTextEntry`, `checked: boolean |
+"indeterminate"`, …) that the web variant maps onto the DOM.
+
+### `src/components/form-components/` — react-hook-form field set
+
+A self-contained module of RHF-powered form fields (`RncInput`, `RncCheckbox`, `RncSwitch`,
+`RncSelect`, `RncDateTimeField`, `RncFormWrapper`, `RncSubmitButton`). Each field follows a 3-layer
+pattern: a `Controller` wrapper, a `useX` validation/defaults hook, and a presentational `Render`
+that consumes only `@workspace/ui` primitives — so most renders are platform-free. `RncSelect` and
+`RncDateTimeField` keep a `.tsx`/`.native.tsx` render split (web dropdown vs. native bottom-sheet;
+HTML date input vs. text input). Because these fields live **inside** `packages/ui`, owning the
+`react-hook-form` + `@workspace/i18n` dependency here is intentional (it adds a `ui → i18n` edge;
+root `AGENTS.md` §2). Validation messages use `common:validations.*` keys.
 
 ## ⛔ The synchronized-pair contract (mandatory)
 
@@ -33,8 +50,8 @@ Every exported primitive **must** ship both variants and stay in sync:
 4. **Theme-token Tailwind classes** that are valid in both Tailwind v4 (web) and NativeWind/Tailwind
    v3 (native): `bg-primary`, `text-foreground`, `border-border`, etc.
 
-Canonical examples: `button.tsx` / `button.native.tsx`, `text.tsx` / `text.native.tsx`,
-`view.tsx` / `view.native.tsx`.
+Canonical examples (all under `src/components/primitives/`): `button.tsx` / `button.native.tsx`,
+`text.tsx` / `text.native.tsx`, `view.tsx` / `view.native.tsx`.
 
 ## Customizing vendored components
 
