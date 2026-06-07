@@ -1,33 +1,33 @@
-export { RncCheckbox } from "./components/form-components/RncCheckbox/RncCheckbox"
+export { RncCheckbox } from "./components/form-components/rnc-checkbox/rnc-checkbox"
 export type {
   RncCheckboxProps,
   RncCheckboxValue,
-} from "./components/form-components/RncCheckbox/RncCheckboxModel"
-export { RncDateTimeField } from "./components/form-components/RncDateTimeField/RncDateTimeField"
+} from "./components/form-components/rnc-checkbox/rnc-checkbox-model"
+export { RncDateTimeField } from "./components/form-components/rnc-date-time-field/rnc-date-time-field"
 export type {
   RncDateTimeFieldProps,
   RncDateTimeFieldType,
-} from "./components/form-components/RncDateTimeField/RncDateTimeFieldModel"
-export { RncForm } from "./components/form-components/RncForm/RncForm"
-export type { RncFormContextValue } from "./components/form-components/RncForm/RncFormContext"
-export { useRncFormContext } from "./components/form-components/RncForm/RncFormContext"
-export type { RncFormProps } from "./components/form-components/RncForm/RncFormModel"
-export { RncInput } from "./components/form-components/RncInput/RncInput"
-export type { RncInputProps } from "./components/form-components/RncInput/RncInputModel"
-export { RncSelect } from "./components/form-components/RncSelect/RncSelect"
+} from "./components/form-components/rnc-date-time-field/rnc-date-time-field-model"
+export { RncForm } from "./components/form-components/rnc-form/rnc-form"
+export type { RncFormContextValue } from "./components/form-components/rnc-form/rnc-form-context"
+export { useRncFormContext } from "./components/form-components/rnc-form/rnc-form-context"
+export type { RncFormProps } from "./components/form-components/rnc-form/rnc-form-model"
+export { RncInput } from "./components/form-components/rnc-input/rnc-input"
+export type { RncInputProps } from "./components/form-components/rnc-input/rnc-input-model"
+export { RncSelect } from "./components/form-components/rnc-select/rnc-select"
 export type {
   RncSelectOption,
   RncSelectProps,
-} from "./components/form-components/RncSelect/RncSelectModel"
+} from "./components/form-components/rnc-select/rnc-select-model"
 export {
   RncSubmitButton,
   type SubmitButtonProps,
-} from "./components/form-components/RncSubmitButton"
-export { RncSwitch } from "./components/form-components/RncSwitch/RncSwitch"
+} from "./components/form-components/rnc-submit-button"
+export { RncSwitch } from "./components/form-components/rnc-switch/rnc-switch"
 export type {
   RncSwitchProps,
   RncSwitchValue,
-} from "./components/form-components/RncSwitch/RncSwitchModel"
+} from "./components/form-components/rnc-switch/rnc-switch-model"
 export type { ButtonProps } from "./components/primitives/button"
 export { Button, buttonVariants } from "./components/primitives/button"
 export type {

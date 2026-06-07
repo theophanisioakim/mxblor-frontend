@@ -26,7 +26,9 @@ Current primitives: `Button`, `Text`, `View`, `Input`, `Label`, `Checkbox`, `Swi
 ### `src/components/form-components/` — react-hook-form field set
 
 A self-contained module of RHF-powered form fields (`RncInput`, `RncCheckbox`, `RncSwitch`,
-`RncSelect`, `RncDateTimeField`, `RncFormWrapper`, `RncSubmitButton`). Each field follows a 3-layer
+`RncSelect`, `RncDateTimeField`, `RncForm`, `RncSubmitButton`). Keep file and folder names
+lowercase/kebab-case (`rnc-input/rnc-input.tsx`, `use-rnc-input.tsx`, etc.) while preserving the
+exported `Rnc*` / `useRnc*` symbols. Each field follows a 3-layer
 pattern: a `Controller` wrapper, a `useX` validation/defaults hook, and a presentational `Render`
 that consumes only `@workspace/ui` primitives — so most renders are platform-free. `RncSelect` and
 `RncDateTimeField` keep a `.tsx`/`.native.tsx` render split (web dropdown vs. native bottom-sheet;
