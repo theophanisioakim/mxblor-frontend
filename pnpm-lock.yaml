@@ -347,12 +347,12 @@ importers:
       '@react-navigation/native':
         specifier: 'catalog:'
         version: 7.2.5(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.0))(react@19.2.0)
-      '@rn-primitives/portal':
-        specifier: 'catalog:'
-        version: 1.4.0(@types/react@19.2.15)(immer@11.1.8)(react-native-web@0.21.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
       '@workspace/app':
         specifier: workspace:*
         version: link:../../packages/app
+      '@workspace/providers':
+        specifier: workspace:*
+        version: link:../../packages/providers
       '@workspace/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -477,6 +477,9 @@ importers:
       '@workspace/app':
         specifier: workspace:*
         version: link:../../packages/app
+      '@workspace/providers':
+        specifier: workspace:*
+        version: link:../../packages/providers
       '@workspace/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -599,7 +602,7 @@ importers:
         version: 19.2.0
       react-i18next:
         specifier: 'catalog:'
-        version: 17.0.8(i18next@26.3.1(typescript@5.9.3))(react@19.2.0)(typescript@5.9.3)
+        version: 17.0.8(i18next@26.3.1(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
     devDependencies:
       '@biomejs/biome':
         specifier: 'catalog:'
@@ -737,6 +740,58 @@ importers:
       tailwindcss-animate:
         specifier: 'catalog:'
         version: 1.0.7(tailwindcss@3.4.19(yaml@2.9.0))
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  packages/providers:
+    dependencies:
+      '@react-navigation/native':
+        specifier: 'catalog:'
+        version: 7.2.5(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.0))(react@19.2.0)
+      '@rn-primitives/portal':
+        specifier: 'catalog:'
+        version: 1.4.0(@types/react@19.2.15)(immer@11.1.8)(react-native-web@0.21.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
+      '@workspace/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+      '@workspace/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      '@workspace/router':
+        specifier: workspace:*
+        version: link:../router
+      '@workspace/storage':
+        specifier: workspace:*
+        version: link:../storage
+      axios:
+        specifier: 'catalog:'
+        version: 1.17.0
+      next-themes:
+        specifier: 'catalog:'
+        version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      react:
+        specifier: 19.2.0
+        version: 19.2.0
+      react-i18next:
+        specifier: 'catalog:'
+        version: 17.0.8(i18next@26.3.1(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+      react-native-safe-area-context:
+        specifier: 'catalog:'
+        version: 5.6.2(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.0))(react@19.2.0)
+    devDependencies:
+      '@biomejs/biome':
+        specifier: 'catalog:'
+        version: 2.4.16
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.15
+      '@workspace/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      react-native:
+        specifier: 0.83.6
+        version: 0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.0)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -15611,7 +15666,7 @@ snapshots:
     dependencies:
       react: 19.2.0
 
-  react-i18next@17.0.8(i18next@26.3.1(typescript@5.9.3))(react@19.2.0)(typescript@5.9.3):
+  react-i18next@17.0.8(i18next@26.3.1(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.0))(react@19.2.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       html-parse-stringify: 3.0.1
@@ -15619,6 +15674,8 @@ snapshots:
       react: 19.2.0
       use-sync-external-store: 1.6.0(react@19.2.0)
     optionalDependencies:
+      react-dom: 19.2.0(react@19.2.0)
+      react-native: 0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.0)
       typescript: 5.9.3
 
   react-is@16.13.1: {}

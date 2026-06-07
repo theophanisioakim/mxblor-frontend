@@ -11,8 +11,9 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v55.0.0/ before 
 ## What this is
 
 The native consumer (Expo SDK 55, RN 0.83 **New Architecture**, expo-router, NativeWind v4). It
-renders the same shared screens from `@workspace/app`; UI comes through `@workspace/ui`; data through
-`@workspace/api-client`.
+renders the same shared screens from `@workspace/app`; UI comes through `@workspace/ui`; data
+through `@workspace/api-client`; app-shell provider composition comes through
+`@workspace/providers`.
 
 Layout: `src/app/` (expo-router routes — `_layout.tsx`, `index.tsx`), `src/global.css` (NativeWind
 input), `__tests__/` (Jest + React Native Testing Library startup/component tests),
@@ -25,16 +26,18 @@ input), `__tests__/` (Jest + React Native Testing Library startup/component test
 - **Consume UI via `@workspace/ui`**, screens via `@workspace/app`, and shared navigation via
   `@workspace/router`. Do **not** import `@workspace/native-ui` directly (root `AGENTS.md` §2 rule
   1).
+- Root provider composition comes from `@workspace/providers` via `src/app/_layout.tsx`. Keep shared
+  cross-platform providers there; keep only truly native-only shell providers in this app.
 - Shared screens should not import `expo-router`; use `@workspace/router`. App-local route/layout
   files can still use Expo Router primitives for native-only shell behavior, such as `Stack`.
-  - **Cleanup:** `package.json` currently lists `@workspace/native-ui` as a dependency but nothing
-    imports it — only `@rn-primitives/portal` (`PortalHost`, required by rnr overlay components) is
-    used. Remove the unused `@workspace/native-ui` dependency.
+  - Native overlay hosting is provided by `@workspace/providers`, which owns the
+    `@rn-primitives/portal` dependency for `PortalHost`.
 - **Metro monorepo setup** (`metro.config.js`) watches the workspace root and uses
   `nodeLinker: hoisted` (set in `pnpm-workspace.yaml`) — required for the RN New-Arch C++ build on
   Windows path-length limits. Don't undo it.
 - **Tailwind content globs** in `tailwind.config.js` must include any new workspace package whose
-  classes need compiling (currently `ui`, `native-ui`, `app`). NativeWind input is `src/global.css`.
+  classes need compiling (currently `ui`, `native-ui`, `app`, `providers`). NativeWind input is
+  `src/global.css`.
 - A single React / React Native version is enforced via the catalog + `overrides`
   (`react`, `react-dom`, `react-native` in `pnpm-workspace.yaml`) — never introduce a second copy.
   The `react` override exists because `react-native-mmkv` / `react-native-nitro-modules` otherwise

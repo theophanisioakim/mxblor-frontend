@@ -10,8 +10,8 @@
 The web consumer (App Router, React 19, Tailwind v4). It renders the shared screens from
 `@workspace/app`; UI comes through `@workspace/ui`; data through `@workspace/api-client`.
 
-Layout: `app/` (routes, `layout.tsx`, `page.tsx`), `components/` (app-local providers —
-`query-provider`, `theme-provider`), `e2e/` (Playwright browser E2E), `playwright.config.ts`,
+Layout: `app/` (routes, `layout.tsx`, `page.tsx`), `components/` (web-only local components),
+`e2e/` (Playwright browser E2E), `playwright.config.ts`,
 `next.config.ts`, `components.json` (shadcn aliases pointing at `@workspace/ui`),
 `postcss.config.mjs`.
 
@@ -19,6 +19,8 @@ Layout: `app/` (routes, `layout.tsx`, `page.tsx`), `components/` (app-local prov
 
 - **Consume UI via `@workspace/ui`**, screens via `@workspace/app`, and shared navigation via
   `@workspace/router` — don't import `@workspace/web-ui` directly (root `AGENTS.md` §2 rule 1).
+- Root provider composition comes from `@workspace/providers` via `app/layout.tsx`. Keep shared
+  cross-platform providers there; keep only truly web-only shell providers in this app.
 - Shared screens should not import `next/link` or `next/navigation`; use `@workspace/router`.
   App-local route files can still use Next router APIs for web-only shell behavior.
 - **`transpilePackages`** in `next.config.ts` must list every `@workspace/*` package the app pulls in

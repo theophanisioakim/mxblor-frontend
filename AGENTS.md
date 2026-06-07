@@ -63,6 +63,7 @@ in this repo is the **three-tier UI structure**:
    └───────────────┬──────────────────────────┬───────────────┘
                    │                           │
             @workspace/app  ──────────────────┘   ← shared screens (write once)
+            @workspace/providers                 ← shared app-shell providers
                    │
             @workspace/ui   ← cross-platform ABSTRACTION LAYER (the only public UI API)
               ┌────┴─────┐
@@ -77,14 +78,15 @@ in this repo is the **three-tier UI structure**:
 | `@workspace/storage`           | _(none)_                                              | typed local/session storage — web: Web Storage + cookies; native: MMKV (`.native.ts`) | api-client, i18n, ui, app, apps |
 | `@workspace/i18n`              | storage                                               | i18next setup, type-safe `useTranslation`, locale JSON                                | ui, app, apps                   |
 | `@workspace/api-client`        | storage                                               | **Orval-generated** React Query hooks + axios instance + query provider               | ui, app, apps                   |
+| `@workspace/providers`         | api-client, i18n, router, storage                     | cross-platform app-shell providers (auth, OTP, menus, breadcrumbs, theme state)       | apps                            |
 | `@workspace/web-ui`            | _(external: shadcn / radix / base-ui)_                | shadcn/ui components — **web only**                                                   | **`@workspace/ui` only**        |
 | `@workspace/native-ui`         | _(external: react-native-reusables / @rn-primitives)_ | rnr components — **native only**                                                      | **`@workspace/ui` only**        |
 | `@workspace/ui`                | web-ui, native-ui, api-client, i18n                   | cross-platform primitives + react-hook-form form fields (`Rnc*`)                      | app, apps                       |
 | `@workspace/router`            | ui (+ peer next / expo-router adapters)               | cross-platform routing API (`Link`, `LinkButton`, `useRouter`) — **no Solito**        | app, apps                       |
 | `@workspace/app`               | ui, router (+ api-client, i18n)                       | shared, cross-platform **screens**                                                    | apps                            |
 | `@workspace/typescript-config` | —                                                     | shared `tsconfig` bases (`base`, `nextjs`, `react-library`)                           | all (dev)                       |
-| `apps/web`                     | app, ui, api-client                                   | Next.js app (transpiles the `@workspace/*` source it pulls in)                        | _(top)_                         |
-| `apps/native`                  | app, ui, api-client                                   | Expo app (Metro resolves workspace source directly)                                   | _(top)_                         |
+| `apps/web`                     | app, providers, ui, api-client                        | Next.js app (transpiles the `@workspace/*` source it pulls in)                        | _(top)_                         |
+| `apps/native`                  | app, providers, ui, api-client                        | Expo app (Metro resolves workspace source directly)                                   | _(top)_                         |
 
 ### ⛔ The two non-negotiable boundary rules
 
@@ -253,11 +255,8 @@ canonical pattern. Rules when adding or changing a `ui` primitive:
   classes need compiling.
 - **Single React / React Native version.** Enforced via the catalog + `overrides.react-native` in
   `pnpm-workspace.yaml`. Don't introduce a second copy.
-- **Known boundary exception to fix (see §2 rule 1):** `apps/native` currently declares
-  `@workspace/native-ui` as a dependency but only imports `@rn-primitives/portal` (the `PortalHost`
-  that rnr overlays require). The `native-ui` dependency is unused and should be removed so the
-  "private to `ui`" rule holds cleanly. `@rn-primitives/portal` is a primitive, not `native-ui`, so
-  that import is fine.
+- `@rn-primitives/portal` is used by `@workspace/providers` for the native `PortalHost` that rnr
+  overlays require. Apps should not import `@workspace/native-ui` directly.
 
 ---
 
@@ -334,6 +333,7 @@ react-mono-core/
     ├── web-ui/         ← shadcn/ui components — VENDORED, private to `ui`        (AGENTS.md)
     ├── native-ui/      ← react-native-reusables — VENDORED, private to `ui`      (AGENTS.md)
     ├── app/            ← shared cross-platform screens                          (AGENTS.md)
+    ├── providers/      ← shared cross-platform app-shell providers              (AGENTS.md)
     ├── api-client/     ← Orval-generated React Query hooks + axios              (AGENTS.md)
     ├── storage/        ← typed storage (web Storage/cookies, native MMKV)       (AGENTS.md)
     ├── i18n/           ← i18next setup + locales                                (AGENTS.md)

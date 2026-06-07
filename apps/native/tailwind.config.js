@@ -6,6 +6,7 @@ module.exports = {
     "../../packages/ui/src/**/*.{ts,tsx}",
     "../../packages/native-ui/src/**/*.{ts,tsx}",
     "../../packages/app/src/**/*.{ts,tsx}",
+    "../../packages/providers/src/**/*.{ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
   theme: {

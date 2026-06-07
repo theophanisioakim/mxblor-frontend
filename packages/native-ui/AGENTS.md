@@ -14,9 +14,8 @@ unstyled primitives. `Text` exposes `TextClassContext` so wrappers (e.g. `Button
 
 - **Private to `@workspace/ui`.** Nothing outside `packages/ui` may import `@workspace/native-ui`.
   Screens and the native app consume the native variant **only** through `@workspace/ui`.
-- **Known cleanup:** `apps/native` declares `@workspace/native-ui` as a dependency but doesn't import
-  it (it only uses `@rn-primitives/portal`'s `PortalHost`). Remove that unused dependency so the
-  boundary holds. See root `AGENTS.md` §6.
+- Native overlay hosting is owned by `@workspace/providers`, which imports
+  `@rn-primitives/portal` for `PortalHost`. Do not add `@workspace/native-ui` as an app dependency.
 
 ## ⚠️ This is vendored / CLI-managed — don't edit unless absolutely necessary
 

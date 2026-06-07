@@ -1,0 +1,41 @@
+{
+  "name": "@workspace/providers",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-navigation/native": "catalog:",
+    "@rn-primitives/portal": "catalog:",
+    "@workspace/api-client": "workspace:*",
+    "@workspace/i18n": "workspace:*",
+    "@workspace/router": "workspace:*",
+    "@workspace/storage": "workspace:*",
+    "axios": "catalog:",
+    "next-themes": "catalog:",
+    "react": "catalog:",
+    "react-i18next": "catalog:",
+    "react-native-safe-area-context": "catalog:"
+  },
+  "peerDependencies": {
+    "react-native": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/react": "catalog:",
+    "@workspace/typescript-config": "workspace:*",
+    "react-native": "catalog:",
+    "typescript": "catalog:"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

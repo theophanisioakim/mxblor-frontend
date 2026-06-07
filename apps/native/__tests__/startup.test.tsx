@@ -10,6 +10,21 @@ jest.mock("expo-router", () => ({
     const { View } = require("react-native")
     return <View testID="expo-router-stack" />
   },
+  useLocalSearchParams: () => ({}),
+  usePathname: () => "/",
+  useRouter: () => ({
+    back: jest.fn(),
+    canGoBack: jest.fn(() => false),
+    dismiss: jest.fn(),
+    dismissAll: jest.fn(),
+    dismissTo: jest.fn(),
+    navigate: jest.fn(),
+    prefetch: jest.fn(),
+    push: jest.fn(),
+    reload: jest.fn(),
+    replace: jest.fn(),
+    setParams: jest.fn(),
+  }),
 }))
 
 jest.mock("@rn-primitives/portal", () => ({

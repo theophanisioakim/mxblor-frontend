@@ -1,9 +1,8 @@
 import { Geist_Mono, Inter } from "next/font/google"
 
 import "@workspace/ui/globals.css"
+import { AppProviders } from "@workspace/providers"
 import { cn } from "@workspace/ui/lib/utils"
-import { QueryProvider } from "@/components/query-provider"
-import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -29,9 +28,7 @@ export default function RootLayout({
       )}
     >
       <body>
-        <ThemeProvider>
-          <QueryProvider>{children}</QueryProvider>
-        </ThemeProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   )

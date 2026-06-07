@@ -10,6 +10,18 @@ module.exports = {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@workspace/app$": "<rootDir>/../../packages/app/src/index.ts",
     "^@workspace/app/(.*)$": "<rootDir>/../../packages/app/src/$1",
+    "^@workspace/api-client$":
+      "<rootDir>/../../packages/api-client/src/index.ts",
+    "^@workspace/api-client/(.*)$":
+      "<rootDir>/../../packages/api-client/src/$1",
+    "^@workspace/i18n$": "<rootDir>/../../packages/i18n/src/index.ts",
+    "^@workspace/i18n/(.*)$": "<rootDir>/../../packages/i18n/src/$1",
+    "^@workspace/providers$": "<rootDir>/../../packages/providers/src/index.ts",
+    "^@workspace/providers/(.*)$": "<rootDir>/../../packages/providers/src/$1",
+    "^@workspace/router$": "<rootDir>/../../packages/router/src/index.ts",
+    "^@workspace/router/(.*)$": "<rootDir>/../../packages/router/src/$1",
+    "^@workspace/storage$": "<rootDir>/../../packages/storage/src/index.ts",
+    "^@workspace/storage/(.*)$": "<rootDir>/../../packages/storage/src/$1",
     "^@workspace/ui$": "<rootDir>/../../packages/ui/src/index.ts",
     "^@workspace/ui/(.*)$": "<rootDir>/../../packages/ui/src/$1",
     "^@workspace/native-ui/(.*)$": "<rootDir>/../../packages/native-ui/src/$1",

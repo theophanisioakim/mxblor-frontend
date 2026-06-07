@@ -1,0 +1,20 @@
+{
+  "extends": "@workspace/typescript-config/react-library.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@workspace/api-client": ["../api-client/src/index.ts"],
+      "@workspace/api-client/*": ["../api-client/src/*"],
+      "@workspace/i18n": ["../i18n/src/index.ts"],
+      "@workspace/i18n/*": ["../i18n/src/*"],
+      "@workspace/providers/*": ["./src/*"],
+      "@workspace/router": ["../router/src/index.ts"],
+      "@workspace/router/*": ["../router/src/*"],
+      "@workspace/storage": ["../storage/src/index.ts"],
+      "@workspace/storage/*": ["../storage/src/*"]
+    }
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}
