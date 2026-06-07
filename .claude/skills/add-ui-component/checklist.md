@@ -7,6 +7,10 @@ Use for every primitive added to or changed in `@workspace/ui`.
 - [ ] `packages/ui/src/components/<name>.tsx` exists (web variant).
 - [ ] `packages/ui/src/components/<name>.native.tsx` exists (native variant).
 - [ ] Both are registered in `packages/ui/src/index.ts` (component + helpers + `export type`).
+- [ ] If the component declares its own prop type, a `<name>.shared.ts` (or `.shared.tsx`) exists and
+      both variants import the prop type from it — it is not duplicated.
+- [ ] Any business logic (state, derived values, event handlers) that doesn't call platform APIs is
+      extracted into the shared file or a `use-<name>.shared.ts` hook.
 
 ## Boundary
 
@@ -22,6 +26,8 @@ Use for every primitive added to or changed in `@workspace/ui`.
       and documented.
 - [ ] Same `export type` names (prop types) from both.
 - [ ] Prop names and their meaning match across variants (type _source_ may differ per platform).
+- [ ] Every component function accepts props as `Readonly<T>` — e.g.
+      `export function Button(props: Readonly<ButtonProps>)` — in both the web and native variants.
 
 ## Behavior parity
 

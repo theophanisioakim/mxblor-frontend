@@ -38,6 +38,13 @@ Mirror the existing `button.tsx` / `button.native.tsx`:
 - **Same business logic** wherever the platform allows; only DOM-vs-`Pressable`-style irreducible
   differences may diverge.
 - **Theme-token Tailwind classes** valid on both Tailwind v4 (web) and NativeWind v3 (native).
+- **Shared props file** — if the component declares its own prop type, define it once in
+  `<name>.shared.ts` (or `.shared.tsx`) and import it from both variants. Never copy-paste the type.
+- **All component functions must accept `Readonly<Props>`** — wrap the props parameter with the
+  `Readonly<>` utility in every component function signature, in both variants. Example:
+  `export function Button(props: Readonly<ButtonProps>)`.
+- **Shared logic** — any state, derived values, or event handlers that don't call platform APIs must
+  live in the shared file or a `use-<name>.shared.ts` hook, not be duplicated across variants.
 
 ### Finish
 

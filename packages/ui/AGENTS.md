@@ -55,6 +55,26 @@ Every exported primitive **must** ship both variants and stay in sync:
 Canonical examples (all under `src/components/primitives/`): `button.tsx` / `button.native.tsx`,
 `text.tsx` / `text.native.tsx`, `view.tsx` / `view.native.tsx`.
 
+### Shared props and shared logic (mandatory)
+
+When a primitive has its own prop type, **define it once** in a shared file so both platform variants
+reference the same source of truth:
+
+- **Shared props file:** `src/components/primitives/<name>.shared.ts` (or `.shared.tsx` if it
+  imports React). Export the props type (and any helper types/constants that do not touch
+  platform-specific APIs) from this file. Both `<name>.tsx` and `<name>.native.tsx` import from it.
+- **All component functions must accept props as `Readonly<T>`** — wrap the props parameter type
+  with the built-in `Readonly<>` utility, e.g.
+  `export function Button(props: Readonly<ButtonProps>)`. This applies to every component function
+  in both the web and native variants.
+- **Extract shared logic** (state machines, validation helpers, derived values, event handlers that
+  do not call platform APIs) into the shared file or a dedicated `use-<name>.shared.ts` hook so the
+  behavior is written once and tested once, not duplicated across variants.
+
+If a component genuinely has no custom props beyond what the underlying `web-ui`/`native-ui`
+component already exports, a shared file is not required — but the readonly rule still applies to any
+type you declare.
+
 ## Customizing vendored components
 
 When a shadcn/rnr component needs different behavior or styling, do it **here** (wrap, compose,

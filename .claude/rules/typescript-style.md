@@ -16,6 +16,9 @@ own rules.
 - **TypeScript:** `strict`, `noUncheckedIndexedAccess`, `isolatedModules`, NodeNext resolution. Don't
   introduce `any` on code you touch; type the public surface of shared packages (they ship `.ts`
   source via `exports`).
+- **Readonly props:** All component functions must wrap their props parameter type with
+  `Readonly<T>` — e.g. `export function Card(props: Readonly<CardProps>)`. This prevents
+  accidental mutation and makes immutability explicit at the call site.
 - **Imports:** use package entrypoints / `exports` subpaths (`@workspace/ui`,
   `@workspace/web-ui/components/...`); never reach into another package's `src` by relative path.
 - **Versions:** reference `"catalog:"` (or `"catalog:tailwind3"`) in `package.json` — versions live

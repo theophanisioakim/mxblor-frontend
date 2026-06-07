@@ -22,5 +22,15 @@ When you add or change a primitive:
    (native): `bg-primary`, `text-foreground`, `border-border`, …
 6. **Customize here, not in the vendored source.** Changes to a shadcn/rnr component's behavior or
    styling belong in this wrapper, never in `web-ui`/`native-ui` (which get overwritten).
+7. **Shared props and shared logic.** When a primitive declares its own prop type, define it once in
+   `<name>.shared.ts` (or `.shared.tsx`) and import it from both variants — never duplicate the type.
+   Shared state, derived values, and event handlers that don't touch platform APIs also belong in the
+   shared file or a `use-<name>.shared.ts` hook.
+8. **Props parameter must use `Readonly<T>`.** Every component function must wrap its props type
+   with the built-in `Readonly<>` utility in the function signature. Example:
+   ```ts
+   export function Button(props: Readonly<ButtonProps>) { … }
+   ```
+   This applies to both the web and native variants.
 
 Follow `button.tsx` / `button.native.tsx` as the canonical pattern.
