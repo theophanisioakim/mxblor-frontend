@@ -1,6 +1,11 @@
-import { describe, expect, it } from "@jest/globals"
+import { describe, expect, it, jest } from "@jest/globals"
 import { render } from "@testing-library/react-native"
 import { HomeScreen } from "@workspace/app"
+import type React from "react"
+
+jest.mock("expo-router", () => ({
+  Link: ({ children }: { children: React.ReactNode }) => children,
+}))
 
 describe("HomeScreen", () => {
   it("renders the shared app copy", async () => {
@@ -16,5 +21,11 @@ describe("HomeScreen", () => {
     const { getByText } = await render(<HomeScreen />)
 
     expect(getByText("Button")).toBeTruthy()
+  })
+
+  it("renders the shared navigation label", async () => {
+    const { getByText } = await render(<HomeScreen />)
+
+    expect(getByText("View form components")).toBeTruthy()
   })
 })

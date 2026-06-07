@@ -22,8 +22,11 @@ input), `__tests__/` (Jest + React Native Testing Library startup/component test
 
 ## Rules
 
-- **Consume UI via `@workspace/ui`**, screens via `@workspace/app`. Do **not** import
-  `@workspace/native-ui` directly (root `AGENTS.md` §2 rule 1).
+- **Consume UI via `@workspace/ui`**, screens via `@workspace/app`, and shared navigation via
+  `@workspace/router`. Do **not** import `@workspace/native-ui` directly (root `AGENTS.md` §2 rule
+  1).
+- Shared screens should not import `expo-router`; use `@workspace/router`. App-local route/layout
+  files can still use Expo Router primitives for native-only shell behavior, such as `Stack`.
   - **Cleanup:** `package.json` currently lists `@workspace/native-ui` as a dependency but nothing
     imports it — only `@rn-primitives/portal` (`PortalHost`, required by rnr overlay components) is
     used. Remove the unused `@workspace/native-ui` dependency.

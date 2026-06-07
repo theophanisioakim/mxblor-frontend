@@ -4,9 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@workspace/app/*": ["./src/*"],
-      "@workspace/router": ["../router/src/index.ts"],
-      "@workspace/router/*": ["../router/src/*"],
+      "@workspace/router/*": ["./src/*"],
       "@workspace/ui": ["../ui/src/index.ts"],
       "@workspace/ui/*": ["../ui/src/*"]
     }

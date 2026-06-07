@@ -17,8 +17,10 @@ Layout: `app/` (routes, `layout.tsx`, `page.tsx`), `components/` (app-local prov
 
 ## Rules
 
-- **Consume UI via `@workspace/ui`**, screens via `@workspace/app` — don't import `@workspace/web-ui`
-  directly (root `AGENTS.md` §2 rule 1).
+- **Consume UI via `@workspace/ui`**, screens via `@workspace/app`, and shared navigation via
+  `@workspace/router` — don't import `@workspace/web-ui` directly (root `AGENTS.md` §2 rule 1).
+- Shared screens should not import `next/link` or `next/navigation`; use `@workspace/router`.
+  App-local route files can still use Next router APIs for web-only shell behavior.
 - **`transpilePackages`** in `next.config.ts` must list every `@workspace/*` package the app pulls in
   (incl. `web-ui` transitively via `ui`). Add new workspace deps there too.
 - The app's own `components.json` adds shadcn components into the **app** (`@/components`) when they're

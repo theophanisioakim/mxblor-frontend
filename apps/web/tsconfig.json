@@ -5,6 +5,8 @@
       "@/*": ["./*"],
       "@workspace/app": ["../../packages/app/src/index.ts"],
       "@workspace/app/*": ["../../packages/app/src/*"],
+      "@workspace/router": ["../../packages/router/src/index.ts"],
+      "@workspace/router/*": ["../../packages/router/src/*"],
       "@workspace/ui": ["../../packages/ui/src/index.ts"],
       "@workspace/ui/*": ["../../packages/ui/src/*"]
     },

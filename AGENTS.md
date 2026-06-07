@@ -80,7 +80,8 @@ in this repo is the **three-tier UI structure**:
 | `@workspace/web-ui`            | _(external: shadcn / radix / base-ui)_                | shadcn/ui components — **web only**                                                   | **`@workspace/ui` only**        |
 | `@workspace/native-ui`         | _(external: react-native-reusables / @rn-primitives)_ | rnr components — **native only**                                                      | **`@workspace/ui` only**        |
 | `@workspace/ui`                | web-ui, native-ui, api-client, i18n                   | cross-platform primitives + react-hook-form form fields (`Rnc*`)                      | app, apps                       |
-| `@workspace/app`               | ui (+ api-client, i18n)                               | shared, cross-platform **screens**                                                    | apps                            |
+| `@workspace/router`            | ui (+ peer next / expo-router adapters)               | cross-platform routing API (`Link`, `LinkButton`, `useRouter`) — **no Solito**        | app, apps                       |
+| `@workspace/app`               | ui, router (+ api-client, i18n)                       | shared, cross-platform **screens**                                                    | apps                            |
 | `@workspace/typescript-config` | —                                                     | shared `tsconfig` bases (`base`, `nextjs`, `react-library`)                           | all (dev)                       |
 | `apps/web`                     | app, ui, api-client                                   | Next.js app (transpiles the `@workspace/*` source it pulls in)                        | _(top)_                         |
 | `apps/native`                  | app, ui, api-client                                   | Expo app (Metro resolves workspace source directly)                                   | _(top)_                         |
@@ -235,7 +236,13 @@ canonical pattern. Rules when adding or changing a `ui` primitive:
   - `foo.native.tsx` / `foo.native.ts` → native (Metro)
   - A plain `foo.ts` with no `.native` sibling is shared by both.
   - Examples: `storage.ts`/`storage.native.ts`, `i18n` `detect-language[.native].ts`,
-    `api-client` `channel[.native].ts`, every `ui` primitive.
+    `api-client` `channel[.native].ts`, `router` `link[.native].tsx` /
+    `router[.native].ts`, every `ui` primitive.
+- **Shared routing goes through `@workspace/router`.** It wraps Next App Router on web and
+  Expo Router on native without Solito. Shared screens must import `Link`, `LinkButton`,
+  `useRouter`, `usePathname`, and `useSearchParams` from `@workspace/router`, not `next/*` or
+  `expo-router`. App route/layout shells may still import framework router primitives that are not
+  part of the shared screen surface (for example Expo Router `Stack`).
 - **Web pulls workspace source through transpilation.** `apps/web/next.config.ts` lists
   `transpilePackages` for the `@workspace/*` packages it consumes (incl. `web-ui` transitively via
   `ui`). If you add a new workspace package to the web app, add it there too.
@@ -330,6 +337,7 @@ react-mono-core/
     ├── api-client/     ← Orval-generated React Query hooks + axios              (AGENTS.md)
     ├── storage/        ← typed storage (web Storage/cookies, native MMKV)       (AGENTS.md)
     ├── i18n/           ← i18next setup + locales                                (AGENTS.md)
+    ├── router/         ← Next/Expo Router abstraction — no Solito               (AGENTS.md)
     └── typescript-config/  ← shared tsconfig bases
 ```
 

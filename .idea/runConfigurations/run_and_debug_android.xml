@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="run and debug android" type="CompoundRunConfigurationType">
+    <toRun name="debug expo" type="ChromiumRemoteDebugType" />
+    <toRun name="native &gt; run:android" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>
