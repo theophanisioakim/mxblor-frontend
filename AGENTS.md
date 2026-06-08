@@ -103,8 +103,9 @@ in this repo is the **three-tier UI structure**:
 Data/util packages follow the same downward-only flow: `storage` is the leaf; `api-client`,
 `i18n`, and `ui` build on it; `ui` and `app` sit above; `apps` are the top and depend on nobody.
 Note `ui` must **not** depend on `@workspace/router` (router depends on `ui` — that would invert the
-graph). Components that need navigation (e.g. `RncGrid`'s `route`-based actions) take an injected
-`onNavigate` callback that the consumer wires with `useRouter().push`.
+graph); this is **machine-enforced** by a Biome `noRestrictedImports` rule scoped to `packages/ui/**`
+in `biome.json`. Components that need navigation (e.g. `RncGrid`'s `route`-based actions) take an
+injected `onNavigate` callback that the consumer wires with `useRouter().push`.
 
 ---
 
@@ -124,6 +125,7 @@ Always go through **pnpm** (which drives **Turbo**). On this Windows machine use
 | Lint, fail on any warning (CI/gate)         | `pnpm lint:strict`                                                |
 | Biome format check, no writes               | `pnpm format:check`                                               |
 | Biome CI gate (format + lint + assist)      | `pnpm biome:ci`                                                   |
+| Workspace dependency hygiene (sherif)       | `pnpm lint:deps`                                                  |
 | Regenerate the API client (Orval)           | `pnpm generate`                                                   |
 | One workspace only                          | `pnpm --filter web dev` / `pnpm --filter @workspace/ui typecheck` |
 | Web app dev                                 | `pnpm --filter web dev`                                           |
@@ -136,16 +138,23 @@ Always go through **pnpm** (which drives **Turbo**). On this Windows machine use
 | Regenerate **all** rnr native components ⚠️ | `pnpm rnr-update`                                                 |
 | Dependency hygiene                          | `pnpm outdated-deps` · `pnpm update-deps` · `pnpm dedupe-deps`    |
 
-`pnpm check:all` runs the gate in order: **`generate → format → typecheck → lint:strict → test → build`**. Run it
+`pnpm check:all` runs the gate in order: **`generate → format → lint:deps → typecheck → lint:strict → test → build`**. Run it
 (or at least `typecheck` + `lint` for the workspaces you touched) before declaring work done, and
 report real results — if something fails, say so.
+
+`pnpm lint:deps` runs **sherif** (`-r unordered-dependencies`) — a workspace dependency linter that
+enforces a single version of each dependency across all packages, no unused/mismatched deps, and
+catalog discipline. The cosmetic `unordered-dependencies` rule is disabled because it conflicts with
+the house ordering that keeps `@biomejs/biome` after the `@types/*` block. Add the `sherif` version
+in the catalog like any other dependency.
 
 E2E tests are intentionally explicit rather than part of `check:all`: web E2E requires Playwright
 browsers (`pnpm --filter web exec playwright install chromium`), and native E2E requires a built app
 installed on an emulator/simulator plus the Maestro CLI.
 
 > **Lint enforcement note.** `pnpm lint` (`biome lint`) fails on **errors** — including the
-> `web-ui`/`native-ui` import boundary (§2), configured as an error. CI and the git hooks run
+> `web-ui`/`native-ui` import boundary (§2) and the `ui`→`router` boundary (both
+> `noRestrictedImports` errors). CI and the git hooks run
 > **`pnpm lint:strict`** (`biome lint --error-on-warnings`), which additionally fails on **warnings**
 > (e.g. unused vars, Tailwind class order). Treat warnings on code you touch as must-fix.
 
@@ -273,8 +282,8 @@ canonical pattern. Rules when adding or changing a `ui` primitive:
   per-package configs). `pnpm lint` fails on errors; `pnpm lint:strict` (`--error-on-warnings`)
   additionally fails on warnings — **leave zero warnings on code you touch** (treat them as must-fix,
   like the backend's "zero Sonar findings" rule). The `web-ui`/`native-ui` import boundary (§2) is a
-  Biome `noRestrictedImports` error, relaxed only inside `ui`/`web-ui`/`native-ui` via config
-  `overrides`.
+  Biome `noRestrictedImports` error, relaxed inside `web-ui`/`native-ui` and swapped for a
+  `ui`→`router` restriction inside `ui`, all via config `overrides`.
 - **TypeScript:** `strict`, `noUncheckedIndexedAccess`, `isolatedModules`, NodeNext resolution
   (from `@workspace/typescript-config`). No `any` escape hatches on code you touch; type the public
   surface of every package (they ship `.ts` source via `exports`, so types must be sound).
@@ -378,8 +387,9 @@ Registered automatically by the root `package.json` `"prepare": "husky"` script,
   (fast). It does **not** apply unsafe fixes (Tailwind class sorting), so run `pnpm format` if
   `lint:strict` later flags class order.
 - **`pre-push`** → the full read-only gate:
-  **`biome:ci → typecheck → test → build → web E2E`** (mirrors CI except native Maestro E2E, which
-  requires a built app installed on an emulator/simulator). Blocks the push if anything fails.
+  **`lint:deps → biome:ci → typecheck → test → build → web E2E`** (mirrors CI except native Maestro
+  E2E, which requires a built app installed on an emulator/simulator). Blocks the push if anything
+  fails.
 
 Don't bypass with `--no-verify` (root §8.6) — CI runs the same checks and will fail the PR anyway.
 
@@ -390,7 +400,8 @@ always finish, so each commit is fully verified and populates the cache). The jo
 least-privilege `permissions: contents: read` and a `timeout-minutes` cap, and uses latest-major
 action tags (Dependabot, `.github/dependabot.yml`, PRs new majors). One `check` job: install
 (`--frozen-lockfile`) → **generated-API drift check** (`pnpm generate`, fail if
-`api-client/src/generated` changed) → **`biome:ci`** → **`typecheck`** → **`test`** → **expo-doctor**
+`api-client/src/generated` changed) → **`lint:deps`** (sherif dependency hygiene) → **`biome:ci`** →
+**`typecheck`** → **`test`** → **expo-doctor**
 (native project audit — SDK/dependency alignment, `app.json` schema, Metro config, duplicate native
 modules) → **`build`** → **Playwright Chromium install** → **web E2E**. Node version is read from
 `engines.node`; pnpm from the `packageManager` field.
@@ -401,6 +412,6 @@ modules) → **`build`** → **Playwright Chromium install** → **web E2E**. No
 no-write pass, so **warnings also fail** the build (e.g. unused vars, Tailwind class order) and
 **import organization is enforced** — an assist action that plain `biome format` and `biome lint`
 each miss on their own. The **`web-ui`/`native-ui` import boundary** (§2) is a Biome
-`noRestrictedImports` **error** in `biome.json`, relaxed only inside `ui`/`web-ui`/`native-ui` via the
-config `overrides`. (`pnpm lint:strict` / `pnpm format:check` remain available for narrower local
-runs.)
+`noRestrictedImports` **error** in `biome.json`, relaxed inside `web-ui`/`native-ui` and swapped for a
+**`ui`→`router`** restriction inside `ui`, via the config `overrides`. (`pnpm lint:strict` /
+`pnpm format:check` remain available for narrower local runs.)

@@ -109,7 +109,17 @@
       "linter": {
         "rules": {
           "style": {
-            "noRestrictedImports": "off"
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@workspace/router", "@workspace/router/*"],
+                    "message": "ui must not import @workspace/router — router depends on ui, so this inverts the dependency graph. Inject navigation via an onNavigate callback instead (AGENTS.md §2; packages/ui/AGENTS.md RncGrid)."
+                  }
+                ]
+              }
+            }
           }
         }
       }

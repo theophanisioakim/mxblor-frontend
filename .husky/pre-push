@@ -1,6 +1,9 @@
 # Pre-push gate — mirrors the CI "check" job's read-only checks
 # (see .github/workflows/ci.yml). Bypass in an emergency with
 # `git push --no-verify` (discouraged — CI runs the same checks).
+echo "[pre-push] dependency hygiene (sherif)…"
+pnpm lint:deps
+
 echo "[pre-push] biome (format · lint · assist, zero warnings)…"
 pnpm biome:ci
 

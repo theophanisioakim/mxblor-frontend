@@ -27,5 +27,7 @@ manual edit under `src/generated/` is deleted on the next run.
 - The Axios mutator is `customInstance` (`override.mutator` in `orval.config.ts`); auth/OTP/401
   behavior lives in `axios-instance.ts` — extend it there, not in generated code.
 - `channel.ts`/`channel.native.ts` is the cross-platform split (web → `CHANNEL_WEB`; native →
-  mobile/tablet by screen size). Follow the `.native.ts` pattern (root `AGENTS.md` §6).
+  mobile/tablet by screen size). Follow the `.native.ts` pattern (root `AGENTS.md` §6). `react-native`
+  (imported only by `channel.native.ts`) is declared as an **optional peer**, not a hard dependency,
+  so the web app doesn't pull React Native into its install graph.
 - Depends only on `@workspace/storage` (+ axios/tanstack) — don't add upward deps.

@@ -73,6 +73,13 @@ jobs:
             exit 1
           fi
 
+      # Workspace dependency hygiene: single version of each dependency across all
+      # packages, no unused/mismatched deps, catalog discipline intact. The cosmetic
+      # `unordered-dependencies` rule is disabled (it conflicts with the house ordering
+      # that keeps @biomejs/biome after the @types/* block).
+      - name: Dependency hygiene (sherif)
+        run: pnpm lint:deps
+
       # biome ci runs format + lint + assist (organize-imports) checks in one no-write
       # pass, scoped by biome.json (vendored/generated and build output excluded there).
       # --error-on-warnings makes warnings (unused vars, Tailwind class order, …) fail the

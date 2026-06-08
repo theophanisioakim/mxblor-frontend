@@ -15,7 +15,6 @@
     "lucide-react": "catalog:",
     "lucide-react-native": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:",
     "react-hook-form": "catalog:"
   },
   "peerDependencies": {
@@ -34,7 +33,6 @@
     "@tailwindcss/postcss": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
     "@biomejs/biome": "catalog:",
     "@workspace/typescript-config": "workspace:*",
     "nativewind": "catalog:",
