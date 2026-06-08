@@ -25,7 +25,11 @@ Layout:
 - `src/lib/utils.ts` — re-exports `cn`; `src/styles/globals.css` — web theme tokens
 
 Current primitives: `Button`, `Text`, `View`, `Pressable`, `Input`, `Label`, `Checkbox`, `Switch`,
-`Spinner`, `Icon` (+ the lucide glyphs consumers use). `Input`/`Checkbox`/`Switch` expose a single
+`Spinner`, `Icon` (+ the lucide glyphs consumers use), `Popover`/`PopoverTrigger`/`PopoverContent`
+(web shadcn / native rnr — native renders into the `@workspace/providers` `PortalHost`), `Separator`,
+and `iconFor(name, size?, className?)` — a dynamic lucide resolver that renders a glyph by its
+(PascalCase) backend name (web `lucide-react` / native rnr `Icon` + `lucide-react-native`), used by
+the navigation chrome in `@workspace/app`. `Input`/`Checkbox`/`Switch` expose a single
 **React-Native-flavored** contract (`onChangeText`, `secureTextEntry`, `checked: boolean |
 "indeterminate"`, …) that the web variant maps onto the DOM. `Pressable` mirrors RN's `Pressable`
 (`onPress`) so shared composite components (the grid's rows/cells/icon-buttons) can be interactive on

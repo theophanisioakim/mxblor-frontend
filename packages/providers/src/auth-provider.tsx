@@ -3,8 +3,11 @@
 import {
   type AuthenticatedUserResponseDto,
   getAuthenticatedUser,
+  getTwitchAuthenticationRedirectUrl,
   type LoginRequestDto,
+  type LoginResponseDto,
   setOnUnauthorized,
+  twitchLogin,
   useLogin,
 } from "@workspace/api-client"
 import { useRouter } from "@workspace/router"
@@ -27,6 +30,13 @@ export interface AuthContextValue {
   login: (
     data: LoginRequestDto
   ) => Promise<{ errorMessage: string; success: boolean }>
+  /** Exchange a Twitch OAuth `code`/`state` (from the callback) for a session. */
+  loginWithTwitch: (
+    code: string,
+    state: string
+  ) => Promise<{ errorMessage: string; success: boolean }>
+  /** Fetch the Twitch OAuth authorize URL to send the user to, or `null`. */
+  getTwitchRedirectUrl: () => Promise<string | null>
   logout: () => void
 }
 
@@ -125,6 +135,30 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
     }
   }, [jwtToken, user, router, clearAuthState, syncSchemaSelection])
 
+  const applyLoginResponse = useCallback((response: LoginResponseDto) => {
+    const schema = response.availableSchemas?.[0]
+    if (!schema) {
+      return {
+        errorMessage: "No available schemas found for the user",
+        success: false,
+      }
+    }
+
+    const token = response.token
+    if (!token) {
+      return {
+        errorMessage: "No token received from the server",
+        success: false,
+      }
+    }
+
+    myLocalStorage.setItem(StorageKeys.SELECTED_SCHEMA, schema)
+    setSelectedSchema(schema)
+    setJwtToken(token)
+
+    return { success: true, errorMessage: "" }
+  }, [])
+
   const login = useCallback(
     async (data: LoginRequestDto) => {
       try {
@@ -136,27 +170,7 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
           },
         })
 
-        const schema = response.availableSchemas?.[0]
-        if (!schema) {
-          return {
-            errorMessage: "No available schemas found for the user",
-            success: false,
-          }
-        }
-
-        const token = response.token
-        if (!token) {
-          return {
-            errorMessage: "No token received from the server",
-            success: false,
-          }
-        }
-
-        myLocalStorage.setItem(StorageKeys.SELECTED_SCHEMA, schema)
-        setSelectedSchema(schema)
-        setJwtToken(token)
-
-        return { success: true, errorMessage: "" }
+        return applyLoginResponse(response)
       } catch (error: unknown) {
         return {
           errorMessage: getLoginErrorMessage(error),
@@ -164,8 +178,28 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
         }
       }
     },
-    [loginMutation]
+    [loginMutation, applyLoginResponse]
   )
+
+  const loginWithTwitch = useCallback(
+    async (code: string, state: string) => {
+      try {
+        const response = await twitchLogin({ code, state })
+        return applyLoginResponse(response)
+      } catch (error: unknown) {
+        return {
+          errorMessage: getLoginErrorMessage(error),
+          success: false,
+        }
+      }
+    },
+    [applyLoginResponse]
+  )
+
+  const getTwitchRedirectUrl = useCallback(async () => {
+    const response = await getTwitchAuthenticationRedirectUrl()
+    return response.redirectUrl ?? null
+  }, [])
 
   const logout = useCallback(() => {
     setJwtToken(null)
@@ -179,9 +213,11 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
       isAuthenticated: user !== undefined,
       selectedSchema,
       login,
+      loginWithTwitch,
+      getTwitchRedirectUrl,
       logout,
     }),
-    [user, selectedSchema, login, logout]
+    [user, selectedSchema, login, loginWithTwitch, getTwitchRedirectUrl, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

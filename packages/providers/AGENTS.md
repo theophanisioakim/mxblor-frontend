@@ -25,3 +25,5 @@ sidebar state, i18n provider wiring, and theme state.
 - Apps import `AppProviders` from this package in their root layout. Shared
   screens should import individual hooks from here only when they actually need
   the relevant context.
+- Web SSR may pass `initialLanguage` to `AppProviders` from the request cookie
+  so client hydration uses the same i18n snapshot as the server render.

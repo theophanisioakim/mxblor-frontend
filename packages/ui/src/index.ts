@@ -86,30 +86,53 @@ export {
   EyeOff,
   FileX,
   Filter,
+  Globe,
   Icon,
+  LogIn,
+  LogOut,
+  Menu,
   Minus,
+  Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pencil,
   Plus,
   RefreshCw,
   RotateCcw,
   Save,
   Search,
+  Sun,
   Trash2,
   Undo2,
+  User,
   X,
 } from "./components/primitives/icon"
+export { iconFor } from "./components/primitives/icon-for"
 export type { InputProps, InputSelection } from "./components/primitives/input"
 export { Input } from "./components/primitives/input"
 export type { LabelProps } from "./components/primitives/label"
 export { Label } from "./components/primitives/label"
+export type {
+  PopoverContentProps,
+  PopoverProps,
+  PopoverTriggerProps,
+} from "./components/primitives/popover"
+export {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "./components/primitives/popover"
 export type { PressableProps } from "./components/primitives/pressable"
 export { Pressable } from "./components/primitives/pressable"
+export type { SeparatorProps } from "./components/primitives/separator"
+export { Separator } from "./components/primitives/separator"
 export type { SpinnerProps } from "./components/primitives/spinner"
 export { Spinner } from "./components/primitives/spinner"
 export type { SwitchProps } from "./components/primitives/switch"
 export { Switch } from "./components/primitives/switch"
 export type { TextProps } from "./components/primitives/text"
 export { Text } from "./components/primitives/text"
+export { Twitch } from "./components/primitives/twitch-icon"
 export type { ViewProps } from "./components/primitives/view"
 export { View } from "./components/primitives/view"
 export { useContainerWidth } from "./hooks/use-container-width"

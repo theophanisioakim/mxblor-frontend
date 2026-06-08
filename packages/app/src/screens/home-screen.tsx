@@ -1,3 +1,6 @@
+"use client"
+
+import { useTranslation } from "@workspace/i18n"
 import { LinkButton } from "@workspace/router"
 import { Button, Text, View } from "@workspace/ui"
 
@@ -13,17 +16,19 @@ import { Button, Text, View } from "@workspace/ui"
  * Next Router on web and Expo Router on native without Solito.
  */
 export function HomeScreen() {
+  const { t } = useTranslation(["screens"])
+
   return (
     <View className="flex-1 items-center justify-center gap-4 p-6">
-      <Text className="font-bold text-2xl text-foreground">Project ready!</Text>
-      <Text className="text-muted-foreground">
-        One screen, shared by the web and native apps.
+      <Text className="font-bold text-2xl text-foreground">
+        {t("home.title")}
       </Text>
+      <Text className="text-muted-foreground">{t("home.crossPlatform")}</Text>
       <Button>
-        <Text>Button</Text>
+        <Text>{t("home.buttonLabel")}</Text>
       </Button>
-      <LinkButton href="/forms">View form components</LinkButton>
-      <LinkButton href="/grid">View data grid</LinkButton>
+      <LinkButton href="/forms">{t("home.formLink")}</LinkButton>
+      <LinkButton href="/grid">{t("home.gridLink")}</LinkButton>
     </View>
   )
 }

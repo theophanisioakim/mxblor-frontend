@@ -78,12 +78,12 @@ in this repo is the **three-tier UI structure**:
 | `@workspace/storage`           | _(none)_                                              | typed local/session storage — web: Web Storage + cookies; native: MMKV (`.native.ts`) | api-client, i18n, ui, app, apps |
 | `@workspace/i18n`              | storage                                               | i18next setup, type-safe `useTranslation`, locale JSON                                | ui, app, apps                   |
 | `@workspace/api-client`        | storage                                               | **Orval-generated** React Query hooks + axios instance + query provider               | ui, app, apps                   |
-| `@workspace/providers`         | api-client, i18n, router, storage                     | cross-platform app-shell providers (auth, OTP, menus, breadcrumbs, theme state)       | apps                            |
+| `@workspace/providers`         | api-client, i18n, router, storage                     | cross-platform app-shell providers (auth, OTP, menus, breadcrumbs, theme state)       | app, apps                       |
 | `@workspace/web-ui`            | _(external: shadcn / radix / base-ui)_                | shadcn/ui components — **web only**                                                   | **`@workspace/ui` only**        |
 | `@workspace/native-ui`         | _(external: react-native-reusables / @rn-primitives)_ | rnr components — **native only**                                                      | **`@workspace/ui` only**        |
-| `@workspace/ui`                | web-ui, native-ui, api-client, i18n, storage          | cross-platform primitives + form fields (`Rnc*`) + overlays (`RncDialog`, `RncBottomSheet`) + data grid (`RncGrid`) | app, apps                       |
+| `@workspace/ui`                | web-ui, native-ui, api-client, i18n, storage          | cross-platform primitives (incl. `Popover`, `Separator`, dynamic `iconFor`) + form fields (`Rnc*`) + overlays (`RncDialog`, `RncBottomSheet`) + data grid (`RncGrid`) | app, apps                       |
 | `@workspace/router`            | ui (+ peer next / expo-router adapters)               | cross-platform routing API (`Link`, `LinkButton`, `useRouter`) — **no Solito**        | app, apps                       |
-| `@workspace/app`               | ui, router (+ api-client, i18n)                       | shared, cross-platform **screens**                                                    | apps                            |
+| `@workspace/app`               | ui, router, providers (+ api-client, i18n)            | shared, cross-platform **screens** + the **app shell / navigation chrome** (Sidebar, TopBar, mega/popover menus, BottomTabBar, Breadcrumbs, FAB, OtpDialog) | apps                            |
 | `@workspace/typescript-config` | —                                                     | shared `tsconfig` bases (`base`, `nextjs`, `react-library`)                           | all (dev)                       |
 | `apps/web`                     | app, providers, ui, api-client                        | Next.js app (transpiles the `@workspace/*` source it pulls in)                        | _(top)_                         |
 | `apps/native`                  | app, providers, ui, api-client                        | Expo app (Metro resolves workspace source directly)                                   | _(top)_                         |
@@ -106,6 +106,14 @@ Note `ui` must **not** depend on `@workspace/router` (router depends on `ui` —
 graph); this is **machine-enforced** by a Biome `noRestrictedImports` rule scoped to `packages/ui/**`
 in `biome.json`. Components that need navigation (e.g. `RncGrid`'s `route`-based actions) take an
 injected `onNavigate` callback that the consumer wires with `useRouter().push`.
+
+The **app shell / navigation chrome** (`Sidebar`, `TopBar`, `BottomTabBar`, `Breadcrumbs`,
+`FloatingActionButton`, `OtpDialog`, composed as `AppShell`) lives in **`@workspace/app`**, not
+`@workspace/ui`, because it reads provider state (`useMenu`, `useSidebar`, `useMyPathname`,
+`useAuth`, `useOtp`, `useAppTheme`) — so `app` depends on `@workspace/providers`. It must **not** go
+in `ui`: `ui → providers → router → ui` would be a cycle. Pure, provider-free building blocks the
+chrome needs (e.g. the `Popover`/`Separator` primitives and the dynamic `iconFor` resolver, whose
+native variant must import `native-ui`) do live in `ui`.
 
 ---
 

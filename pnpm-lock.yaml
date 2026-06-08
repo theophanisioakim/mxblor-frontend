@@ -483,9 +483,15 @@ importers:
       '@workspace/app':
         specifier: workspace:*
         version: link:../../packages/app
+      '@workspace/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@workspace/providers':
         specifier: workspace:*
         version: link:../../packages/providers
+      '@workspace/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@workspace/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -569,6 +575,15 @@ importers:
 
   packages/app:
     dependencies:
+      '@workspace/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+      '@workspace/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      '@workspace/providers':
+        specifier: workspace:*
+        version: link:../providers
       '@workspace/router':
         specifier: workspace:*
         version: link:../router

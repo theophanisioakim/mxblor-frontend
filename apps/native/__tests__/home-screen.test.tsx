@@ -20,7 +20,7 @@ describe("HomeScreen", () => {
   it("renders the shared button label", async () => {
     const { getByText } = await render(<HomeScreen />)
 
-    expect(getByText("Button")).toBeTruthy()
+    expect(getByText("Example button")).toBeTruthy()
   })
 
   it("renders the shared navigation label", async () => {

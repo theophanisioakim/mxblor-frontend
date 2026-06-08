@@ -7,6 +7,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@workspace/api-client": "workspace:*",
+    "@workspace/i18n": "workspace:*",
+    "@workspace/providers": "workspace:*",
     "@workspace/router": "workspace:*",
     "@workspace/ui": "workspace:*",
     "react": "catalog:"
