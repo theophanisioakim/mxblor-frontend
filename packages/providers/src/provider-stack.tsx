@@ -1,6 +1,9 @@
 "use client"
 
-import { ApiQueryClientProvider } from "@workspace/api-client"
+import {
+  ApiQueryClientProvider,
+  type SbfMenuTreeResponseDto,
+} from "@workspace/api-client"
 import {
   changeLanguage,
   ensureI18nInitialized,
@@ -21,11 +24,14 @@ import { SidebarProvider } from "./sidebar-provider"
 export type ProviderStackProps = Readonly<{
   children: ReactNode
   initialLanguage?: SupportedLanguage
+  /** SSR-fetched menu tree forwarded to MenuProvider as `initialData`. */
+  initialMenus?: SbfMenuTreeResponseDto
 }>
 
 export function ProviderStack({
   children,
   initialLanguage,
+  initialMenus,
 }: ProviderStackProps) {
   ensureI18nInitialized(initialLanguage)
 
@@ -42,7 +48,7 @@ export function ProviderStack({
       <I18nextProvider i18n={i18n}>
         <ApiQueryClientProvider>
           <AuthProvider>
-            <MenuProvider>
+            <MenuProvider initialMenus={initialMenus}>
               <SidebarProvider>
                 <BreadcrumbsProvider>
                   <OtpProvider>{children}</OtpProvider>

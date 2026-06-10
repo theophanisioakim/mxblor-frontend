@@ -1,6 +1,7 @@
 import { Geist_Mono, Inter } from "next/font/google"
 
 import "@workspace/ui/globals.css"
+import { getMyMenus, type SbfMenuTreeResponseDto } from "@workspace/api-client"
 import { AppShell } from "@workspace/app"
 import {
   ensureI18nInitialized,
@@ -41,6 +42,23 @@ export default async function RootLayout({
     : "en"
   ensureI18nInitialized(lang)
 
+  // Server-side render the user's menu tree on first load so the sidebar/top
+  // nav paint immediately instead of waiting for the client `useGetMyMenus`
+  // query. `setServerCookies` above bridged the JWT + selected schema into
+  // `@workspace/storage`, so `getMyMenus` -> `customInstance` attaches the
+  // Authorization / x-schema-id headers during SSR. Only fetch when those
+  // cookies exist (matching MenuProvider's `enabled` gating); on any failure
+  // we leave `initialMenus` undefined and fall back to client-side fetching.
+  let initialMenus: SbfMenuTreeResponseDto | undefined
+  if (cookieMap.app_jwt_token && cookieMap.app_selected_schema) {
+    try {
+      initialMenus = await getMyMenus()
+    } catch {
+      // SSR fetch failed (e.g. not authenticated, API unreachable) — the
+      // client MenuProvider will retry via React Query.
+    }
+  }
+
   return (
     <html
       lang={lang}
@@ -53,7 +71,7 @@ export default async function RootLayout({
       )}
     >
       <body>
-        <AppProviders initialLanguage={lang}>
+        <AppProviders initialLanguage={lang} initialMenus={initialMenus}>
           <AppShell>{children}</AppShell>
         </AppProviders>
       </body>
