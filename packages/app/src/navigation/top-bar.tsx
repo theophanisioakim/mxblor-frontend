@@ -22,29 +22,36 @@ export function TopBar() {
   const { pathname } = useMyPathname()
   const { expanded, toggle, toggleMobile } = useSidebar()
   const topMenus = menus?.top ?? []
+  // The sidebar toggles only make sense when there's a side menu to open; hide
+  // them while the backend hasn't returned side rows (loading or empty).
+  const hasSideMenu = (menus?.side ?? []).length > 0
 
   return (
     <View className="h-14 w-full flex-row items-center justify-between border-border border-b bg-background px-4">
       {/* Left - sidebar toggles + logo */}
       <View className="flex-row items-center gap-2">
-        <Button
-          aria-label="Open menu"
-          className="hidden rounded-full hover:bg-accent max-sm:flex"
-          onPress={toggleMobile}
-          size="icon"
-          variant="ghost"
-        >
-          <Icon as={Menu} size={18} />
-        </Button>
-        <Button
-          aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
-          className="rounded-full hover:bg-accent max-sm:hidden"
-          onPress={toggle}
-          size="icon"
-          variant="ghost"
-        >
-          <Icon as={expanded ? PanelLeftClose : PanelLeftOpen} size={18} />
-        </Button>
+        {hasSideMenu ? (
+          <>
+            <Button
+              aria-label="Open menu"
+              className="hidden rounded-full hover:bg-accent max-sm:flex"
+              onPress={toggleMobile}
+              size="icon"
+              variant="ghost"
+            >
+              <Icon as={Menu} size={18} />
+            </Button>
+            <Button
+              aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+              className="rounded-full hover:bg-accent max-sm:hidden"
+              onPress={toggle}
+              size="icon"
+              variant="ghost"
+            >
+              <Icon as={expanded ? PanelLeftClose : PanelLeftOpen} size={18} />
+            </Button>
+          </>
+        ) : null}
 
         <NavLink href="/">
           <View className="flex-row items-center gap-2">

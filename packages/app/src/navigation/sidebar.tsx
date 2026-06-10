@@ -24,6 +24,13 @@ export function Sidebar() {
   const { menus, isLoading } = useMenu()
   const sections = menus?.side ?? []
 
+  // The side menu is backend-driven: stay hidden until the API returns rows.
+  // During the loading window there are no rows yet, so nothing paints (no
+  // skeleton), and an empty side menu renders nothing at all.
+  if (sections.length === 0) {
+    return null
+  }
+
   return (
     <View className="max-sm:hidden">
       <View
@@ -73,6 +80,12 @@ export function MobileSidebar() {
   const { mobileOpen, closeMobile } = useSidebar()
   const { menus, isLoading } = useMenu()
   const sections = menus?.side ?? []
+
+  // Mirror the desktop sidebar: hide the overlay until the backend returns
+  // side-menu rows, so there's nothing to open while loading or when empty.
+  if (sections.length === 0) {
+    return null
+  }
 
   return (
     <View
