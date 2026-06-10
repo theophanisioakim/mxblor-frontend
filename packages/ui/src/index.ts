@@ -62,6 +62,7 @@ export type {
   RncDialogIcon,
   RncDialogProps,
 } from "./components/overlays/rnc-dialog/rnc-dialog-model"
+export { Apple } from "./components/primitives/apple-icon"
 export type { ButtonProps } from "./components/primitives/button"
 export { Button, buttonVariants } from "./components/primitives/button"
 export type {
@@ -69,6 +70,8 @@ export type {
   CheckedState,
 } from "./components/primitives/checkbox"
 export { Checkbox } from "./components/primitives/checkbox"
+export { Github } from "./components/primitives/github-icon"
+export { Google } from "./components/primitives/google-icon"
 export type { IconProps } from "./components/primitives/icon"
 export {
   ArrowDown,
