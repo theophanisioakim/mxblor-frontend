@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuth } from "@workspace/providers"
-import { useRouter, useSearchParams } from "@workspace/router"
+import { useRouter } from "@workspace/router"
 import {
   Apple,
   Button,
@@ -25,6 +25,16 @@ type LoginForm = {
   username: string
   password: string
   rememberMe?: boolean
+}
+
+export interface LoginScreenProps {
+  /**
+   * Twitch authorize URL resolved during SSR (web login page). When provided
+   * (`string` URL or `null` = unavailable) the client skips its own fetch and
+   * the OAuth button paints on first load. `undefined` means the server didn't
+   * resolve it (native, or an SSR failure), so the client fetches instead.
+   */
+  initialTwitchUrl?: string | null
 }
 
 type OAuthProvider = "twitch" | "google" | "apple" | "github"
@@ -78,25 +88,29 @@ function openExternalUrl(url: string) {
  * platform branching.
  *
  * Username/email + password (with "remember me") is the primary path. Twitch
- * OAuth is fully wired: the Twitch flow fetches the authorize URL from the
- * backend (`getTwitchRedirectUrl`) and, when Twitch redirects back here with
- * `?code&state`, exchanges them via `loginWithTwitch`. Google/Apple/GitHub are
- * presented as providers but not yet backed by the API — they surface a
- * "coming soon" notice until their server flows exist.
+ * OAuth is initiated here: the flow fetches the authorize URL from the backend
+ * (`getTwitchRedirectUrl`) and sends the user to Twitch. Twitch redirects back
+ * to the `/` route, where `TwitchCallback` exchanges `?code&state` for a
+ * session. Google/Apple/GitHub are presented as providers but not yet backed by
+ * the API — they surface a "coming soon" notice until their server flows exist.
+ *
+ * On web the authorize URL is resolved during SSR (the login `page.tsx`) and
+ * passed in via `initialTwitchUrl` so the Twitch button paints on first load;
+ * when it isn't supplied (native, or an SSR failure) the client resolves it.
  */
-export function LoginScreen() {
-  const { login, loginWithTwitch, getTwitchRedirectUrl, isAuthenticated } =
-    useAuth()
+export function LoginScreen({
+  initialTwitchUrl,
+}: Readonly<LoginScreenProps> = {}) {
+  const { login, getTwitchRedirectUrl, isAuthenticated } = useAuth()
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null)
   // `null` = not available / not yet known; a non-empty string = ready to use.
-  const [twitchUrl, setTwitchUrl] = useState<string | null>(null)
-
-  const code = searchParams.get("code")
-  const state = searchParams.get("state")
+  // Seeded from the SSR-resolved URL on web so it's ready on first paint.
+  const [twitchUrl, setTwitchUrl] = useState<string | null>(
+    initialTwitchUrl ?? null
+  )
 
   // Redirect away once authenticated.
   useEffect(() => {
@@ -105,36 +119,15 @@ export function LoginScreen() {
     }
   }, [isAuthenticated, router])
 
-  // Handle the Twitch OAuth callback (?code&state) landing back on this screen.
+  // Resolve the Twitch authorize URL up front so the Twitch option can be hidden
+  // entirely when the backend doesn't provide one (empty/unavailable). Skipped
+  // when the server already resolved it (`initialTwitchUrl` defined) — only the
+  // native/SSR-failure case falls back to this client fetch.
   useEffect(() => {
-    if (!(code && state)) {
+    if (initialTwitchUrl !== undefined) {
       return
     }
 
-    let active = true
-    setOauthLoading("twitch")
-    setError(null)
-
-    loginWithTwitch(code, state).then((result) => {
-      if (!active) {
-        return
-      }
-      if (result.success) {
-        router.replace("/")
-      } else {
-        setError(result.errorMessage)
-        setOauthLoading(null)
-      }
-    })
-
-    return () => {
-      active = false
-    }
-  }, [code, state, loginWithTwitch, router])
-
-  // Resolve the Twitch authorize URL up front so the Twitch option can be hidden
-  // entirely when the backend doesn't provide one (empty/unavailable).
-  useEffect(() => {
     let active = true
     getTwitchRedirectUrl()
       .then((url) => {
@@ -151,7 +144,7 @@ export function LoginScreen() {
     return () => {
       active = false
     }
-  }, [getTwitchRedirectUrl])
+  }, [getTwitchRedirectUrl, initialTwitchUrl])
 
   const handleOAuth = (provider: OAuthProvider) => {
     setError(null)
