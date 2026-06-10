@@ -3,15 +3,24 @@ import { type FieldErrors, type FieldValues, useForm } from "react-hook-form"
 import type { RncFormProps } from "./rnc-form-model"
 
 export default function useRncFormInternal<T>(props: RncFormProps<T>) {
-  // Load initial form values if loadFormValues is provided
+  // Only treat the form as "loading" when there is async work to wait for.
+  // Passing an async `defaultValues` function unconditionally makes RHF report
+  // `formState.isLoading` and our own flags `true` on the first render, which
+  // doesn't survive SSR hydration: the server resolves to `false` (button
+  // enabled) while the client's first render still reads `true` (disabled),
+  // mismatching the `disabled` attribute. So async defaults / loading flags are
+  // gated on the props that actually need them.
+  const hasAsyncValues = Boolean(props.loadFormValues)
   const methods = useForm({
     mode: "onBlur",
-    defaultValues: loadData,
+    defaultValues: hasAsyncValues ? loadData : {},
   })
 
   // State to track loading status
-  const [loading, setLoading] = useState<boolean>(true)
-  const [loadingOnLoad, setLoadingOnLoad] = useState<boolean>(true)
+  const [loading, setLoading] = useState<boolean>(hasAsyncValues)
+  const [loadingOnLoad, setLoadingOnLoad] = useState<boolean>(
+    Boolean(props.onLoad)
+  )
 
   // Function to load initial form values
   async function loadData() {

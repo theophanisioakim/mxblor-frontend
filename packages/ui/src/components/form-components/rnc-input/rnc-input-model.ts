@@ -12,6 +12,11 @@ export interface RncInputProps {
   type?: "text" | "password" | "number"
   variant?: "underlined" | "outline" | "rounded"
   size?: "lg" | "md" | "sm"
+  /**
+   * Return/Enter key label on mobile keyboards (native `returnKeyType` / web
+   * `enterKeyHint`). Defaults to "done" when omitted.
+   */
+  returnKeyType?: "done" | "go" | "next" | "search" | "send"
   label?: string
   helperText?: string
   placeholder?: string

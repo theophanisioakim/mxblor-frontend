@@ -1,10 +1,12 @@
 import { cn } from "@workspace/ui/lib/utils"
+import { useContext } from "react"
 import { Button } from "../../../primitives/button"
 import { Eye, EyeOff, Icon } from "../../../primitives/icon"
 import { Input } from "../../../primitives/input"
 import { Label } from "../../../primitives/label"
 import { Text } from "../../../primitives/text"
 import { View } from "../../../primitives/view"
+import { RncFormContext } from "../../rnc-form/rnc-form-context"
 import type { RncInputRenderProps } from "./rnc-input-render-model"
 import useRncInputRender from "./use-rnc-input-render"
 
@@ -38,6 +40,10 @@ export default function RncInputRender(props: Readonly<RncInputRenderProps>) {
     setShowPassword,
   } = useRncInputRender(props)
 
+  // Read optionally so a field rendered outside an RncForm simply won't submit
+  // on Enter (rather than throwing). `submit` is the form's bound handler.
+  const form = useContext(RncFormContext)
+
   if (hidden) return null
 
   return (
@@ -57,6 +63,8 @@ export default function RncInputRender(props: Readonly<RncInputRenderProps>) {
             value={inputValue}
             onChangeText={onChangeText}
             onBlur={onBlur}
+            onSubmitEditing={form?.submit}
+            returnKeyType={props.returnKeyType ?? "done"}
             placeholder={placeholder}
             editable={!isDisabled}
             readOnly={isReadOnly}

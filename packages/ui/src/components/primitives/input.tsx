@@ -16,6 +16,17 @@ type InputProps = {
   onChangeText?: (text: string) => void
   onBlur?: () => void
   onFocus?: () => void
+  /**
+   * Called when the user presses Enter/Return in the field. Mapped from the DOM
+   * `keydown` here; forwarded straight to `TextInput.onSubmitEditing` on native.
+   * Lets forms (which render a `View`, not a `<form>`) submit on Enter.
+   */
+  onSubmitEditing?: () => void
+  /**
+   * Return/Enter key label on mobile keyboards. Maps to `TextInput.returnKeyType`
+   * on native and the `enterKeyHint` attribute on web (the value names overlap).
+   */
+  returnKeyType?: "done" | "go" | "next" | "search" | "send"
   placeholder?: string
   editable?: boolean
   disabled?: boolean
@@ -46,6 +57,8 @@ function Input({
   onChangeText,
   onBlur,
   onFocus,
+  onSubmitEditing,
+  returnKeyType,
   editable,
   disabled,
   secureTextEntry,
@@ -81,9 +94,16 @@ function Input({
       type={secureTextEntry ? "password" : (type ?? "text")}
       value={value}
       disabled={disabled || editable === false}
+      enterKeyHint={returnKeyType}
       onChange={(e) => onChangeText?.(e.target.value)}
       onBlur={() => onBlur?.()}
       onFocus={() => onFocus?.()}
+      onKeyDown={(e) => {
+        // `isComposing` guards IME (e.g. CJK) Enter that confirms a candidate.
+        if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+          onSubmitEditing?.()
+        }
+      }}
       onSelect={(e) => {
         const el = e.currentTarget
         onSelectionChange?.({

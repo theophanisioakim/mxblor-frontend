@@ -92,6 +92,8 @@ export function LoginScreen() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null)
+  // `null` = not available / not yet known; a non-empty string = ready to use.
+  const [twitchUrl, setTwitchUrl] = useState<string | null>(null)
 
   const code = searchParams.get("code")
   const state = searchParams.get("state")
@@ -130,7 +132,28 @@ export function LoginScreen() {
     }
   }, [code, state, loginWithTwitch, router])
 
-  const handleOAuth = async (provider: OAuthProvider) => {
+  // Resolve the Twitch authorize URL up front so the Twitch option can be hidden
+  // entirely when the backend doesn't provide one (empty/unavailable).
+  useEffect(() => {
+    let active = true
+    getTwitchRedirectUrl()
+      .then((url) => {
+        if (active) {
+          setTwitchUrl(url)
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setTwitchUrl(null)
+        }
+      })
+
+    return () => {
+      active = false
+    }
+  }, [getTwitchRedirectUrl])
+
+  const handleOAuth = (provider: OAuthProvider) => {
     setError(null)
     setNotice(null)
 
@@ -140,22 +163,21 @@ export function LoginScreen() {
       return
     }
 
-    setOauthLoading("twitch")
-    try {
-      const url = await getTwitchRedirectUrl()
-      if (url) {
-        openExternalUrl(url)
-      } else {
-        setError("Twitch login is currently unavailable.")
-        setOauthLoading(null)
-      }
-    } catch {
-      setError("Could not start Twitch login. Please try again.")
-      setOauthLoading(null)
+    // The Twitch button only renders when a URL is available, so this is a guard.
+    if (!twitchUrl) {
+      setError("Twitch login is currently unavailable.")
+      return
     }
+
+    setOauthLoading("twitch")
+    openExternalUrl(twitchUrl)
   }
 
   const busy = oauthLoading !== null
+  // Hide Twitch unless the backend handed us a non-empty redirect URL.
+  const providers = PROVIDERS.filter(
+    (provider) => provider.id !== "twitch" || Boolean(twitchUrl)
+  )
 
   return (
     <View className="min-h-full flex-1 bg-background lg:flex-row">
@@ -282,13 +304,13 @@ export function LoginScreen() {
 
           {/* OAuth providers — each in its brand color */}
           <View className="flex-row gap-3">
-            {PROVIDERS.map((provider) => (
+            {providers.map((provider) => (
               <Button
                 aria-label={`Continue with ${PROVIDER_LABELS[provider.id]}`}
                 className={cn("h-11 flex-1", provider.className)}
                 disabled={busy}
                 key={provider.id}
-                onPress={() => void handleOAuth(provider.id)}
+                onPress={() => handleOAuth(provider.id)}
               >
                 {oauthLoading === provider.id ? (
                   <Spinner />
