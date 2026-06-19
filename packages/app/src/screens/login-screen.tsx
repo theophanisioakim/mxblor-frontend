@@ -20,6 +20,7 @@ import {
   View,
 } from "@workspace/ui"
 import { useEffect, useState } from "react"
+import { startTwitchAuth } from "./twitch-auth"
 
 type LoginForm = {
   username: string
@@ -73,13 +74,6 @@ const PROVIDERS = [
   },
 ]
 
-/** Opens an external URL (full-page redirect on web). */
-function openExternalUrl(url: string) {
-  const loc = (globalThis as { location?: { assign?: (u: string) => void } })
-    .location
-  loc?.assign?.(url)
-}
-
 /**
  * Shared, cross-platform login screen rendered by both `apps/web` and
  * `apps/native`. A responsive two-pane "aurora" layout: on wide (web) viewports
@@ -88,11 +82,12 @@ function openExternalUrl(url: string) {
  * platform branching.
  *
  * Username/email + password (with "remember me") is the primary path. Twitch
- * OAuth is initiated here: the flow fetches the authorize URL from the backend
- * (`getTwitchRedirectUrl`) and sends the user to Twitch. Twitch redirects back
- * to the `/` route, where `TwitchCallback` exchanges `?code&state` for a
- * session. Google/Apple/GitHub are presented as providers but not yet backed by
- * the API — they surface a "coming soon" notice until their server flows exist.
+ * OAuth is initiated here via `startTwitchAuth`, which diverges by platform: on
+ * web it full-page redirects to Twitch and the `/` route's `TwitchCallback`
+ * finishes the exchange; on native it opens an in-app auth session that returns
+ * `code`/`state` inline, which this screen exchanges via `loginWithTwitch`.
+ * Google/Apple/GitHub are presented as providers but not yet backed by the API —
+ * they surface a "coming soon" notice until their server flows exist.
  *
  * On web the authorize URL is resolved during SSR (the login `page.tsx`) and
  * passed in via `initialTwitchUrl` so the Twitch button paints on first load;
@@ -101,7 +96,8 @@ function openExternalUrl(url: string) {
 export function LoginScreen({
   initialTwitchUrl,
 }: Readonly<LoginScreenProps> = {}) {
-  const { login, getTwitchRedirectUrl, isAuthenticated } = useAuth()
+  const { login, loginWithTwitch, getTwitchRedirectUrl, isAuthenticated } =
+    useAuth()
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -146,7 +142,7 @@ export function LoginScreen({
     }
   }, [getTwitchRedirectUrl, initialTwitchUrl])
 
-  const handleOAuth = (provider: OAuthProvider) => {
+  const handleOAuth = async (provider: OAuthProvider) => {
     setError(null)
     setNotice(null)
 
@@ -163,7 +159,26 @@ export function LoginScreen({
     }
 
     setOauthLoading("twitch")
-    openExternalUrl(twitchUrl)
+
+    // Web full-page redirects (the `/` route's TwitchCallback finishes the
+    // exchange); native opens an in-app auth session and returns code/state
+    // inline, which we exchange here.
+    const result = await startTwitchAuth(twitchUrl)
+    if (result.type === "redirecting") {
+      return
+    }
+    if (result.type === "cancelled") {
+      setOauthLoading(null)
+      return
+    }
+
+    const session = await loginWithTwitch(result.code, result.state)
+    if (session.success) {
+      router.replace("/")
+    } else {
+      setError(session.errorMessage)
+      setOauthLoading(null)
+    }
   }
 
   const busy = oauthLoading !== null
@@ -303,7 +318,7 @@ export function LoginScreen({
                 className={cn("h-11 flex-1", provider.className)}
                 disabled={busy}
                 key={provider.id}
-                onPress={() => handleOAuth(provider.id)}
+                onPress={() => void handleOAuth(provider.id)}
               >
                 {oauthLoading === provider.id ? (
                   <Spinner />

@@ -1,17 +1,16 @@
 import { FormShowcaseScreen } from "@workspace/app"
 import { ScrollView } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
 
 /**
  * Native `/forms` route. Renders the same `FormShowcaseScreen` from
  * `@workspace/app` that the web app serves at `/forms`.
+ *
+ * Safe-area insets are handled once around the whole app shell in `_layout.tsx`.
  */
 export default function Forms() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <FormShowcaseScreen />
-      </ScrollView>
-    </SafeAreaView>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+      <FormShowcaseScreen />
+    </ScrollView>
   )
 }

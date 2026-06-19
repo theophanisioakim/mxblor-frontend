@@ -1,17 +1,16 @@
 import { GridShowcaseScreen } from "@workspace/app"
 import { ScrollView } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
 
 /**
  * Native `/grid` route. Renders the same `GridShowcaseScreen` from
  * `@workspace/app` that the web app serves at `/grid`.
+ *
+ * Safe-area insets are handled once around the whole app shell in `_layout.tsx`.
  */
 export default function Grid() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <GridShowcaseScreen />
-      </ScrollView>
-    </SafeAreaView>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+      <GridShowcaseScreen />
+    </ScrollView>
   )
 }

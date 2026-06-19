@@ -14,10 +14,24 @@
     "@workspace/ui": "workspace:*",
     "react": "catalog:"
   },
+  "peerDependencies": {
+    "expo-linking": "*",
+    "expo-web-browser": "*"
+  },
+  "peerDependenciesMeta": {
+    "expo-linking": {
+      "optional": true
+    },
+    "expo-web-browser": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/react": "catalog:",
     "@biomejs/biome": "catalog:",
     "@workspace/typescript-config": "workspace:*",
+    "expo-linking": "catalog:",
+    "expo-web-browser": "catalog:",
     "typescript": "catalog:"
   },
   "exports": {
