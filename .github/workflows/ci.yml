@@ -25,7 +25,7 @@ jobs:
     steps:
       # Actions track their latest major tag (auto-receive patches/minors); Dependabot
       # opens PRs for new majors (.github/dependabot.yml).
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # pnpm version is read from the root package.json `packageManager` field.
       - name: Setup pnpm
