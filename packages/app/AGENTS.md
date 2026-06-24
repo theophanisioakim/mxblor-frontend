@@ -43,3 +43,20 @@ Layout:
   `expo-router`, or Solito here.
 - May use `@workspace/api-client` (data) and `@workspace/i18n` (text); both are cross-platform.
 - Keep the public surface typed; consumers import from `@workspace/app`.
+
+## Page layout — use large screens
+
+`AppShell` already provides the chrome; the scrollable content area is the canvas. **Default to full
+width** — do not artificially narrow pages on large viewports when there is no UX reason to.
+
+- **Page root:** `w-full` plus responsive padding (e.g. `p-4 md:p-6 lg:py-8`). Avoid root-level
+  `max-w-sm`, `max-w-md`, `max-w-xl`, or `max-w-2xl` on list, grid, dashboard, or admin screens.
+- **Data-heavy screens:** Grids (`RncGrid`), tables, and multi-column layouts should span the
+  available width. See `user-list-screen.tsx` — `w-full` with no page-level max-width.
+- **When to constrain:** Only for flows that are intentionally narrow — login/auth cards, OTP,
+  marketing hero copy, or a single focused widget. Keep the cap on that widget, not the whole page.
+- **Forms:** If a form field column should not stretch edge-to-edge, apply `max-w-*` on the form
+  section (or individual fields), not on the screen wrapper. Prefer wider caps on large breakpoints
+  (e.g. `md:max-w-[700px] lg:max-w-[900px]`) over a fixed narrow column on desktop.
+- **App route shells** (`apps/web/app/**`, `apps/native/src/app/**`) should render shared screens
+  without adding extra `max-w-*` or centered column wrappers — layout belongs in the screen.

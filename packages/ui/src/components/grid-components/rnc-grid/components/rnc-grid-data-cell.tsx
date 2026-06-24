@@ -19,7 +19,7 @@ export function RncGridDataCell<T, S>({
 
   return (
     <View
-      className="pr-3 pl-1"
+      className="min-w-0 pr-3 pl-1"
       style={{
         flexGrow: col.minWidth ?? 120,
         flexShrink: 1,

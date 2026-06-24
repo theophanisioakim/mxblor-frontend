@@ -24,5 +24,5 @@ export function RncGridStringCell({
     )
   }
 
-  return <Text className="text-foreground text-sm">{value}</Text>
+  return <Text className="break-words text-foreground text-sm">{value}</Text>
 }

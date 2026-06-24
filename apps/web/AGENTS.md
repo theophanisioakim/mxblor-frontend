@@ -28,6 +28,9 @@ Layout: `app/` (routes, `layout.tsx`, `page.tsx`), `components/` (web-only local
 - The app's own `components.json` adds shadcn components into the **app** (`@/components`) when they're
   app-specific; shared components belong in `@workspace/ui` (wrapping `web-ui`).
 - Web theme tokens come from `@workspace/ui/globals.css` (imported in `app/layout.tsx`).
+- **Page width:** Route `page.tsx` / layout shells should not wrap shared screens in narrow
+  `max-w-*` containers. Full-width layout is defined in `@workspace/app` screens (root `AGENTS.md`
+  §7, `packages/app/AGENTS.md`).
 - `pnpm --filter web dev` to run; `pnpm --filter web test:e2e` for Playwright E2E (install browsers
   first with `pnpm --filter web exec playwright install chromium`); `pnpm --filter web typecheck`
   (lint/format run repo-wide via `pnpm lint` / `pnpm format` — Biome from the root, not per-package)

@@ -40,7 +40,7 @@ export function RncGridRow<T>({
   const rowContent = (
     <Pressable
       className={cn(
-        "flex-row items-center px-3 py-2",
+        "flex-row items-start px-3 py-2",
         selected ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted",
         clickable && "cursor-pointer"
       )}

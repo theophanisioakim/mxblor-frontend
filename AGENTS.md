@@ -300,6 +300,14 @@ canonical pattern. Rules when adding or changing a `ui` primitive:
   package's `src` by relative path.
 - **Styling:** Tailwind utility classes + `cva` for variants + `cn` to merge. Prefer theme tokens so
   the same class works on web and native.
+- **Page layout (large screens):** Screens and app routes should use the full width available inside
+  the shell (`w-full` with responsive padding). Do **not** add narrow `max-w-*` wrappers at the page
+  root unless the UX genuinely needs a constrained column (e.g. login, OTP, a single-field prompt).
+  Data-heavy pages (grids, tables, dashboards, admin lists) must stay full-width on large viewports —
+  let `RncGrid` and similar components use the space. When a form benefits from a reading width, cap
+  **the form block only** (not the whole page) and scale the cap up at `lg`/`xl` rather than leaving
+  `max-w-sm` / `max-w-xl` in place on desktop. See `packages/app/AGENTS.md` and
+  `.claude/rules/page-layout.md`.
 - **Match the surrounding code** — file layout, naming, comment density, the `.native` split pattern.
 
 ---

@@ -38,6 +38,9 @@ input), `__tests__/` (Jest + React Native Testing Library startup/component test
 - **Tailwind content globs** in `tailwind.config.js` must include any new workspace package whose
   classes need compiling (currently `ui`, `native-ui`, `app`, `providers`). NativeWind input is
   `src/global.css`.
+- **Page width:** Expo route files should not wrap shared screens in narrow `max-w-*` containers.
+  Full-width layout is defined in `@workspace/app` screens (root `AGENTS.md` §7,
+  `packages/app/AGENTS.md`).
 - A single React / React Native version is enforced via the catalog + `overrides`
   (`react`, `react-dom`, `react-native` in `pnpm-workspace.yaml`) — never introduce a second copy.
   The `react` override exists because `react-native-mmkv` / `react-native-nitro-modules` otherwise

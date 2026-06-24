@@ -44,6 +44,7 @@ Path-gated guidance that loads when you open a matching file:
 - `ui-abstraction.md` → `packages/ui/src/components/**`
 - `generated-api.md` → `packages/api-client/src/generated/**`
 - `cross-platform.md` → `**/*.native.{ts,tsx}`
+- `page-layout.md` → `packages/app/src/screens/**`, `apps/web/app/**`, `apps/native/src/app/**`
 - `typescript-style.md` → `**/*.{ts,tsx}`
   These are guidance (like CLAUDE.md), not enforcement — the hook + permissions in `settings.json` are
   the enforced layer.

@@ -26,7 +26,7 @@ export function RncGridHeaderCell<T, S>({
   return (
     <Pressable
       className={cn(
-        "flex-row items-center gap-1 rounded-md py-1 pr-3 pl-1",
+        "min-w-0 flex-row items-center gap-1 rounded-md py-1 pr-3 pl-1",
         isSortable && "cursor-pointer hover:bg-accent"
       )}
       style={{
@@ -39,7 +39,9 @@ export function RncGridHeaderCell<T, S>({
         isSortable ? () => handleSortSelection(col.sortKey as S) : undefined
       }
     >
-      <Text className="font-bold text-foreground text-sm">{col.header}</Text>
+      <Text className="break-words font-bold text-foreground text-sm">
+        {col.header}
+      </Text>
       {isSortable && (
         <View className="flex-row items-center gap-0.5">
           <Icon as={SortIcon} size={14} className="text-foreground" />

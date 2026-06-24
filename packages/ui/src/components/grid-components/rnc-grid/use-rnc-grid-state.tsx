@@ -18,6 +18,18 @@ import type {
 } from "./rnc-grid-model"
 import { computeClientSideData } from "./utils"
 
+/** Shallow equality for selection key sets — same size and same members. */
+function areKeySetsEqual(
+  a: Set<string | number>,
+  b: Set<string | number>
+): boolean {
+  if (a.size !== b.size) return false
+  for (const key of a) {
+    if (!b.has(key)) return false
+  }
+  return true
+}
+
 export default function useRncGridState<
   T,
   S,
@@ -29,6 +41,10 @@ export default function useRncGridState<
   // ── Data fetching ──
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<RncGridData<T>>()
+  // Mirrors `data` for use inside the fetch effect's client-side guard without
+  // making `data` a reactive dependency — otherwise each server-side fetch
+  // (which sets a fresh `data` object) would re-trigger the effect forever.
+  const dataRef = useRef<RncGridData<T> | undefined>(undefined)
   const [refreshCounter, setRefreshCounter] = useState(0)
 
   // ── Columns ──
@@ -266,7 +282,7 @@ export default function useRncGridState<
       id: props.id,
     })
 
-    if (clientSide && data) {
+    if (clientSide && dataRef.current) {
       const prev = prevRefreshRef.current
       const isRefresh =
         prev.counter !== refreshCounter || prev.trigger !== props.refreshTrigger
@@ -310,6 +326,7 @@ export default function useRncGridState<
             signal: controller.signal,
           })
         }
+        dataRef.current = dataResponse
         setData(dataResponse)
         setLoading(false)
       } catch (e) {
@@ -331,7 +348,6 @@ export default function useRncGridState<
     refreshCounter,
     filterValues,
     props.refreshTrigger,
-    data,
     clientSide,
     props.fetchData,
     props.id,
@@ -377,7 +393,10 @@ export default function useRncGridState<
     if (props.selection?.resolveSelectedKeys) {
       const keys = props.selection.resolveSelectedKeys(data.data)
       const newSet = new Set(keys)
-      setSelectedKeys(newSet)
+      // Bail out when the resolved keys are unchanged so an unstable
+      // `keyExtractor`/`resolveSelectedKeys` (recreated each render) can't spin a
+      // selection → onChange → re-render loop. Returning `prev` skips the update.
+      setSelectedKeys((prev) => (areKeySetsEqual(prev, newSet) ? prev : newSet))
       selectedRowsCacheRef.current.clear()
       for (const row of data.data) {
         const key = keyExtractor(row, 0)
@@ -386,7 +405,7 @@ export default function useRncGridState<
         }
       }
     } else if (!persistSelection) {
-      setSelectedKeys(new Set())
+      setSelectedKeys((prev) => (prev.size === 0 ? prev : new Set()))
       selectedRowsCacheRef.current.clear()
     }
   }, [
@@ -465,8 +484,16 @@ export default function useRncGridState<
 
   useEffect(() => {
     if (!props.selection?.onChange || !selectable) return
-    props.selection.onChange(Array.from(selectedRowsCacheRef.current.values()))
-  }, [selectable, props.selection?.onChange])
+    // Derive the rows from `selectedKeys` so this fires on every selection
+    // change (toggling a row mutates `selectedKeys`); the cache holds the row
+    // objects for the currently-selected keys.
+    const selectedRows: T[] = []
+    for (const key of selectedKeys) {
+      const row = selectedRowsCacheRef.current.get(key)
+      if (row) selectedRows.push(row)
+    }
+    props.selection.onChange(selectedRows)
+  }, [selectable, props.selection?.onChange, selectedKeys])
 
   // ── Row actions ──
   const actions = props.actions
