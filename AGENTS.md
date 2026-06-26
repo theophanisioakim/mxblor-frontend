@@ -115,6 +115,22 @@ in `ui`: `ui → providers → router → ui` would be a cycle. Pure, provider-f
 chrome needs (e.g. the `Popover`/`Separator` primitives and the dynamic `iconFor` resolver, whose
 native variant must import `native-ui`) do live in `ui`.
 
+### Navigation menus are backend-driven
+
+**Do not hardcode nav items in the frontend.** The sidebar, top bar, mega/popover menus, and bottom
+tab bar all render from the menu tree returned by the backend `getMyMenus` API (Orval hook:
+`useGetMyMenus`, type `SbfMenuTreeResponseDto` with `top` and `side` arrays).
+
+- **`@workspace/providers`** — `MenuProvider` fetches the tree and exposes it via `useMenu()`.
+  Authenticated users get their role/schema-specific tree; anonymous users get public menus. The tree
+  refetches on login/logout (query key includes auth + `selectedSchema`).
+- **`apps/web`** — `layout.tsx` may SSR-fetch `getMyMenus()` and pass `initialMenus` into
+  `AppProviders` so the chrome paints on first load without a client round-trip.
+- **`apps/native`** — fetches client-side only (`initialMenus` is undefined).
+- **`@workspace/app`** — navigation chrome (`src/navigation/`) maps the API tree to UI. To add,
+  reorder, or permission-gate a nav entry, change the backend menu data — not a hardcoded link list
+  in the frontend.
+
 ---
 
 ## 3. Build, test, format — commands

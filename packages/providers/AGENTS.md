@@ -9,6 +9,18 @@ It owns cross-cutting runtime context used by screens and app-local layouts:
 auth/session state, OTP interception state, menus, breadcrumbs, pathname,
 sidebar state, i18n provider wiring, and theme state.
 
+### Menus (`MenuProvider` / `useMenu`)
+
+Navigation menus are **backend-driven**. `MenuProvider` fetches the tree with the Orval-generated
+`useGetMyMenus` hook (`getMyMenus` API, `SbfMenuTreeResponseDto` with `top` / `side` arrays).
+Authenticated users get their role/schema-specific tree; anonymous users get public menus. Refetch on
+login/logout is driven by the query key (`isAuthenticated`, `selectedSchema`).
+
+- Web may pass `initialMenus` from SSR (`apps/web/app/layout.tsx`) to seed React Query on first
+  paint; the seed is released after the first auth/schema change.
+- Native leaves `initialMenus` undefined and fetches client-side.
+- Consumers (`@workspace/app` navigation chrome) must not hardcode nav items — read from `useMenu()`.
+
 ## Rules
 
 - Keep this package cross-platform. Put platform-specific shell behavior behind

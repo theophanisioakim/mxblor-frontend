@@ -17,9 +17,14 @@ export function RncGridDirtyBar() {
         {dirtyRowCount} unsaved {dirtyRowCount === 1 ? "change" : "changes"}
       </Text>
       <View className="flex-row items-center gap-2">
-        <Button variant="ghost" size="sm" onPress={resetAllDirtyRows}>
-          <Icon as={Undo2} size={15} />
-          <Text className="text-sm">Discard</Text>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-amber-300 bg-background text-amber-800 hover:bg-amber-100 hover:text-amber-900"
+          onPress={resetAllDirtyRows}
+        >
+          <Icon as={Undo2} size={15} className="text-amber-800" />
+          <Text className="text-amber-800 text-sm">Discard</Text>
         </Button>
         <Button size="sm" onPress={() => saveAllDirtyRows()}>
           <Icon as={Save} size={15} />

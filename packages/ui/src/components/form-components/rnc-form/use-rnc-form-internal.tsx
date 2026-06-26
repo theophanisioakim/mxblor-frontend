@@ -10,10 +10,11 @@ export default function useRncFormInternal<T>(props: RncFormProps<T>) {
   // enabled) while the client's first render still reads `true` (disabled),
   // mismatching the `disabled` attribute. So async defaults / loading flags are
   // gated on the props that actually need them.
-  const hasAsyncValues = Boolean(props.loadFormValues)
+  const hasAsyncValues =
+    Boolean(props.loadFormValues) && props.defaultValues === undefined
   const methods = useForm({
-    mode: "onBlur",
-    defaultValues: hasAsyncValues ? loadData : {},
+    mode: props.mode ?? "onBlur",
+    defaultValues: props.defaultValues ?? (hasAsyncValues ? loadData : {}),
   })
 
   // State to track loading status

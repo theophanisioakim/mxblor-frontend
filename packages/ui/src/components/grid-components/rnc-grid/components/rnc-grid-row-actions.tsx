@@ -39,6 +39,7 @@ export function RncGridRowActions<T>({
     keyExtractor,
     isRowDirty,
     discardRow,
+    isDraftRow,
   } = useRncGridContext()
 
   const isEditAll = addEditMode === "inline" && inlineEdit?.mode === "all"
@@ -55,17 +56,17 @@ export function RncGridRowActions<T>({
     const dirty = isRowDirty(key)
     return (
       <Pressable
-        className="flex-row items-center gap-1"
-        style={{ width: actionsWidth || 40 }}
+        className="shrink-0 flex-row items-center gap-1 self-center"
+        style={{ width: actionsWidth || 30 }}
         onPress={stopPress}
       >
         {dirty && (
           <Pressable
-            className={cn(ICON_BTN, "cursor-pointer hover:bg-accent")}
+            className={cn(ICON_BTN, "cursor-pointer hover:bg-amber-100")}
             onPress={() => discardRow(key)}
             aria-label="Discard"
           >
-            <Icon as={Undo2} size={16} className="text-muted-foreground" />
+            <Icon as={Undo2} size={16} className="text-amber-700" />
           </Pressable>
         )}
       </Pressable>
@@ -78,7 +79,7 @@ export function RncGridRowActions<T>({
   if (editing && addEditMode === "inline") {
     return (
       <Pressable
-        className="flex-row items-center gap-1"
+        className="shrink-0 flex-row items-center gap-1 self-center"
         style={{ width: actionsWidth }}
         onPress={stopPress}
       >
@@ -96,11 +97,11 @@ export function RncGridRowActions<T>({
 
   return (
     <Pressable
-      className="flex-row items-center gap-1"
+      className="shrink-0 flex-row items-center gap-1 self-center"
       style={{ width: actionsWidth }}
       onPress={stopPress}
     >
-      {actions?.edit && (
+      {actions?.edit && !isDraftRow(row) && (
         <Pressable
           className={cn(ICON_BTN, "cursor-pointer hover:bg-accent")}
           onPress={() => handleEditPress(row)}
@@ -109,7 +110,7 @@ export function RncGridRowActions<T>({
           <Icon as={Pencil} size={16} className="text-muted-foreground" />
         </Pressable>
       )}
-      {actions?.delete && (
+      {actions?.delete && !isDraftRow(row) && (
         <Pressable
           className={cn(ICON_BTN, "cursor-pointer hover:bg-red-100")}
           onPress={() => handleDeletePress(row)}

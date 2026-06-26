@@ -1,12 +1,14 @@
 "use client"
 
 import { mySessionStorage, StorageKeys } from "@workspace/storage"
-import { useEffect, useMemo, useRef, useState } from "react"
-import type { UseFormReturn } from "react-hook-form"
+import type { SetStateAction } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { FieldErrors, UseFormReturn } from "react-hook-form"
 import { useContainerWidth } from "../../../hooks/use-container-width"
 import { useIsMobile } from "../../../hooks/use-is-mobile"
 import { resolveColumnType } from "../cells/rnc-grid-cell-resolver"
 import type { RncGridContextValue } from "./rnc-grid-context"
+import { isRncGridDraftRow } from "./rnc-grid-draft"
 import type {
   RncGridColumn,
   RncGridColumnType,
@@ -30,6 +32,19 @@ function areKeySetsEqual(
   return true
 }
 
+function focusFirstFormError(errors: FieldErrors) {
+  for (const key of Object.keys(errors)) {
+    const ref = errors[key]?.ref as { focus?: () => void } | undefined
+    if (ref?.focus) {
+      ref.focus()
+      break
+    }
+  }
+}
+
+const DEFAULT_DISCARD_CONFIRM_MESSAGE =
+  "You have unsaved changes. Continuing will discard them. Do you want to continue?"
+
 export default function useRncGridState<
   T,
   S,
@@ -46,6 +61,20 @@ export default function useRncGridState<
   // (which sets a fresh `data` object) would re-trigger the effect forever.
   const dataRef = useRef<RncGridData<T> | undefined>(undefined)
   const [refreshCounter, setRefreshCounter] = useState(0)
+  const [effectiveRefreshTrigger, setEffectiveRefreshTrigger] = useState(
+    props.refreshTrigger ?? 0
+  )
+  const withDiscardConfirmationRef = useRef<
+    (action: () => void, message?: string) => void
+  >((action) => action())
+  const pendingRefetchActionRef = useRef<(() => void) | null>(null)
+  const resetAllDirtyRowsRef = useRef<() => void>(() => {})
+  const removeDraftRowRef = useRef<(row: T, index: number) => void>(() => {})
+  const acknowledgedExternalRefreshRef = useRef(props.refreshTrigger ?? 0)
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false)
+  const [discardConfirmMessage, setDiscardConfirmMessage] = useState(
+    DEFAULT_DISCARD_CONFIRM_MESSAGE
+  )
 
   // ── Columns ──
   const [columns, setColumns] = useState<RncGridColumn<T, S>[]>(props.columns)
@@ -91,20 +120,22 @@ export default function useRncGridState<
   }
 
   function handleSortSelection(sortKey: S) {
-    const existing = sort.find((s) => s.field === sortKey)
-    if (existing) {
-      if (existing.direction === "ASC") {
-        setSort(
-          sort.map((s) =>
-            s.field === sortKey ? { ...s, direction: "DESC" as const } : s
+    withDiscardConfirmationRef.current(() => {
+      const existing = sort.find((s) => s.field === sortKey)
+      if (existing) {
+        if (existing.direction === "ASC") {
+          setSort(
+            sort.map((s) =>
+              s.field === sortKey ? { ...s, direction: "DESC" as const } : s
+            )
           )
-        )
+        } else {
+          setSort(sort.filter((s) => s.field !== sortKey))
+        }
       } else {
-        setSort(sort.filter((s) => s.field !== sortKey))
+        setSort([...sort, { field: sortKey, direction: "ASC" }])
       }
-    } else {
-      setSort([...sort, { field: sortKey, direction: "ASC" }])
-    }
+    })
   }
 
   // ── Filtering ──
@@ -141,32 +172,36 @@ export default function useRncGridState<
   }
 
   function clearFilters() {
-    isResettingRef.current = true
-    const persistent = props.filters?.persistent ?? {}
-    const allFields = filterMethodsRef.current?.getValues() ?? {}
-    const clearedFields = Object.fromEntries(
-      Object.keys(allFields).map((k) => [k, null])
-    )
-    filterMethodsRef.current?.reset({ ...clearedFields, ...persistent })
-    setFilterValues({} as F)
-    setPagination((prev) => ({ ...prev, pageNumber: 0 }))
-    setTimeout(() => {
-      isResettingRef.current = false
-    }, 400)
+    withDiscardConfirmationRef.current(() => {
+      isResettingRef.current = true
+      const persistent = props.filters?.persistent ?? {}
+      const allFields = filterMethodsRef.current?.getValues() ?? {}
+      const clearedFields = Object.fromEntries(
+        Object.keys(allFields).map((k) => [k, null])
+      )
+      filterMethodsRef.current?.reset({ ...clearedFields, ...persistent })
+      setFilterValues({} as F)
+      setPagination((prev) => ({ ...prev, pageNumber: 0 }))
+      setTimeout(() => {
+        isResettingRef.current = false
+      }, 400)
+    })
   }
 
   function handleReset() {
-    isResettingRef.current = true
-    const defaults = (props.filters?.defaultValues ?? {}) as F
-    const persistent = props.filters?.persistent ?? {}
-    filterMethodsRef.current?.reset({ ...defaults, ...persistent })
-    setFilterValues(defaults)
-    if (props.initialPagination) setPagination(props.initialPagination)
-    setSort(props.initialSort)
-    if (clientSide) setRefreshCounter((c) => c + 1)
-    setTimeout(() => {
-      isResettingRef.current = false
-    }, 400)
+    withDiscardConfirmationRef.current(() => {
+      isResettingRef.current = true
+      const defaults = (props.filters?.defaultValues ?? {}) as F
+      const persistent = props.filters?.persistent ?? {}
+      filterMethodsRef.current?.reset({ ...defaults, ...persistent })
+      setFilterValues(defaults)
+      if (props.initialPagination) setPagination(props.initialPagination)
+      setSort(props.initialSort)
+      if (clientSide) setRefreshCounter((c) => c + 1)
+      setTimeout(() => {
+        isResettingRef.current = false
+      }, 400)
+    }, props.toolbar?.reset?.confirm)
   }
 
   async function handleFilterLoad() {
@@ -201,8 +236,10 @@ export default function useRncGridState<
     const userValues = Object.fromEntries(
       Object.entries(values).filter(([k]) => !persistentKeys.has(k))
     ) as F
-    setPagination((prev) => ({ ...prev, pageNumber: 0 }))
-    setFilterValues({ ...userValues })
+    withDiscardConfirmationRef.current(() => {
+      setPagination((prev) => ({ ...prev, pageNumber: 0 }))
+      setFilterValues({ ...userValues })
+    })
   }
 
   function openMobileFilters() {
@@ -221,38 +258,44 @@ export default function useRncGridState<
   }
 
   function applyFilters() {
-    filterSnapshotRef.current = null
-    const values = (filterMethodsRef.current?.getValues() ?? {}) as F
-    const persistentKeys = new Set(Object.keys(props.filters?.persistent ?? {}))
-    const userValues = Object.fromEntries(
-      Object.entries(values).filter(
-        ([k, v]) =>
-          !persistentKeys.has(k) &&
-          v !== "" &&
-          v !== null &&
-          v !== undefined &&
-          !(Array.isArray(v) && v.length === 0)
+    withDiscardConfirmationRef.current(() => {
+      filterSnapshotRef.current = null
+      const values = (filterMethodsRef.current?.getValues() ?? {}) as F
+      const persistentKeys = new Set(
+        Object.keys(props.filters?.persistent ?? {})
       )
-    ) as F
-    setFilterValues({ ...userValues })
-    setPagination((prev) => ({ ...prev, pageNumber: 0 }))
-    setFiltersExpanded(false)
+      const userValues = Object.fromEntries(
+        Object.entries(values).filter(
+          ([k, v]) =>
+            !persistentKeys.has(k) &&
+            v !== "" &&
+            v !== null &&
+            v !== undefined &&
+            !(Array.isArray(v) && v.length === 0)
+        )
+      ) as F
+      setFilterValues({ ...userValues })
+      setPagination((prev) => ({ ...prev, pageNumber: 0 }))
+      setFiltersExpanded(false)
+    })
   }
 
   function clearMobileFilters() {
-    isResettingRef.current = true
-    const persistent = props.filters?.persistent ?? {}
-    const allFields = filterMethodsRef.current?.getValues() ?? {}
-    const clearedFields = Object.fromEntries(
-      Object.keys(allFields).map((k) => [k, null])
-    )
-    filterMethodsRef.current?.reset({ ...clearedFields, ...persistent })
-    setFilterValues({} as F)
-    setPagination((prev) => ({ ...prev, pageNumber: 0 }))
-    filterSnapshotRef.current = filterMethodsRef.current?.getValues() ?? null
-    setTimeout(() => {
-      isResettingRef.current = false
-    }, 400)
+    withDiscardConfirmationRef.current(() => {
+      isResettingRef.current = true
+      const persistent = props.filters?.persistent ?? {}
+      const allFields = filterMethodsRef.current?.getValues() ?? {}
+      const clearedFields = Object.fromEntries(
+        Object.keys(allFields).map((k) => [k, null])
+      )
+      filterMethodsRef.current?.reset({ ...clearedFields, ...persistent })
+      setFilterValues({} as F)
+      setPagination((prev) => ({ ...prev, pageNumber: 0 }))
+      filterSnapshotRef.current = filterMethodsRef.current?.getValues() ?? null
+      setTimeout(() => {
+        isResettingRef.current = false
+      }, 400)
+    })
   }
 
   const activeFilterCount = Object.values(filterValues).filter(
@@ -266,7 +309,7 @@ export default function useRncGridState<
   // ── Data fetching effect ──
   const prevRefreshRef = useRef({
     counter: refreshCounter,
-    trigger: props.refreshTrigger,
+    trigger: effectiveRefreshTrigger,
   })
 
   useEffect(() => {
@@ -285,10 +328,11 @@ export default function useRncGridState<
     if (clientSide && dataRef.current) {
       const prev = prevRefreshRef.current
       const isRefresh =
-        prev.counter !== refreshCounter || prev.trigger !== props.refreshTrigger
+        prev.counter !== refreshCounter ||
+        prev.trigger !== effectiveRefreshTrigger
       prevRefreshRef.current = {
         counter: refreshCounter,
-        trigger: props.refreshTrigger,
+        trigger: effectiveRefreshTrigger,
       }
       if (!isRefresh) {
         setLoading(false)
@@ -347,7 +391,7 @@ export default function useRncGridState<
     loadingStoredState,
     refreshCounter,
     filterValues,
-    props.refreshTrigger,
+    effectiveRefreshTrigger,
     clientSide,
     props.fetchData,
     props.id,
@@ -377,6 +421,28 @@ export default function useRncGridState<
     columns,
     props.filters?.clientFilter,
   ])
+
+  // ── Inline draft rows (row mode add) ──
+  const [draftRows, setDraftRows] = useState<T[]>([])
+  const [dirtyDraftKeys, setDirtyDraftKeys] = useState<Set<string | number>>(
+    new Set()
+  )
+
+  const isDraftRow = useCallback(
+    (row: T) =>
+      props.inlineEdit?.isDraftRow?.(row) ??
+      isRncGridDraftRow(row as { id?: string }),
+    [props.inlineEdit?.isDraftRow]
+  )
+
+  const displayData = useMemo(() => {
+    const base = processedData ?? data
+    if (!base || draftRows.length === 0) return base
+    return {
+      ...base,
+      data: [...draftRows, ...base.data],
+    }
+  }, [processedData, data, draftRows])
 
   // ── Selection ──
   const keyExtractor = props.keyExtractor
@@ -415,7 +481,7 @@ export default function useRncGridState<
     persistSelection,
   ])
 
-  const currentPageRows = processedData?.data ?? []
+  const currentPageRows = displayData?.data ?? []
   const allSelected =
     currentPageRows.length > 0 &&
     currentPageRows.every((row, i) => selectedKeys.has(keyExtractor(row, i)))
@@ -514,9 +580,11 @@ export default function useRncGridState<
     props.addEditMode === "inline" && props.inlineEdit ? 2 : 0
   // In mode 'all', reserve space for the per-row discard button even without other actions
   const editAllActionsCount = isEditAll ? 1 : 0
-  const actionsWidth =
-    hasActions || isEditAll
-      ? Math.max(actionsCount, editingActionsCount, editAllActionsCount) * 40
+  const ACTION_SLOT_WIDTH = 40
+  const actionsWidth = isEditAll
+    ? editAllActionsCount * 30
+    : hasActions
+      ? Math.max(actionsCount, editingActionsCount) * ACTION_SLOT_WIDTH
       : 0
 
   // ── Inline editing ──
@@ -531,6 +599,9 @@ export default function useRncGridState<
 
   function cancelEditingRow(row: T, index: number) {
     const key = keyExtractor(row, index)
+    if (isDraftRow(row)) {
+      removeDraftRow(row, index)
+    }
     setEditingRowKeys((prev) => {
       const next = new Set(prev)
       next.delete(key)
@@ -541,6 +612,7 @@ export default function useRncGridState<
 
   function isRowEditing(row: T, index: number): boolean {
     if (props.addEditMode !== "inline" || !props.inlineEdit) return false
+    if (isDraftRow(row)) return true
     if (props.inlineEdit.mode === "all") return true
     return editingRowKeys.has(keyExtractor(row, index))
   }
@@ -554,6 +626,9 @@ export default function useRncGridState<
     const success = await props.inlineEdit.onSave(row, formValues as Partial<T>)
     if (success) {
       const key = keyExtractor(row, index)
+      if (isDraftRow(row)) {
+        removeDraftRow(row, index)
+      }
       setEditingRowKeys((prev) => {
         const next = new Set(prev)
         next.delete(key)
@@ -574,10 +649,67 @@ export default function useRncGridState<
     rowFormsRef.current.set(rowKey, methods)
   }
 
+  function handleDraftFormChange(rowKey: string | number) {
+    const methods = rowFormsRef.current.get(rowKey)
+    if (!methods) return
+    const values = methods.getValues()
+    const hasValue = columns.some((col) => {
+      if (col.editable === false) return false
+      const value = values[col.key]
+      return value !== undefined && value !== null && value !== ""
+    })
+    setDirtyDraftKeys((prev) => {
+      if (hasValue === prev.has(rowKey)) return prev
+      const next = new Set(prev)
+      if (hasValue) next.add(rowKey)
+      else next.delete(rowKey)
+      return next
+    })
+  }
+
+  function discardNonDirtyDraftRows() {
+    const removedKeys = draftRows
+      .filter((draft) => !dirtyDraftKeys.has(keyExtractor(draft, 0)))
+      .map((draft) => keyExtractor(draft, 0))
+
+    setDraftRows((prev) =>
+      prev.filter((draft) => dirtyDraftKeys.has(keyExtractor(draft, 0)))
+    )
+
+    if (removedKeys.length > 0) {
+      setEditingRowKeys((prev) => {
+        const next = new Set(prev)
+        for (const key of removedKeys) {
+          next.delete(key)
+        }
+        return next
+      })
+      for (const key of removedKeys) {
+        rowFormsRef.current.delete(key)
+      }
+    }
+  }
+
+  function removeDraftRow(row: T, index: number) {
+    const key = keyExtractor(row, index)
+    setDraftRows((prev) =>
+      prev.filter(
+        (draft, draftIndex) => keyExtractor(draft, draftIndex) !== key
+      )
+    )
+    setDirtyDraftKeys((prev) => {
+      if (!prev.has(key)) return prev
+      const next = new Set(prev)
+      next.delete(key)
+      return next
+    })
+    rowFormsRef.current.delete(key)
+  }
+
   function handleRowFormChange(rowKey: string | number) {
     const methods = rowFormsRef.current.get(rowKey)
     if (!methods) return
-    const rows = processedData?.data ?? []
+    const rows = displayData?.data ?? []
     const row = rows.find((r, i) => keyExtractor(r, i) === rowKey) as
       | Record<string, unknown>
       | undefined
@@ -599,9 +731,30 @@ export default function useRncGridState<
 
   async function saveAllDirtyRows() {
     if (!props.inlineEdit) return
-    const rows = processedData?.data ?? []
+    const rows = displayData?.data ?? []
+    const dirtyKeys = Array.from(dirtyRowKeys)
+    if (dirtyKeys.length === 0) return
+
+    let allValid = true
+    let firstInvalidForm: UseFormReturn | undefined
+    for (const rowKey of dirtyKeys) {
+      const methods = rowFormsRef.current.get(rowKey)
+      if (!methods) continue
+      const isValid = await methods.trigger()
+      if (!isValid) {
+        allValid = false
+        firstInvalidForm ??= methods
+      }
+    }
+    if (!allValid) {
+      if (firstInvalidForm) {
+        focusFirstFormError(firstInvalidForm.formState.errors)
+      }
+      return
+    }
+
     const entries: { row: T; updatedValues: Partial<T> }[] = []
-    for (const rowKey of dirtyRowKeys) {
+    for (const rowKey of dirtyKeys) {
       const methods = rowFormsRef.current.get(rowKey)
       if (!methods) continue
       const row = rows.find((r, i) => keyExtractor(r, i) === rowKey)
@@ -622,28 +775,78 @@ export default function useRncGridState<
     }
 
     if (success) {
+      const savedDraftKeys = new Set(
+        entries
+          .filter(({ row }) => isDraftRow(row))
+          .map(({ row }) => {
+            const index = rows.indexOf(row)
+            return keyExtractor(row, index >= 0 ? index : 0)
+          })
+      )
+      if (savedDraftKeys.size > 0) {
+        setDraftRows((prev) =>
+          prev.filter(
+            (draft, draftIndex) =>
+              !savedDraftKeys.has(keyExtractor(draft, draftIndex))
+          )
+        )
+        setDirtyDraftKeys((prev) => {
+          const next = new Set(prev)
+          for (const key of savedDraftKeys) {
+            next.delete(key)
+          }
+          return next
+        })
+      }
       setDirtyRowKeys(new Set())
       setRefreshCounter((c) => c + 1)
     }
   }
 
   function resetAllDirtyRows() {
-    const rows = processedData?.data ?? []
+    const rows = displayData?.data ?? []
+    const draftKeysToRemove: (string | number)[] = []
     for (const [rowKey, methods] of rowFormsRef.current.entries()) {
-      const row = rows.find((r, i) => keyExtractor(r, i) === rowKey) as
-        | Record<string, unknown>
-        | undefined
-      if (!row) continue
+      const rowIndex = rows.findIndex((r, i) => keyExtractor(r, i) === rowKey)
+      if (rowIndex < 0) continue
+      const row = rows[rowIndex]
+      if (row === undefined) continue
+      if (isDraftRow(row)) {
+        draftKeysToRemove.push(rowKey)
+        continue
+      }
       const values: Record<string, unknown> = {}
       for (const col of columns) {
         if (col.editable !== false) {
-          values[col.key] = row[col.key]
+          values[col.key] = (row as Record<string, unknown>)[col.key]
         }
       }
       methods.reset(values)
     }
+    if (draftKeysToRemove.length > 0) {
+      const keysToRemove = new Set(draftKeysToRemove)
+      setDraftRows((prev) =>
+        prev.filter(
+          (draft, draftIndex) =>
+            !keysToRemove.has(keyExtractor(draft, draftIndex))
+        )
+      )
+      setDirtyDraftKeys((prev) => {
+        const next = new Set(prev)
+        for (const key of keysToRemove) {
+          next.delete(key)
+        }
+        return next
+      })
+      for (const key of keysToRemove) {
+        rowFormsRef.current.delete(key)
+      }
+    }
     setDirtyRowKeys(new Set())
   }
+
+  resetAllDirtyRowsRef.current = resetAllDirtyRows
+  removeDraftRowRef.current = removeDraftRow
 
   function isRowDirty(rowKey: string | number): boolean {
     return dirtyRowKeys.has(rowKey)
@@ -652,15 +855,24 @@ export default function useRncGridState<
   function discardRow(rowKey: string | number) {
     const methods = rowFormsRef.current.get(rowKey)
     if (!methods) return
-    const rows = processedData?.data ?? []
-    const row = rows.find((r, i) => keyExtractor(r, i) === rowKey) as
-      | Record<string, unknown>
-      | undefined
-    if (!row) return
+    const rows = displayData?.data ?? []
+    const rowIndex = rows.findIndex((r, i) => keyExtractor(r, i) === rowKey)
+    if (rowIndex < 0) return
+    const row = rows[rowIndex]
+    if (row === undefined) return
+    if (isDraftRow(row)) {
+      removeDraftRow(row, rowIndex)
+      setDirtyRowKeys((prev) => {
+        const next = new Set(prev)
+        next.delete(rowKey)
+        return next
+      })
+      return
+    }
     const values: Record<string, unknown> = {}
     for (const col of columns) {
       if (col.editable !== false) {
-        values[col.key] = row[col.key]
+        values[col.key] = (row as Record<string, unknown>)[col.key]
       }
     }
     methods.reset(values)
@@ -669,6 +881,127 @@ export default function useRncGridState<
       next.delete(rowKey)
       return next
     })
+  }
+
+  const hasUnsavedInlineEdits = useCallback((): boolean => {
+    if (props.addEditMode !== "inline" || !props.inlineEdit) return false
+    if (props.inlineEdit.mode === "all") {
+      return dirtyRowKeys.size > 0 || dirtyDraftKeys.size > 0
+    }
+    return editingRowKeys.size > 0 || dirtyDraftKeys.size > 0
+  }, [
+    props.addEditMode,
+    props.inlineEdit,
+    dirtyRowKeys,
+    dirtyDraftKeys,
+    editingRowKeys,
+  ])
+
+  const discardAllInlineEdits = useCallback(() => {
+    if (props.addEditMode !== "inline" || !props.inlineEdit) return
+
+    if (props.inlineEdit.mode === "all") {
+      resetAllDirtyRowsRef.current()
+      return
+    }
+
+    const rows = displayData?.data ?? []
+    for (const key of editingRowKeys) {
+      const rowIndex = rows.findIndex((r, i) => keyExtractor(r, i) === key)
+      if (rowIndex < 0) continue
+      const row = rows[rowIndex]
+      if (row === undefined) continue
+      if (isDraftRow(row)) {
+        removeDraftRowRef.current(row, rowIndex)
+      } else {
+        props.inlineEdit.onCancel?.(row)
+        rowFormsRef.current.delete(key)
+      }
+    }
+    setEditingRowKeys(new Set())
+    setDirtyDraftKeys(new Set())
+    setDirtyRowKeys(new Set())
+  }, [
+    props.addEditMode,
+    props.inlineEdit,
+    displayData,
+    editingRowKeys,
+    isDraftRow,
+    keyExtractor,
+  ])
+
+  function requestRefetchAction(action: () => void, message?: string) {
+    if (!hasUnsavedInlineEdits()) {
+      action()
+      return
+    }
+    pendingRefetchActionRef.current = () => {
+      discardAllInlineEdits()
+      action()
+    }
+    setDiscardConfirmMessage(
+      message ??
+        props.inlineEdit?.discardConfirm ??
+        DEFAULT_DISCARD_CONFIRM_MESSAGE
+    )
+    setDiscardConfirmOpen(true)
+  }
+
+  withDiscardConfirmationRef.current = requestRefetchAction
+
+  function confirmDiscardRefetch() {
+    const action = pendingRefetchActionRef.current
+    pendingRefetchActionRef.current = null
+    setDiscardConfirmOpen(false)
+    action?.()
+  }
+
+  function cancelDiscardRefetch() {
+    const external = props.refreshTrigger ?? 0
+    if (external !== effectiveRefreshTrigger) {
+      acknowledgedExternalRefreshRef.current = external
+    }
+    pendingRefetchActionRef.current = null
+    setDiscardConfirmOpen(false)
+  }
+
+  function guardedSetPagination(action: SetStateAction<RncGridPagination>) {
+    withDiscardConfirmationRef.current(() => setPagination(action))
+  }
+
+  useEffect(() => {
+    const external = props.refreshTrigger ?? 0
+    if (external === effectiveRefreshTrigger) {
+      acknowledgedExternalRefreshRef.current = external
+      return
+    }
+    if (external === acknowledgedExternalRefreshRef.current) return
+
+    if (hasUnsavedInlineEdits()) {
+      pendingRefetchActionRef.current = () => {
+        discardAllInlineEdits()
+        setEffectiveRefreshTrigger(external)
+        acknowledgedExternalRefreshRef.current = external
+      }
+      setDiscardConfirmMessage(
+        props.inlineEdit?.discardConfirm ?? DEFAULT_DISCARD_CONFIRM_MESSAGE
+      )
+      setDiscardConfirmOpen(true)
+      return
+    }
+
+    setEffectiveRefreshTrigger(external)
+    acknowledgedExternalRefreshRef.current = external
+  }, [
+    props.refreshTrigger,
+    effectiveRefreshTrigger,
+    props.inlineEdit,
+    hasUnsavedInlineEdits,
+    discardAllInlineEdits,
+  ])
+
+  function guardedIncrementRefreshCounter() {
+    requestRefetchAction(() => setRefreshCounter((c) => c + 1))
   }
 
   // ── Modal editing ──
@@ -699,17 +1032,14 @@ export default function useRncGridState<
 
   function handleEditPress(row: T) {
     if (!actions?.edit) return
+    if (isDraftRow(row)) return
     if (props.addEditMode === "inline") {
-      const index = (processedData?.data ?? []).indexOf(row)
+      const index = (displayData?.data ?? []).indexOf(row)
       if (editingRowKeys.has(keyExtractor(row, index))) {
         cancelEditingRow(row, index)
       } else {
         startEditingRow(row, index)
       }
-      return
-    }
-    if (props.addEditMode === "modal" && props.modalEdit) {
-      openModalEdit(row)
       return
     }
     if (actions.edit.route) {
@@ -718,7 +1048,13 @@ export default function useRncGridState<
           ? actions.edit.route(row)
           : actions.edit.route
       props.onNavigate?.(route)
-    } else if (actions.edit.onPress) {
+      return
+    }
+    if (props.addEditMode === "modal" && props.modalEdit) {
+      openModalEdit(row)
+      return
+    }
+    if (actions.edit.onPress) {
       actions.edit.onPress(row)
     }
   }
@@ -729,22 +1065,33 @@ export default function useRncGridState<
 
   function handleDeletePress(row: T) {
     if (!actions?.delete) return
+    const index = displayData?.data?.indexOf(row) ?? 0
+    if (isDraftRow(row)) {
+      removeDraftRow(row, index)
+      return
+    }
     if (showDeleteConfirm) {
       setDeleteTarget(row)
     } else {
-      Promise.resolve(actions.delete.onPress(row)).then(() => {
-        setRefreshCounter((c) => c + 1)
+      const deleteAction = actions.delete
+      requestRefetchAction(() => {
+        Promise.resolve(deleteAction.onPress(row)).then(() => {
+          guardedIncrementRefreshCounter()
+        })
       })
     }
   }
 
   function confirmDelete() {
-    if (deleteTarget && actions?.delete) {
-      Promise.resolve(actions.delete.onPress(deleteTarget)).then(() => {
-        setRefreshCounter((c) => c + 1)
-      })
-    }
+    const target = deleteTarget
     setDeleteTarget(null)
+    if (!target || !actions?.delete) return
+    const deleteAction = actions.delete
+    requestRefetchAction(() => {
+      Promise.resolve(deleteAction.onPress(target)).then(() => {
+        guardedIncrementRefreshCounter()
+      })
+    })
   }
 
   function cancelDelete() {
@@ -856,13 +1203,33 @@ export default function useRncGridState<
   )
 
   function handleRefresh() {
-    setRefreshCounter((c) => c + 1)
+    requestRefetchAction(() => {
+      discardNonDirtyDraftRows()
+      setRefreshCounter((c) => c + 1)
+    }, props.toolbar?.refresh?.confirm)
+  }
+
+  function handleResetGrid() {
+    handleReset()
   }
 
   function handleAddPress() {
     if (!toolbar?.add) return
     if (props.addEditMode === "modal" && props.modalEdit) {
       setModalEditRow({} as T)
+      return
+    }
+    if (
+      props.addEditMode === "inline" &&
+      props.inlineEdit?.createDraftRow &&
+      (props.inlineEdit.mode === "row" || props.inlineEdit.mode === "all")
+    ) {
+      const draft = props.inlineEdit.createDraftRow()
+      const key = keyExtractor(draft, 0)
+      setDraftRows((prev) => [draft, ...prev])
+      if (props.inlineEdit.mode === "row") {
+        setEditingRowKeys((prev) => new Set(prev).add(key))
+      }
       return
     }
     if (toolbar.add.route) {
@@ -885,7 +1252,7 @@ export default function useRncGridState<
     id: props.id,
     keyExtractor,
     isMobile,
-    data: processedData,
+    data: displayData,
     loading,
     refresh: handleRefresh,
     columns,
@@ -896,7 +1263,7 @@ export default function useRncGridState<
     containerProps,
     paged,
     pagination,
-    setPagination,
+    setPagination: guardedSetPagination,
     sort,
     sortableColumns,
     activeSortColumn,
@@ -933,9 +1300,11 @@ export default function useRncGridState<
     bulkActions: props.selection?.bulkActions?.map((action) => ({
       ...action,
       onPress: (rows: T[]) => {
-        Promise.resolve(action.onPress(rows)).then(() => {
-          setRefreshCounter((c) => c + 1)
-          clearSelection()
+        requestRefetchAction(() => {
+          Promise.resolve(action.onPress(rows)).then(() => {
+            setRefreshCounter((c) => c + 1)
+            clearSelection()
+          })
         })
       },
     })),
@@ -946,11 +1315,13 @@ export default function useRncGridState<
     handleDeletePress,
     addEditMode: props.addEditMode ?? "default",
     inlineEdit: props.inlineEdit,
+    isDraftRow,
     isRowEditing,
     cancelEditingRow,
     saveEditingRow,
     registerRowForm,
     handleRowFormChange,
+    handleDraftFormChange,
     dirtyRowCount: dirtyRowKeys.size,
     isRowDirty,
     discardRow,
@@ -965,12 +1336,16 @@ export default function useRncGridState<
     cancelDelete,
     deleteDialogTitle,
     deleteDialogDescription,
+    discardConfirmOpen,
+    discardConfirmMessage,
+    confirmDiscardRefetch,
+    cancelDiscardRefetch,
     expandableRender: props.expandable?.render,
     toggleRowExpanded,
     isRowExpanded,
     toolbar,
     hasToolbar,
-    handleReset,
+    handleReset: handleResetGrid,
     handleAddPress,
   }
 }

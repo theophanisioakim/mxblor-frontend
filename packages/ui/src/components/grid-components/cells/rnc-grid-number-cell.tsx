@@ -1,16 +1,21 @@
 import { RncInput } from "../../form-components/rnc-input/rnc-input"
+import type { RncInputProps } from "../../form-components/rnc-input/rnc-input-model"
 import { Text } from "../../primitives/text"
 
 interface RncGridNumberCellProps {
   id: string
-  value: number
+  value: number | undefined
   editing: boolean
+  required?: boolean
+  numberValidationRules?: RncInputProps["numberValidationRules"]
 }
 
 export function RncGridNumberCell({
   id,
   value,
   editing,
+  required,
+  numberValidationRules,
 }: Readonly<RncGridNumberCellProps>) {
   if (editing) {
     return (
@@ -20,9 +25,15 @@ export function RncGridNumberCell({
         defaultValue={value}
         size="sm"
         variant="underlined"
+        required={required}
+        numberValidationRules={numberValidationRules}
       />
     )
   }
 
-  return <Text className="text-foreground text-sm">{String(value)}</Text>
+  return (
+    <Text className="text-foreground text-sm">
+      {value != null ? String(value) : "—"}
+    </Text>
+  )
 }

@@ -29,6 +29,11 @@ export type {
   RncSwitchValue,
 } from "./components/form-components/rnc-switch/rnc-switch-model"
 export { RncGrid } from "./components/grid-components/rnc-grid/rnc-grid"
+export {
+  createRncGridDraftId,
+  isRncGridDraftRow,
+  RNC_GRID_DRAFT_ID_PREFIX,
+} from "./components/grid-components/rnc-grid/rnc-grid-draft"
 export type {
   RncGridActions,
   RncGridBulkAction,

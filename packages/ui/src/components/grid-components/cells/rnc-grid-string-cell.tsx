@@ -5,12 +5,14 @@ interface RncGridStringCellProps {
   id: string
   value: string
   editing: boolean
+  required?: boolean
 }
 
 export function RncGridStringCell({
   id,
   value,
   editing,
+  required,
 }: Readonly<RncGridStringCellProps>) {
   if (editing) {
     return (
@@ -20,6 +22,7 @@ export function RncGridStringCell({
         defaultValue={value}
         size="sm"
         variant="underlined"
+        required={required}
       />
     )
   }

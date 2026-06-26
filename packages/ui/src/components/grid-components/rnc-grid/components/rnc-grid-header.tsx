@@ -29,7 +29,7 @@ export function RncGridHeader() {
   return (
     <View className="flex-row items-center rounded-t-lg bg-muted px-3 py-2">
       {selectable && (
-        <View className="w-10 items-center">
+        <View className="w-10 shrink-0 items-center justify-center">
           {!singleSelection && (
             <Checkbox
               checked={selectAllChecked}
@@ -40,7 +40,7 @@ export function RncGridHeader() {
       )}
       {showActionsSpacer && (
         <View
-          className="flex-row items-center"
+          className="shrink-0 flex-row items-center"
           style={{ width: actionsWidth }}
         />
       )}

@@ -12,11 +12,11 @@ export function RncGridBody() {
     return <RncGridSkeleton />
   }
 
-  if (!loading && data.pagination.isEmpty) {
+  const rows = data.data ?? []
+
+  if (!loading && rows.length === 0) {
     return <RncGridEmptyState />
   }
-
-  const rows = data.data ?? []
 
   return (
     <View className="relative">

@@ -17,6 +17,18 @@ This package also owns the **app shell / navigation chrome** — `Sidebar`/`Mobi
 rather than in `@workspace/ui` because `ui → providers → router → ui` would be a cycle (root
 `AGENTS.md` §2).
 
+## Navigation menus are backend-driven
+
+The chrome does **not** own a hardcoded link list. `Sidebar`, `TopBar` (incl. `MegaMenu` /
+`NavMenuPopover`), and `BottomTabBar` all render from `useMenu()` → `menus.top` / `menus.side`
+(`SbfMenuTreeResponseDto`, fetched by `MenuProvider` via `useGetMyMenus`). Helpers in
+`src/navigation/menu-tree.ts` walk that API tree.
+
+- To add, reorder, or permission-gate a nav entry, change the **backend menu data** — not a new
+  hardcoded link in this package.
+- While the API returns no rows (loading or empty), side chrome stays hidden; do not invent fallback
+  nav items client-side.
+
 Layout:
 
 - `src/screens/<name>-screen.tsx` — shared screens, re-exported via `./screens/*`. See

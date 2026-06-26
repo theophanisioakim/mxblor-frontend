@@ -1,4 +1,5 @@
 import { cn } from "@workspace/ui/lib/utils"
+import { useMemo } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { RncForm } from "../../../form-components/rnc-form/rnc-form"
 import { Checkbox } from "../../../primitives/checkbox"
@@ -29,12 +30,15 @@ export function RncGridRow<T>({
     inlineEdit,
     registerRowForm,
     handleRowFormChange,
+    handleDraftFormChange,
+    isDraftRow,
   } = useRncGridContext()
 
   const key = keyExtractor(row, rowIndex)
   const selected = selectable && isRowSelected(row, rowIndex)
   const editing = isRowEditing(row, rowIndex)
   const isEditAll = inlineEdit?.mode === "all"
+  const draftRow = isDraftRow(row)
   const clickable = selectable && rowClickable
 
   const rowContent = (
@@ -48,7 +52,7 @@ export function RncGridRow<T>({
     >
       {selectable && (
         <Pressable
-          className="w-10 items-center"
+          className="w-10 shrink-0 items-center justify-center self-center"
           onPress={
             clickable
               ? (e?: PressableEvent) => e?.stopPropagation?.()
@@ -84,24 +88,38 @@ export function RncGridRow<T>({
       }
     : {}
 
+  const draftRowHandlers =
+    draftRow && editing && !isEditAll
+      ? {
+          onLoad: async (methods: UseFormReturn) =>
+            registerRowForm(key, methods),
+          onValuesChange: async () => handleDraftFormChange(key),
+        }
+      : {}
+
+  const rowDefaultValues = useMemo(() => {
+    const values: Record<string, unknown> = {}
+    for (const col of columns) {
+      if (col.editable !== false) {
+        const value = (row as Record<string, unknown>)[col.key]
+        values[col.key] = value ?? undefined
+      }
+    }
+    return values
+  }, [columns, row])
+
   return (
     <View className="border-border border-t">
       {editing ? (
         <RncForm
           id={`${id}-row-${key}`}
+          mode={isEditAll ? "onTouched" : undefined}
           onSubmit={async (formData) =>
             saveEditingRow(row, rowIndex, formData as Record<string, unknown>)
           }
-          loadFormValues={async () => {
-            const values: Record<string, unknown> = {}
-            for (const col of columns) {
-              if (col.editable !== false) {
-                values[col.key] = (row as Record<string, unknown>)[col.key]
-              }
-            }
-            return values
-          }}
+          defaultValues={rowDefaultValues}
           {...editAllHandlers}
+          {...draftRowHandlers}
           unstyled
         >
           {rowContent}

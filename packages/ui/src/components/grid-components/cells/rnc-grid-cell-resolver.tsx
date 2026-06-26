@@ -65,8 +65,10 @@ export function RncGridCellResolver<T, S>({
       return (
         <RncGridNumberCell
           id={col.key}
-          value={Number(value) || 0}
+          value={value == null || value === "" ? undefined : Number(value)}
           editing={editing}
+          required={col.required}
+          numberValidationRules={col.numberValidationRules}
         />
       )
     case "date":
@@ -93,6 +95,7 @@ export function RncGridCellResolver<T, S>({
           id={col.key}
           value={value != null ? String(value) : ""}
           editing={editing}
+          required={col.required}
         />
       )
   }

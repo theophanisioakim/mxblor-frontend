@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { RncInputProps } from "../../form-components/rnc-input/rnc-input-model"
 
 export type RncGridColumnType =
   | "string"
@@ -24,6 +25,12 @@ export interface RncGridInlineEditConfig<T> {
     entries: { row: T; updatedValues: Partial<T> }[]
   ) => Promise<boolean>
   onCancel?: (row: T) => void
+  /** Creates a local draft row for inline add (row mode). Not persisted until saved. */
+  createDraftRow?: () => T
+  /** Defaults to {@link isRncGridDraftRow} when omitted. */
+  isDraftRow?: (row: T) => boolean
+  /** Shown before discarding unsaved inline edits when a refetch is triggered. */
+  discardConfirm?: string
 }
 
 export interface RncGridModalEditConfig<T> {
@@ -132,6 +139,8 @@ export interface RncGridColumn<T, S> {
   sortable?: boolean
   sortKey?: S
   priority?: number
+  required?: boolean
+  numberValidationRules?: RncInputProps["numberValidationRules"]
 }
 
 export interface RncGridPagination {

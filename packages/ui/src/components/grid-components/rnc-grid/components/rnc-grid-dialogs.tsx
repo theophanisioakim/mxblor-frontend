@@ -13,6 +13,10 @@ export function RncGridDialogs() {
     confirmDelete,
     deleteDialogTitle,
     deleteDialogDescription,
+    discardConfirmOpen,
+    discardConfirmMessage,
+    confirmDiscardRefetch,
+    cancelDiscardRefetch,
     modalEdit,
     modalEditRow,
     closeModalEdit,
@@ -43,6 +47,18 @@ export function RncGridDialogs() {
         onConfirm={confirmDelete}
         confirmLabel="Delete"
         confirmIcon={Trash2}
+      />
+
+      <RncDialog
+        title="Unsaved Changes"
+        description={discardConfirmMessage}
+        open={discardConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) cancelDiscardRefetch()
+        }}
+        onCancel={cancelDiscardRefetch}
+        onConfirm={confirmDiscardRefetch}
+        confirmLabel="Discard"
       />
 
       {modalEdit && (

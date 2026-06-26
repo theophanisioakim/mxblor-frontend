@@ -96,6 +96,7 @@ export interface RncGridContextValue<T, S, F extends Record<string, unknown>> {
   // Inline editing
   addEditMode: "default" | "inline" | "modal"
   inlineEdit: RncGridInlineEditConfig<T> | undefined
+  isDraftRow: (row: T) => boolean
   isRowEditing: (row: T, index: number) => boolean
   cancelEditingRow: (row: T, index: number) => void
   saveEditingRow: (
@@ -107,6 +108,7 @@ export interface RncGridContextValue<T, S, F extends Record<string, unknown>> {
   // Inline edit mode 'all' — dirty tracking
   registerRowForm: (rowKey: string | number, methods: UseFormReturn) => void
   handleRowFormChange: (rowKey: string | number) => void
+  handleDraftFormChange: (rowKey: string | number) => void
   dirtyRowCount: number
   isRowDirty: (rowKey: string | number) => boolean
   discardRow: (rowKey: string | number) => void
@@ -125,6 +127,12 @@ export interface RncGridContextValue<T, S, F extends Record<string, unknown>> {
   cancelDelete: () => void
   deleteDialogTitle: string
   deleteDialogDescription: string
+
+  // Inline edit discard confirmation
+  discardConfirmOpen: boolean
+  discardConfirmMessage: string
+  confirmDiscardRefetch: () => void
+  cancelDiscardRefetch: () => void
 
   // Expand/collapse
   expandableRender: ((row: T) => ReactNode) | undefined

@@ -15,14 +15,14 @@ export function RncGridSkeleton() {
         >
           <View className="flex-row items-center gap-2 px-3 py-2">
             {selectable && (
-              <View className="w-10 items-center">
+              <View className="w-10 shrink-0 items-center justify-center">
                 <View className="size-4 rounded-sm bg-muted" />
               </View>
             )}
             {hasActions && !hasOverflow && (
               <View
-                className="h-4 rounded-md bg-muted"
-                style={{ width: actionsWidth }}
+                className="shrink-0 self-center rounded-md bg-muted"
+                style={{ width: actionsWidth, height: 16 }}
               />
             )}
             {visibleColumns.map((col) => (
