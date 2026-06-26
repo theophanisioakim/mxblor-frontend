@@ -32,7 +32,7 @@ The same screens (`@workspace/app`) render on both. Platform differences are res
 time** by file extension (`*.tsx` for web, `*.native.tsx` / `*.native.ts` for native) inside shared
 packages — app and screen code never branches on platform.
 
-- **Package manager:** pnpm **11.8.0** (workspaces + **catalog** for single-sourced versions)
+- **Package manager:** pnpm **11.9.0** (workspaces + **catalog** for single-sourced versions)
 - **Node:** **26.2.0** (pinned in root `engines`)
 - **Task runner:** **Turborepo** (`turbo.json`) — `build`, `dev`, `typecheck`, `test`, `test:e2e`,
   `generate`. Lint and
