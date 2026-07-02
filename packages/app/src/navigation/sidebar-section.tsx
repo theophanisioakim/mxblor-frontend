@@ -2,6 +2,7 @@
 
 import type { SbfMenuSideTreeItemResponseDto } from "@workspace/api-client"
 import { useMyPathname } from "@workspace/providers"
+import { useRouter } from "@workspace/router"
 import {
   ChevronDown,
   cn,
@@ -50,20 +51,32 @@ const SidebarMenuItem = memo(function SidebarMenuItem({
   const [open, setOpen] = useState(
     () => hasChildren && hasActiveMenuItems(children, pathname)
   )
+  const router = useRouter()
 
   if (hasChildren) {
+    const ownRouteActive = isMenuRouteActive(item, pathname)
+
     return (
       <View>
         <Pressable
-          className="flex-row items-center gap-2 rounded-md px-3 py-2 hover:bg-accent active:bg-accent"
-          onPress={() => setOpen((prev) => !prev)}
+          className={cn(
+            "flex-row items-center gap-2 rounded-md px-3 py-2 hover:bg-accent active:bg-accent",
+            ownRouteActive && "bg-accent"
+          )}
+          onPress={() => {
+            setOpen((prev) => !prev)
+            if (item.route && item.route !== "/") {
+              router.push(item.route)
+              onItemPress?.()
+            }
+          }}
           style={{ marginLeft: depth * 12 }}
         >
           {iconFor(item.icon, 14)}
           <Text
             className={cn(
               "flex-1 text-sm",
-              depth > 0 ? "text-muted-foreground" : "text-foreground"
+              leafTextClass(ownRouteActive, depth)
             )}
           >
             {item.label}
@@ -120,9 +133,13 @@ export function SidebarSection({
   onItemPress,
 }: Readonly<SidebarSectionProps>) {
   const items = getMenuChildren(section)
+  const hasChildren = hasMenuChildren(section)
   const { pathname } = useMyPathname()
-  const sectionActive = hasActiveMenuItems(items, pathname)
+  const sectionActive = hasChildren
+    ? hasActiveMenuItems(items, pathname)
+    : isMenuRouteActive(section, pathname)
   const [open, setOpen] = useState(sectionActive)
+  const router = useRouter()
 
   if (collapsed) {
     const firstLeaf = getFirstNavigableMenuItem(items)
@@ -143,11 +160,41 @@ export function SidebarSection({
     )
   }
 
+  if (!hasChildren) {
+    return (
+      <NavLink href={section.route ?? "/"}>
+        <Pressable
+          className={cn(
+            "flex-row items-center gap-2 rounded-md px-3 py-2 hover:bg-accent active:bg-accent",
+            sectionActive && "bg-accent"
+          )}
+          onPress={onItemPress}
+        >
+          {iconFor(section.icon, 18)}
+          <Text className="flex-1 font-semibold text-foreground text-sm">
+            {section.label}
+          </Text>
+        </Pressable>
+      </NavLink>
+    )
+  }
+
+  const ownRouteActive = isMenuRouteActive(section, pathname)
+
   return (
     <View>
       <Pressable
-        className="flex-row items-center gap-2 rounded-md px-3 py-2 hover:bg-accent active:bg-accent"
-        onPress={() => setOpen((prev) => !prev)}
+        className={cn(
+          "flex-row items-center gap-2 rounded-md px-3 py-2 hover:bg-accent active:bg-accent",
+          ownRouteActive && "bg-accent"
+        )}
+        onPress={() => {
+          setOpen((prev) => !prev)
+          if (section.route && section.route !== "/") {
+            router.push(section.route)
+            onItemPress?.()
+          }
+        }}
       >
         {iconFor(section.icon, 18)}
         <Text className="flex-1 font-semibold text-foreground text-sm">
