@@ -13,7 +13,7 @@ import type {
 import Axios from "axios"
 import { getChannelId } from "./channel"
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://192.168.68.68:21001"
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://192.168.68.68:21003"
 
 export const axiosInstance = Axios.create({
   baseURL: BASE_URL,
