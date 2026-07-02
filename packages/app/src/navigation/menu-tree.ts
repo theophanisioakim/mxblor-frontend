@@ -21,13 +21,10 @@ export function isRouteActive(
   pathname: string | undefined,
   href: string
 ): boolean {
-  if (!pathname) {
+  if (!pathname || href === "/") {
     return false
   }
-  if (href === "/") {
-    return pathname === "/"
-  }
-  return pathname === href || pathname.startsWith(`${href}/`)
+  return pathname === href
 }
 
 export function getMenuChildren<T extends TreeMenuNode>(
