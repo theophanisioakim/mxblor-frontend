@@ -21,7 +21,7 @@ export function isRouteActive(
   pathname: string | undefined,
   href: string
 ): boolean {
-  if (!pathname) {
+  if (!pathname || href === "/") {
     return false
   }
   return pathname === href
