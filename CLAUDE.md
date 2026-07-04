@@ -35,6 +35,10 @@ features in this repo.
 
 - `/add-ui-component <Name>` — adds a synchronized cross-platform component to `@workspace/ui`
   wrapping the `web-ui` (shadcn) and `native-ui` (rnr) implementations, with a parity checklist.
+- The `.claude/skills/` entries are **thin stubs** — the canonical, tool-agnostic skill bodies live
+  in `.agents/skills/` (Agent Skills standard, also read by Codex/Copilot/Gemini/Cursor). Edit the
+  `.agents/skills/` copy, never the stub. `.agents/skills/add-screen/` documents the end-to-end
+  "new screen through every layer" procedure.
 
 ### Rules (`.claude/rules/`) — auto-loaded by file path, no invocation needed
 
@@ -51,7 +55,8 @@ Path-gated guidance that loads when you open a matching file:
 
 ### Hooks (configured in `.claude/settings.json`)
 
-- **PreToolUse guard** (`hooks/guard-protected-paths.ps1`) denies edits under
+- **PreToolUse guard** (`.agents/hooks/guard-protected-paths.mjs` — Node, cross-platform, shared
+  with Codex via `.codex/hooks.json`) denies edits under
   `**/node_modules/**`, `**/.next/**`, `**/.turbo/**`, `**/dist/**`, `**/build/**`, and
   `packages/api-client/src/generated/**` (Orval-owned); and **asks before editing** vendored
   component files under `packages/web-ui/src/components/**` and `packages/native-ui/src/components/**`
@@ -65,7 +70,8 @@ you read/edit a file in, say, `packages/ui/`, Claude Code pulls in `packages/ui/
 
 ### Conventions reminder
 
-- Windows + PowerShell: use `$env:VAR`, `$null`, backtick line-continuation; run scripts via `pnpm`.
+- Local dev is Windows **and** Linux: always run scripts via `pnpm`; in PowerShell use `$env:VAR`,
+  `$null`, backtick line-continuation.
 - Versions live in the `catalog:` (`pnpm-workspace.yaml`), not in individual `package.json` files.
 - Don't `git commit`/`push` unless asked; never bypass the husky hooks with `--no-verify`. Git hooks
   (husky: pre-commit lint-staged, pre-push full gate) and CI are described in `AGENTS.md` §11 — these

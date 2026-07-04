@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File 'C:\\Users\\theophanisioakim\\github\\core\\react-mono-core\\.codex\\hooks\\guard-protected-paths.ps1'"
+            "command": "node .agents/hooks/guard-protected-paths.mjs"
           }
         ]
       }

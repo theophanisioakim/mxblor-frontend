@@ -70,7 +70,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/hooks/guard-protected-paths.ps1"
+            "command": "node .agents/hooks/guard-protected-paths.mjs"
           }
         ]
       }

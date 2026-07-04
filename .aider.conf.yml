@@ -1,0 +1,2 @@
+# Purpose: point Aider at the canonical agent guide — it doesn't read AGENTS.md by default.
+read: [AGENTS.md]
