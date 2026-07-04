@@ -10,7 +10,7 @@ through it (root `AGENTS.md` §2, §4).
 ### Before writing
 
 1. Read `packages/ui/AGENTS.md`, `packages/web-ui/AGENTS.md`, `packages/native-ui/AGENTS.md`, and
-   `.Codex/rules/ui-abstraction.md`. Use `checklist.md` in this skill dir as the per-file checklist.
+   `.claude/rules/ui-abstraction.md`. Use `checklist.md` in this skill dir as the per-file checklist.
 2. Confirm both source components exist:
    - `packages/web-ui/src/components/ui/<name>.tsx` (shadcn)
    - `packages/native-ui/src/components/ui/<name>.tsx` (rnr)
