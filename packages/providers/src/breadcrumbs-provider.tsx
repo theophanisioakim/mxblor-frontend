@@ -16,6 +16,7 @@ interface BreadcrumbsContextValue {
 
 const SEGMENT_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
+  buildings: "Buildings",
   "form-demo": "Form Demo",
   forms: "Forms",
   login: "Login",

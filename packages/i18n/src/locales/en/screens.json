@@ -6,6 +6,50 @@
     "formLink": "View form components",
     "gridLink": "View data grid"
   },
+  "building": {
+    "list": {
+      "title": "Buildings",
+      "add": "Add",
+      "columns": {
+        "code": "Code",
+        "name": "Name",
+        "units": "Units",
+        "address": "Address",
+        "manager": "Manager",
+        "email": "Email",
+        "published": "Published",
+        "active": "Active"
+      },
+      "filters": {
+        "code": "Code",
+        "codePlaceholder": "Search code...",
+        "name": "Name",
+        "namePlaceholder": "Search name...",
+        "email": "Email",
+        "emailPlaceholder": "Search email...",
+        "number": "Number",
+        "numberPlaceholder": "Address number",
+        "street": "Street",
+        "streetPlaceholder": "Street",
+        "postCode": "Post code",
+        "postCodePlaceholder": "Post code",
+        "area": "Area / region",
+        "areaPlaceholder": "Area or region",
+        "city": "City",
+        "cityPlaceholder": "City",
+        "country": "Country",
+        "countryPlaceholder": "Select countries",
+        "manager": "Manager",
+        "managerPlaceholder": "Select manager",
+        "acquiredDate": "Acquired date",
+        "active": "Active"
+      },
+      "delete": {
+        "title": "Delete Building",
+        "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+      }
+    }
+  },
   "user": {
     "title": "User Details",
     "namePlaceholder": "Enter your name",
