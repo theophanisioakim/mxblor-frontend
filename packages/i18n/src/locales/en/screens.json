@@ -50,6 +50,38 @@
       }
     }
   },
+  "buildingUnit": {
+    "list": {
+      "title": "Units",
+      "add": "Add",
+      "back": "Back",
+      "columns": {
+        "code": "Code",
+        "confinedSpace": "Confined space",
+        "coveredTerraces": "Covered terraces",
+        "uncoveredTerraces": "Uncovered terraces",
+        "storeRoom": "Store room",
+        "roofGardens": "Roof gardens",
+        "floor": "Floor",
+        "owner": "Owner(s)",
+        "tenant": "Tenant(s)"
+      },
+      "filters": {
+        "code": "Code",
+        "codePlaceholder": "Search code...",
+        "confinedSpace": "Confined space",
+        "coveredTerraces": "Covered terraces",
+        "uncoveredTerraces": "Uncovered terraces",
+        "storeRoom": "Store room",
+        "roofGardens": "Roof gardens",
+        "floor": "Floor"
+      },
+      "delete": {
+        "title": "Delete Unit",
+        "description": "Are you sure you want to delete unit \"{{code}}\"? This action cannot be undone."
+      }
+    }
+  },
   "user": {
     "title": "User Details",
     "namePlaceholder": "Enter your name",
