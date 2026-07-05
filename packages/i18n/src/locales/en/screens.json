@@ -48,6 +48,45 @@
         "title": "Delete Building",
         "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
       }
+    },
+    "create": {
+      "title": "New Building",
+      "save": "Save",
+      "cancel": "Cancel",
+      "error": "Could not create the building. Please try again.",
+      "sections": {
+        "identity": "Identity",
+        "management": "Management",
+        "communication": "Communication",
+        "ownership": "Ownership",
+        "address": "Address"
+      },
+      "fields": {
+        "code": "Code",
+        "codePlaceholder": "Building code",
+        "name": "Name",
+        "namePlaceholder": "Building name",
+        "active": "Active",
+        "manager": "Manager",
+        "managerPlaceholder": "Select manager",
+        "email": "Email address",
+        "emailPlaceholder": "building@example.com",
+        "emailTransmission": "Email transmission",
+        "smsTransmission": "SMS transmission",
+        "autoCommunicationDay": "Auto-communication day",
+        "acquiredDate": "Acquired date",
+        "number": "Number",
+        "street": "Street",
+        "postCode": "Post code",
+        "area": "Area / region",
+        "city": "City",
+        "country": "Country",
+        "countryPlaceholder": "Select country"
+      },
+      "validation": {
+        "email": "Enter a valid email address.",
+        "autoDayRequired": "Auto-communication day is required when a transmission method is enabled."
+      }
     }
   },
   "buildingUnit": {

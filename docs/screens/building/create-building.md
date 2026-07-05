@@ -10,7 +10,8 @@
 - **Name:** Create New Building
 - **Location:** Buildings → New Building
 - **Purpose:** Let a manager register a new building with its identity, address, management, communication preferences, and supporting documents, then save it to the buildings list.
-- **Scope:** Curated v3 — carries the useful upgrades from v2 (photos, active flag, manager, communication settings, attachments) while leaving edit-only concepts (publish, external users, audit/activation history) to the building detail/edit screen.
+- **Scope:** Curated v3 — carries the useful upgrades from v2 (active flag, manager, communication settings) while leaving edit-only concepts (publish, external users, audit/activation history) to the building detail/edit screen.
+- **First release note:** Photos and document attachments are **deferred** (no file/attachment support exists yet), so those two sections are not built in this cut. Everything else below is implemented.
 
 ---
 
@@ -31,9 +32,6 @@ A single scrollable form, grouped into labelled sections from top to bottom. On 
 ┌───────────────────────────────────────────────────────────┐
 │ Buildings › New Building                                    │
 ├───────────────────────────────────────────────────────────┤
-│ PHOTOS                                                      │
-│   [ + add photos ]   ( carousel of added photos )          │
-│                                                             │
 │ IDENTITY                                                    │
 │   [ Code * ........ ]  [ Name * .......................... ]│
 │                                                             │
@@ -54,12 +52,11 @@ A single scrollable form, grouped into labelled sections from top to bottom. On 
 │   [ Post code ] [ Area / region ........... ]              │
 │   [ City * ............ ]  [ Country ▾ ..... ]             │
 │                                                             │
-│ DOCUMENTS                                                   │
-│   [ + attach files ]   ( list: name · description · ⭳ )    │
-│                                                             │
 │                       [ Save ]   [ Cancel ]                 │
 └───────────────────────────────────────────────────────────┘
 ```
+
+> **PHOTOS** and **DOCUMENTS** sections are deferred (see §1) and not shown in the first release.
 
 ---
 
@@ -69,11 +66,11 @@ Required fields are marked with an asterisk in the UI.
 
 | Section | Field | Control | Required | Default | Constraints / notes |
 |---|---|---|---|---|---|
-| Photos | Building photos | Image upload + carousel | No | empty | Accepts image files (jpg, jpeg, png, gif, bmp, svg). Multiple allowed. |
+| Photos | Building photos | Image upload + carousel | No | empty | **Deferred** — not in the first release. |
 | Identity | **Code** | Text | Yes | — | Building's short code. Must be unique across buildings. Max 255 chars. |
 | Identity | **Name** | Text | Yes | — | Display name of the building. Max 255 chars. Receives focus on load. |
 | Management | Active | Toggle | — | On | Whether the building is active. New buildings default to active. |
-| Management | Manager | Dropdown (list of users) | No | Current user | The user responsible for the building. Defaults to the person creating it. |
+| Management | Manager | Dropdown (list of users) | No | None | The user responsible for the building. Chosen from the user list; left empty by default. |
 | Communication | Email address | Text | No | — | Contact email for the building. Must be a valid email format if provided. Max 255 chars. |
 | Communication | Email transmission | Toggle | — | Off | Enables sending communications to this building by email. |
 | Communication | SMS transmission | Toggle | — | Off | Enables sending communications to this building by SMS. |
@@ -84,18 +81,18 @@ Required fields are marked with an asterisk in the UI.
 | Address | Post code | Text | No | — | Max 255 chars. |
 | Address | Area / region | Text | No | — | Neighbourhood or region. Max 255 chars. |
 | Address | **City** | Text | Yes | — | Max 255 chars. |
-| Address | Country | Dropdown (country list) | No | — | Selected from a predefined list of countries. |
-| Documents | Attached files | File list | No | empty | Supporting documents. Each row shows file name, description, and a download action. Multiple allowed. |
+| Address | Country | Dropdown (country list) | No | Cyprus | Selected from a predefined list of countries. Defaults to Cyprus when left unset. |
+| Documents | Attached files | File list | No | empty | **Deferred** — not in the first release. |
 
 ---
 
 ## 5. Behaviour & interactions
 
 - **Conditional requirement:** turning on **Email transmission** or **SMS transmission** makes **Auto-communication day** required. Turning both off again removes that requirement.
-- **Manager default:** the field is pre-filled with the current user but can be changed to another user.
+- **Manager default:** empty; the user picks a manager from the user list (not auto-filled in this release).
 - **Active default:** on for new buildings.
 - **Acquired date default:** today; opens a date picker for changes.
-- **Photos & attached files:** can be added before the building is saved; both accept multiple items and can be removed before saving.
+- **Country default:** Cyprus, changeable from the country list.
 - **Save enablement:** Save is only accepted once all required fields are valid; otherwise the invalid fields are highlighted with their messages and the screen scrolls/focuses to the first error.
 
 ---
@@ -154,6 +151,6 @@ These v2 concepts are intentionally **not** on the create screen and are listed 
 ## 10. Open questions
 
 - Should **Code** be auto-suggested/generated, or always entered manually?
-- Is **Manager** limited to users with a specific role, or any user?
-- Are **photos/attachments** expected at creation time, or is deferring them to the detail screen acceptable for the common case?
-- Confirm whether **Country** should default (e.g. to Cyprus) rather than start empty.
+- Is **Manager** limited to users with a specific role, or any user? (Currently any user; not defaulted.)
+- **Photos/attachments** are deferred to a later release once file support exists (resolved for now).
+- **Country** defaults to **Cyprus** when left unset (resolved).

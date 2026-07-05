@@ -44,6 +44,7 @@ export { TimerInfoListScreen } from "./screens/admin/timer-info/timer-info-list-
 export { UserFormScreen } from "./screens/admin/user/user-form-screen"
 export { UserListScreen } from "./screens/admin/user/user-list-screen"
 export { BuildingListScreen } from "./screens/building/building-list-screen"
+export { CreateBuildingScreen } from "./screens/building/create-building-screen"
 export {
   BuildingUnitListScreen,
   type BuildingUnitListScreenProps,
