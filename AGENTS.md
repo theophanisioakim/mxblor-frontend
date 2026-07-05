@@ -20,6 +20,41 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ---
 
+## 0. ⛔ Execution policy — the agent builds and tests, it does not run the apps
+
+**Hard rule, no exceptions (not even with explicit permission):** an AI agent working in this repo
+may **only** (a) **build / typecheck / lint / format** code and (b) **run the isolated unit
+tests**. It must **never start a dev server, a device/emulator build, or an end-to-end run.**
+Validate every change through compilation and unit tests — never by launching an app.
+
+**✅ Allowed**
+- **Build / typecheck:** `pnpm build`, `pnpm typecheck` (and `pnpm --filter <pkg> …`).
+- **Lint / format:** `pnpm lint` / `lint:strict` / `lint:deps` / `format` / `format:check` /
+  `biome:ci`.
+- **Unit tests:** `pnpm test`, `pnpm --filter web test`, `pnpm --filter native test`. These are
+  isolated (jsdom / RN test renderer) — no server, browser, or emulator. This is the sanctioned way
+  to observe behavior.
+- **Codegen from the checked-in spec:** `pnpm generate` (Orval reads the local
+  `packages/api-client/openapi.json` — it hits no running backend and only rewrites source).
+- **The gate:** `pnpm check:all` (generate → format → lint:deps → typecheck → lint:strict → **test**
+  → build) — every step is allowed, since `test` is the unit suite (E2E is intentionally excluded).
+
+**⛔ Never run — hand these to the user instead**
+- **Dev servers** — `pnpm dev`, `pnpm run dev`, `turbo dev`, `pnpm --filter web dev` (Next dev
+  server), `pnpm --filter native start` (Metro).
+- **Native device/emulator builds & launches** — `pnpm --filter native prebuild` / `android` /
+  `ios`.
+- **End-to-end tests** — `pnpm test:e2e`, `pnpm --filter web test:e2e` (needs Playwright browsers),
+  `pnpm --filter native test:e2e` (needs a built app on an emulator/simulator + Maestro).
+- Anything else that boots a long-running process or reaches an external device/service.
+
+When a task would normally need one of the forbidden steps (e.g. "see it in the browser"), **stop
+and hand it to the user with the exact command**, state what you changed and what remains, and don't
+fabricate the result. A `PreToolUse`/permissions layer denies these commands to enforce this
+(`settings.json`; see `CLAUDE.md`).
+
+---
+
 ## 1. What this project is
 
 `react-mono-core` is a **cross-platform monorepo** that ships one shared UI and one shared set of
@@ -164,6 +199,12 @@ and Linux shells.
 | Regenerate **all** shadcn web components ⚠️ | `pnpm shadcn-update`                                              |
 | Regenerate **all** rnr native components ⚠️ | `pnpm rnr-update`                                                 |
 | Dependency hygiene                          | `pnpm outdated-deps` · `pnpm update-deps` · `pnpm dedupe-deps`    |
+
+> **⛔ Agent execution note (§0).** The rows above that **start a process** — `pnpm dev`,
+> `pnpm --filter web dev`, `pnpm --filter native start`, the native `prebuild`/`android`/`ios`
+> builds, and every `test:e2e` variant — are **for the user, not the agent**. The agent validates
+> through build, typecheck, lint, and the **unit** `test` rows only; `settings.json` denies the
+> process-starting commands. Hand any dev-server / device / E2E run to the user.
 
 `pnpm check:all` runs the gate in order: **`generate → format → lint:deps → typecheck → lint:strict → test → build`**. Run it
 (or at least `typecheck` + `lint` for the workspaces you touched) before declaring work done, and
@@ -343,9 +384,11 @@ canonical pattern. Rules when adding or changing a `ui` primitive:
    customize at the `ui` layer.
 4. **Versions go in the catalog** (`pnpm-workspace.yaml`), not in individual `package.json` files (§3).
 5. **Run the gate** — `pnpm check:all` (or at least `typecheck` + `lint` for touched workspaces) —
-   before declaring done. After editing, check IDE diagnostics (`mcp__ide__getDiagnostics`) for the
-   files you changed and resolve every finding; if diagnostics look stale, ask the user to refresh
-   rather than assuming clean. Don't suppress findings to silence them without approval.
+   before declaring done. Validate through the gate and the **unit** tests only — **never start a
+   dev server or run E2E to "try it out"** (§0); hand those to the user. After editing, check IDE
+   diagnostics (`mcp__ide__getDiagnostics`) for the files you changed and resolve every finding; if
+   diagnostics look stale, ask the user to refresh rather than assuming clean. Don't suppress
+   findings to silence them without approval.
 6. **Don't commit or push unless asked.** When you do, don't bypass the husky hooks with
    `--no-verify` (§11) — pre-commit formats staged files, pre-push runs the full gate, and CI runs it
    again regardless.
