@@ -101,7 +101,7 @@ export function RncGridRowActions<T>({
       style={{ width: actionsWidth }}
       onPress={stopPress}
     >
-      {actions?.edit && !isDraftRow(row) && (
+      {actions?.edit && !isDraftRow(row) && !actions.edit.hidden?.(row) && (
         <Pressable
           className={cn(ICON_BTN, "cursor-pointer hover:bg-accent")}
           onPress={() => handleEditPress(row)}
@@ -110,7 +110,7 @@ export function RncGridRowActions<T>({
           <Icon as={Pencil} size={16} className="text-muted-foreground" />
         </Pressable>
       )}
-      {actions?.delete && !isDraftRow(row) && (
+      {actions?.delete && !isDraftRow(row) && !actions.delete.hidden?.(row) && (
         <Pressable
           className={cn(ICON_BTN, "cursor-pointer hover:bg-red-100")}
           onPress={() => handleDeletePress(row)}
