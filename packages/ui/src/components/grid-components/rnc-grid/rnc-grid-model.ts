@@ -51,6 +51,9 @@ export interface RncGridSort<S> {
 export interface RncGridEditAction<T> {
   route?: string | ((row: T) => string)
   onPress?: (row: T) => void
+  /** When it returns true for a row, the edit action is not rendered for that
+   * row (e.g. read-only / system-default rows). */
+  hidden?: (row: T) => boolean
 }
 
 export interface RncGridDeleteConfirm<T> {
@@ -61,6 +64,9 @@ export interface RncGridDeleteConfirm<T> {
 export interface RncGridDeleteAction<T> {
   onPress: (row: T) => void | Promise<void>
   confirm?: boolean | RncGridDeleteConfirm<T>
+  /** When it returns true for a row, the delete action is not rendered for that
+   * row (e.g. read-only / system-default rows). */
+  hidden?: (row: T) => boolean
 }
 
 export interface RncGridCustomAction<T> {
