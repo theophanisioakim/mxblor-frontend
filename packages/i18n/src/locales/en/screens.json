@@ -121,6 +121,49 @@
       }
     }
   },
+  "expenseCategory": {
+    "list": {
+      "title": "Expense Categories",
+      "columns": {
+        "code": "Code",
+        "name": "Name",
+        "description": "Description",
+        "editable": "Editable"
+      },
+      "filters": {
+        "code": "Code",
+        "codePlaceholder": "Search code...",
+        "editable": "Editable only"
+      },
+      "delete": {
+        "title": "Delete Expense Category",
+        "description": "Are you sure you want to delete category \"{{name}}\"? This action cannot be undone."
+      }
+    }
+  },
+  "expense": {
+    "list": {
+      "title": "Expenses",
+      "columns": {
+        "code": "Code",
+        "name": "Name",
+        "category": "Category",
+        "description": "Description",
+        "editable": "Editable"
+      },
+      "filters": {
+        "code": "Code",
+        "codePlaceholder": "Search code...",
+        "category": "Category",
+        "categoryPlaceholder": "All categories",
+        "editable": "Editable only"
+      },
+      "delete": {
+        "title": "Delete Expense",
+        "description": "Are you sure you want to delete expense \"{{name}}\"? This action cannot be undone."
+      }
+    }
+  },
   "user": {
     "title": "User Details",
     "namePlaceholder": "Enter your name",

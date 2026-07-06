@@ -50,6 +50,8 @@ export {
   type BuildingUnitListScreenProps,
 } from "./screens/building-unit/building-unit-list-screen"
 export { ErrorScreen, type ErrorScreenProps } from "./screens/error-screen"
+export { ExpenseListScreen } from "./screens/expense/expense-list-screen"
+export { ExpenseCategoryListScreen } from "./screens/expense-category/expense-category-list-screen"
 export { FormShowcaseScreen } from "./screens/form-showcase-screen"
 export { GridShowcaseScreen } from "./screens/grid-showcase-screen"
 export { HomeScreen } from "./screens/home-screen"
