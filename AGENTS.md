@@ -527,3 +527,90 @@ each miss on their own. The **`web-ui`/`native-ui` import boundary** (§2) is a 
 `noRestrictedImports` **error** in `biome.json`, relaxed inside `web-ui`/`native-ui` and swapped for a
 **`ui`→`router`** restriction inside `ui`, via the config `overrides`. (`pnpm lint:strict` /
 `pnpm format:check` remain available for narrower local runs.)
+
+---
+
+## 12. Worktree workflow (feature isolation)
+
+Feature work **may** happen in an isolated git **worktree** — a second working directory backed by
+the same repository but with its own checked-out branch. This gives **filesystem isolation between
+parallel tasks**: two features can be edited, built, and tested side by side without touching each
+other's files, and any **conflicts are deferred to merge time** instead of colliding in a single
+working tree.
+
+### The policy — always ask first, never assume
+
+The worktree approach is a **per-task choice, not an automatic default.**
+
+- **Before starting any new feature or task**, the agent **MUST ask the user**:
+  > "Work on this in a dedicated worktree, or directly on main?"
+
+  and **wait for the answer** before proceeding — do not begin editing until the user has chosen.
+- **If the user chooses the worktree approach**, follow the skill **"Start a feature in a new
+  worktree"** (`.agents/skills/worktree-start/SKILL.md`) below.
+- **If the user chooses main**, work directly on the `main` branch as normal — **skip the worktree
+  steps entirely.**
+
+### Naming convention
+
+- **Branch:** `feat/<feature-name>`
+- **Worktree directory:** a **sibling of the repo root** named `../<repo-name>-<feature-name>`
+  (for this repo, `<repo-name>` is `react-mono-core`, so e.g. `../react-mono-core-search-filters`).
+
+### Two hard constraints
+
+1. **Each worktree needs its own branch.** Git will **not** check out the same branch in two
+   worktrees at once — the feature worktree must be on `feat/<feature-name>`, never `main`.
+2. **Merge into `main` from the main worktree.** The `git merge` must be run from the worktree that
+   has `main` checked out (the repo root), **not** from the feature worktree.
+
+### The three worktree skills
+
+Canonical bodies live in `.agents/skills/` (read by every agent tool); `.claude/skills/` holds thin
+stubs pointing there. The exact commands:
+
+#### Skill A — Start a feature in a new worktree
+
+**Use when:** the user has confirmed they want to use a worktree for a new feature.
+
+```bash
+# 1. From the repo root, create the branch + sibling worktree in one step:
+git worktree add -b feat/<feature-name> ../<repo-name>-<feature-name>
+# 2. Move into it:
+cd ../<repo-name>-<feature-name>
+# 3. Do all work for this feature here. Commit locally as you go.
+#    Do NOT push unless the user explicitly asks.
+```
+
+#### Skill B — Merge a worktree into main and delete it
+
+**Use when:** a feature is complete and the user wants to keep it.
+
+```bash
+# 1. Move into the main worktree (the directory that has `main` checked out — the repo root):
+cd <path-to-main-worktree>
+# 2. Merge the feature branch:
+git merge feat/<feature-name>
+# 3. Run the test suite. If merging MULTIPLE feature branches, do them ONE AT A TIME
+#    (merge, then test, then the next) so a failure is traceable to one branch:
+pnpm test
+# 4. On success, remove the worktree:
+git worktree remove ../<repo-name>-<feature-name>
+# 5. Delete the merged branch:
+git branch -d feat/<feature-name>
+```
+
+#### Skill C — Discard a worktree without merging
+
+**Use when:** abandoning a feature; its work should be thrown away.
+
+```bash
+# 1. Move into the main worktree:
+cd <path-to-main-worktree>
+# 2. Force-remove the worktree (force handles uncommitted changes inside it):
+git worktree remove --force ../<repo-name>-<feature-name>
+# 3. Force-delete the unmerged branch (capital -D forces deletion of unmerged work):
+git branch -D feat/<feature-name>
+# 4. Optional: clear any stale worktree metadata:
+git worktree prune
+```
