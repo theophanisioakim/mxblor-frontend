@@ -1,7 +1,6 @@
 "use client"
 
 import { cn, View } from "@workspace/ui"
-import type { ReactNode } from "react"
 import { ScrollView } from "react-native"
 import { BottomTabBar } from "../navigation/bottom-tab-bar"
 import { Breadcrumbs } from "../navigation/breadcrumbs"
