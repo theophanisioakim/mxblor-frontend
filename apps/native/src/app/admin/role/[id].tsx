@@ -1,6 +1,5 @@
 import { RoleFormScreen } from "@workspace/app"
 import { useLocalSearchParams } from "expo-router"
-import { ScrollView } from "react-native"
 
 /**
  * Native `/admin/role/[id]` route (use `new` to create). Reads the dynamic
@@ -11,9 +10,5 @@ import { ScrollView } from "react-native"
 export default function RoleForm() {
   const { id } = useLocalSearchParams<{ id: string }>()
 
-  return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
-      <RoleFormScreen id={id} />
-    </ScrollView>
-  )
+  return <RoleFormScreen id={id} />
 }
