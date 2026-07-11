@@ -11,7 +11,7 @@ TanStack Query hooks + Axios client for the **`springboot-core` (`sbf`)** backen
 | ------------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------- |
 | `src/generated/**` (per-tag hooks, `springBootFrameworkAPI.schemas.ts`)                     | **Orval** from `openapi.json` | ❌ Never — `pnpm generate` wipes it (`clean: true`) |
 | `src/axios-instance.ts` (`customInstance`, `setOnOtpRequired`, `setOnUnauthorized`)         | hand-written                  | ✅                                                  |
-| `src/query-client-provider.tsx`, `src/channel.ts` / `src/channel.native.ts`, `src/index.ts` | hand-written                  | ✅                                                  |
+| `src/query-client-provider.tsx`, `src/language-config-provider.tsx`, `src/channel.ts` / `src/channel.native.ts`, `src/index.ts` | hand-written                  | ✅                                                  |
 | `orval.config.ts`, `openapi.json`                                                           | config / input                | ✅ (regenerate after)                               |
 
 ## ⚠️ Don't hand-edit `src/generated/**`
@@ -31,3 +31,25 @@ manual edit under `src/generated/` is deleted on the next run.
   (imported only by `channel.native.ts`) is declared as an **optional peer**, not a hard dependency,
   so the web app doesn't pull React Native into its install graph.
 - Depends only on `@workspace/storage` (+ axios/tanstack) — don't add upward deps.
+
+## `LanguageConfigProvider` — why an app-level provider lives here
+
+`language-config-provider.tsx` fetches the tenant's languages (`GET /sbf-translation/language-config`)
+**once for the whole app** and hands them out via `useLanguageConfig()`. It lives in this package —
+not in `@workspace/providers`, where the other providers live — because its main consumer is
+`RncTranslationLabel` in **`@workspace/ui`**, and `ui` may not import `providers`
+(`ui → providers → router → ui` is a cycle, machine-enforced). `api-client` is the lowest package
+that both `ui` and `providers` depend on *and* that can fetch. It already hosts a React provider
+(`ApiQueryClientProvider`), so this follows an established shape.
+
+Two consequences worth keeping straight:
+
+- **The session is injected, never imported.** This package sits below `@workspace/providers`, so it
+  cannot call `useAuth()`. `isAuthenticated` / `selectedSchema` arrive as **props** from
+  `providers`' thin `LanguageProvider` adapter, which mounts this one inside `AuthProvider`. Don't
+  "simplify" that away.
+- **No `staleTime` / `gcTime` override, on purpose.** The provider is the query's *only* observer and
+  stays mounted for the app's lifetime, so nothing ever re-triggers the fetch and the global
+  `staleTime: 0` defaults are irrelevant. **Context is the distribution mechanism; the query cache is
+  not being used as a cache.** The session is in the query key, so login/logout/tenant-switch refetch
+  — that is the intended (and only) refresh path.

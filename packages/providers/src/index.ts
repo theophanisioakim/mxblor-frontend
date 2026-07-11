@@ -8,6 +8,8 @@ export type {
   BreadcrumbsProviderProps,
 } from "./breadcrumbs-provider"
 export { BreadcrumbsProvider, useBreadcrumbs } from "./breadcrumbs-provider"
+export type { LanguageProviderProps } from "./language-provider"
+export { LanguageProvider } from "./language-provider"
 export type { MenuContextValue, MenuProviderProps } from "./menu-provider"
 export { MenuProvider, useMenu } from "./menu-provider"
 export type { OtpContextValue, OtpProviderProps } from "./otp-provider"

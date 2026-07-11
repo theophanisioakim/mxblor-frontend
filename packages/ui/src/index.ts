@@ -28,6 +28,13 @@ export type {
   RncSwitchProps,
   RncSwitchValue,
 } from "./components/form-components/rnc-switch/rnc-switch-model"
+export { RncTranslationLabel } from "./components/form-components/rnc-translation-label/rnc-translation-label"
+export type {
+  RncTranslationLabelDisplay,
+  RncTranslationLabelFieldContext,
+  RncTranslationLabelProps,
+  RncTranslationLabelRequiredLanguages,
+} from "./components/form-components/rnc-translation-label/rnc-translation-label-model"
 export { RncGrid } from "./components/grid-components/rnc-grid/rnc-grid"
 export {
   createRncGridDraftId,
