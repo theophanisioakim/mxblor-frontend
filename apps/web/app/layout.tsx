@@ -1,7 +1,12 @@
 import { Geist_Mono, Inter } from "next/font/google"
 
 import "@workspace/ui/globals.css"
-import { getMyMenus, type SbfMenuTreeResponseDto } from "@workspace/api-client"
+import {
+  getLanguageConfig,
+  getMyMenus,
+  type LanguageConfigResponseDto,
+  type SbfMenuTreeResponseDto,
+} from "@workspace/api-client"
 import { AppShell } from "@workspace/app"
 import {
   ensureI18nInitialized,
@@ -59,6 +64,18 @@ export default async function RootLayout({
     }
   }
 
+  // The tenant's languages, so a form with an `RncTranslationLabel` paints with
+  // its inputs on first load. Unlike the menus this needs no cookie gating: the
+  // endpoint is public, and the schema comes from the x-schema-id header when
+  // one is selected (falling back to the main schema's defaults otherwise).
+  let initialLanguageConfig: LanguageConfigResponseDto | undefined
+  try {
+    initialLanguageConfig = await getLanguageConfig()
+  } catch {
+    // SSR fetch failed (e.g. API unreachable) — the client LanguageProvider
+    // will retry via React Query.
+  }
+
   return (
     <html
       lang={lang}
@@ -71,7 +88,11 @@ export default async function RootLayout({
       )}
     >
       <body>
-        <AppProviders initialLanguage={lang} initialMenus={initialMenus}>
+        <AppProviders
+          initialLanguage={lang}
+          initialMenus={initialMenus}
+          initialLanguageConfig={initialLanguageConfig}
+        >
           <AppShell>{children}</AppShell>
         </AppProviders>
       </body>
