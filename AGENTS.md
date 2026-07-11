@@ -509,6 +509,18 @@ action tags (Dependabot, `.github/dependabot.yml`, PRs new majors). One `check` 
 modules) → **`build`** → **Playwright Chromium install** → **web E2E**. Node version is read from
 `engines.node`; pnpm from the `packageManager` field.
 
+**No backend runs in CI.** The job sets `NEXT_PUBLIC_API_URL` to a closed local port
+(`http://127.0.0.1:9999`), because `api-client`'s `BASE_URL` otherwise falls back to a LAN dev host
+the runner can't route to — traffic there is blackholed, so the SSR fetches in
+`apps/web/app/layout.tsx` (`getLanguageConfig` / `getMyMenus`) would block for axios's full 30s
+timeout on every request and exhaust Playwright's navigation budget. Against a closed port the
+connection is refused instantly and the layout takes its intended graceful-degradation path (both
+fetches are wrapped in `try`/`catch`, and React Query runs with `throwOnError: false`), so the shell
+paints with no menus and the default language. It's set at **job level** because `NEXT_PUBLIC_*` is
+inlined at build time — setting it only on the E2E step would leave the LAN host baked into `build`.
+Web E2E therefore covers app startup and shared-screen rendering, **not** data-backed flows; add a
+mock/stub backend before asserting on API-driven content.
+
 ### Why `biome:ci` (not `format:check` + `lint`)
 
 `pnpm biome:ci` (`biome ci --error-on-warnings`) runs **format + lint + assist** checks in one

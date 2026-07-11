@@ -22,6 +22,17 @@ jobs:
     name: check (generate · biome · typecheck · test · expo · build · web-e2e)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # No backend runs in CI, and api-client's BASE_URL falls back to a LAN dev
+      # host (192.168.68.68:21001) that a runner cannot route to. Traffic to it is
+      # blackholed rather than refused, so the SSR fetches in apps/web/app/layout.tsx
+      # (getLanguageConfig / getMyMenus) would block for axios's full 30s timeout on
+      # every request and blow Playwright's 30s navigation budget. Point at a closed
+      # local port instead: the connection is refused instantly, the layout's
+      # try/catch takes the documented graceful-degradation path, and the page paints.
+      # NEXT_PUBLIC_* is inlined at build time, so this must be set for `build` too —
+      # not just the E2E step (hence job-level, not step-level).
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:9999
     steps:
       # Actions track their latest major tag (auto-receive patches/minors); Dependabot
       # opens PRs for new majors (.github/dependabot.yml).
