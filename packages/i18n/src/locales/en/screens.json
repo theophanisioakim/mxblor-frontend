@@ -162,6 +162,37 @@
         "title": "Delete Expense",
         "description": "Are you sure you want to delete expense \"{{name}}\"? This action cannot be undone."
       }
+    },
+    "form": {
+      "fields": {
+        "code": "Code",
+        "codePlaceholder": "e.g. 101",
+        "category": "Category",
+        "categoryPlaceholder": "Select a category",
+        "name": "Name",
+        "namePlaceholder": "Type or pick an existing name",
+        "nameHelper": "Shared across languages — search an existing name or add a new one.",
+        "description": "Description",
+        "descriptionPlaceholder": "Type or pick an existing description",
+        "descriptionHelper": "Reusable text. Switch on the global namespace to share it with other entities."
+      }
+    },
+    "create": {
+      "title": "Create Expense",
+      "save": "Create Expense",
+      "cancel": "Cancel",
+      "error": "The expense could not be created."
+    },
+    "edit": {
+      "title": "Edit Expense",
+      "save": "Save Changes",
+      "cancel": "Cancel",
+      "back": "Back",
+      "locked": "This is a system default expense. It is view-only and cannot be changed.",
+      "notFound": "This expense could not be found.",
+      "loadError": "This expense could not be loaded.",
+      "missingVersion": "The expense record is incomplete and cannot be saved.",
+      "error": "The expense could not be updated."
     }
   },
   "user": {

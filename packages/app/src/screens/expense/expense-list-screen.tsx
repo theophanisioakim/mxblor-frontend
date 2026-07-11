@@ -6,7 +6,6 @@ import {
   ExpenseSortOrderField,
   searchExpenses,
   useDeleteExpense,
-  useGetExpenseCategorySelectOptions,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
 import { useRouter } from "@workspace/router"
@@ -23,6 +22,7 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { useExpenseCategoryOptions } from "./use-expense-category-options"
 
 type ExpenseListFilters = Omit<
   ExpenseSearchRequestDto,
@@ -33,30 +33,8 @@ export function ExpenseListScreen() {
   const { t } = useTranslation(["screens"])
   const router = useRouter()
   const deleteMutation = useDeleteExpense()
-  const { data: categorySelectOptions = [] } =
-    useGetExpenseCategorySelectOptions()
-
-  const categoriesById = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const option of categorySelectOptions) {
-      if (option.id) {
-        map.set(option.id, option.label ?? option.id)
-      }
-    }
-    return map
-  }, [categorySelectOptions])
-
-  const categoryOptions = useMemo(
-    () =>
-      categorySelectOptions
-        .filter((option) => option.id != null)
-        .map((option) => ({
-          id: option.id as string,
-          label: option.label ?? (option.id as string),
-          filterString: option.filterString,
-        })),
-    [categorySelectOptions]
-  )
+  const { options: categoryOptions, byId: categoriesById } =
+    useExpenseCategoryOptions()
 
   const fetchData = useCallback(
     async (
@@ -184,7 +162,12 @@ export function ExpenseListScreen() {
   const actions: RncGridActions<ExpenseResponseDto> = useMemo(
     () => ({
       // Seeded (editable=false) expenses are system defaults: view-only, no
-      // delete. Only user-created (editable=true) expenses can be removed.
+      // edit and no delete. Only user-created (editable=true) expenses can be
+      // changed or removed.
+      edit: {
+        hidden: (row) => !row.editable,
+        route: (row) => `/expenses/${row.id}`,
+      },
       delete: {
         hidden: (row) => !row.editable,
         onPress: async (row) => {
@@ -225,6 +208,9 @@ export function ExpenseListScreen() {
         actions={actions}
         filters={{ render: filters }}
         toolbar={{
+          add: {
+            route: "/expenses/new",
+          },
           refresh: {},
           reset: {},
         }}

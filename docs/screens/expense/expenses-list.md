@@ -18,8 +18,9 @@
 - **Purpose:** Browse the tenant's housekeeping **expense types** (e.g. Account Management,
   Cleaner, Lift Maintenance) in a searchable, paged grid. Each expense belongs to one
   [expense category](../expense-category/expense-categories-list.md).
-- **Scope:** A read-and-delete catalog grid. Creating and editing expenses are separate screens
-  (see §7), not part of this screen.
+- **Scope:** A catalog grid. Creating and editing an expense happen on their own screens
+  ([Create Expense](./create-expense.md) / [Edit Expense](./edit-expense.md)), which this screen
+  navigates to.
 
 ---
 
@@ -67,19 +68,21 @@ Grid supports paging (10 / 25 / 50 per page).
 |---|---|---|---|
 | **Search** / **Clear** | Filters panel | All roles | Apply / reset the filters. |
 | **Refresh** | Toolbar | All roles | Re-fetches the current page. |
+| **Add** | Toolbar | All roles | Opens [Create Expense](./create-expense.md). |
+| **Edit** | Row action | **Only for editable (user-created) expenses** | Opens [Edit Expense](./edit-expense.md) for that row. |
 | **Delete** | Row action (destructive) | **Only for editable (user-created) expenses** | Deletes the expense after confirmation. |
 
 ### The editable rule (system defaults are view-only)
 
 - **Seeded / system-default expenses carry `editable = false`.** They are **view-only**: the
-  **Delete** row action is **not shown** for them, and they cannot be modified.
-- **User-created expenses carry `editable = true`** and expose the **Delete** action.
+  **Edit** and **Delete** row actions are **not shown** for them, and they cannot be modified.
+- **User-created expenses carry `editable = true`** and expose the **Edit** and **Delete** actions.
 - `editable` is **never** set by the client — it is assigned and enforced by the server (new
   expenses are always editable; seeded expenses are locked). A direct API attempt to modify or
   delete a locked expense is rejected by the server.
 - Because the seeded catalog ships with every tenant, in a fresh tenant every row is a system
-  default and therefore exposes no Delete action — the screen is effectively read-only until a
-  user creates their own expense.
+  default and therefore exposes no Edit or Delete action — the rows are read-only until a user
+  adds their own expense (via **Add**, which is always available).
 
 ---
 
@@ -93,8 +96,7 @@ error state.
 
 ## 7. Out of scope
 
-- **Create Expense** and **Edit Expense** screens — separate deliverables. When they exist, Add
-  (toolbar) and Edit (row action, shown only for editable rows) are added to this list, following
-  the same editable rule as Delete.
+- Filling in an expense's details — [Create Expense](./create-expense.md) and
+  [Edit Expense](./edit-expense.md), which this screen's Add and Edit actions open.
 - The [Expense Categories List](../expense-category/expense-categories-list.md) — its own screen.
 - The per-building transactional expenses ([t-expense](../t-expense/expenses-list.md)).
