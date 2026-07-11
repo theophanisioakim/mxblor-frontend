@@ -2,6 +2,7 @@
 
 import {
   ApiQueryClientProvider,
+  type LanguageConfigResponseDto,
   type SbfMenuTreeResponseDto,
 } from "@workspace/api-client"
 import {
@@ -16,6 +17,7 @@ import { type ReactNode, useEffect } from "react"
 import { I18nextProvider } from "react-i18next"
 import { AuthProvider } from "./auth-provider"
 import { BreadcrumbsProvider } from "./breadcrumbs-provider"
+import { LanguageProvider } from "./language-provider"
 import { MenuProvider } from "./menu-provider"
 import { OtpProvider } from "./otp-provider"
 import { PathnameProvider } from "./pathname-provider"
@@ -26,12 +28,15 @@ export type ProviderStackProps = Readonly<{
   initialLanguage?: SupportedLanguage
   /** SSR-fetched menu tree forwarded to MenuProvider as `initialData`. */
   initialMenus?: SbfMenuTreeResponseDto
+  /** SSR-fetched tenant language config forwarded to LanguageProvider. */
+  initialLanguageConfig?: LanguageConfigResponseDto
 }>
 
 export function ProviderStack({
   children,
   initialLanguage,
   initialMenus,
+  initialLanguageConfig,
 }: ProviderStackProps) {
   ensureI18nInitialized(initialLanguage)
 
@@ -48,13 +53,15 @@ export function ProviderStack({
       <I18nextProvider i18n={i18n}>
         <ApiQueryClientProvider>
           <AuthProvider>
-            <MenuProvider initialMenus={initialMenus}>
-              <SidebarProvider>
-                <BreadcrumbsProvider>
-                  <OtpProvider>{children}</OtpProvider>
-                </BreadcrumbsProvider>
-              </SidebarProvider>
-            </MenuProvider>
+            <LanguageProvider initialLanguageConfig={initialLanguageConfig}>
+              <MenuProvider initialMenus={initialMenus}>
+                <SidebarProvider>
+                  <BreadcrumbsProvider>
+                    <OtpProvider>{children}</OtpProvider>
+                  </BreadcrumbsProvider>
+                </SidebarProvider>
+              </MenuProvider>
+            </LanguageProvider>
           </AuthProvider>
         </ApiQueryClientProvider>
       </I18nextProvider>

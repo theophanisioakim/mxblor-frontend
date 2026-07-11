@@ -9,6 +9,14 @@ export {
 } from "./axios-instance"
 // All generated hooks + schemas — auto-maintained by Orval
 export * from "./generated"
+export type {
+  LanguageConfigContextValue,
+  LanguageConfigProviderProps,
+} from "./language-config-provider"
+export {
+  LanguageConfigProvider,
+  useLanguageConfig,
+} from "./language-config-provider"
 export {
   ApiQueryClientProvider,
   createQueryClient,

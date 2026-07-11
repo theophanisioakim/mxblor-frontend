@@ -51,15 +51,34 @@ injected `onNavigate?: (href: string) => void` prop that the consumer wires with
 ### `src/components/form-components/` — react-hook-form field set
 
 A self-contained module of RHF-powered form fields (`RncInput`, `RncCheckbox`, `RncSwitch`,
-`RncSelect`, `RncDateTimeField`, `RncForm`, `RncSubmitButton`). Keep file and folder names
-lowercase/kebab-case (`rnc-input/rnc-input.tsx`, `use-rnc-input.tsx`, etc.) while preserving the
-exported `Rnc*` / `useRnc*` symbols. Each field follows a 3-layer
+`RncSelect`, `RncDateTimeField`, `RncTranslationLabel`, `RncForm`, `RncSubmitButton`). Keep file and
+folder names lowercase/kebab-case (`rnc-input/rnc-input.tsx`, `use-rnc-input.tsx`, etc.) while
+preserving the exported `Rnc*` / `useRnc*` symbols. Each field follows a 3-layer
 pattern: a `Controller` wrapper, a `useX` validation/defaults hook, and a presentational `Render`
 that consumes only `@workspace/ui` primitives — so most renders are platform-free. `RncSelect` and
 `RncDateTimeField` keep a `.tsx`/`.native.tsx` render split (web dropdown vs. native bottom-sheet;
 HTML date input vs. text input). Because these fields live **inside** `packages/ui`, owning the
 `react-hook-form` + `@workspace/i18n` dependency here is intentional (it adds a `ui → i18n` edge;
 root `AGENTS.md` §2). Validation messages use `common:validations.*` keys.
+
+`RncTranslationLabel` is the field whose **value is a translation-label id**, not text: it edits one
+text per tenant language in an `RncDialog`, autocompletes over the labels of its `keyNamespace`, and
+lets the backend (`/sbf-translation`) decide reuse-vs-create on save. It is the **first (and
+so far only) consumer of the `ui → api-client` edge** already declared in `package.json`. It does
+**not** fetch the tenant's languages itself: it reads `useLanguageConfig()` from
+`@workspace/api-client`, whose `LanguageConfigProvider` loads them **once for the whole app** (see
+`packages/api-client/AGENTS.md`). Don't reintroduce a per-field `useGetLanguageConfig()` — with the
+global `staleTime: 0` / `gcTime: 0` query defaults that means one HTTP request per field, per mount.
+Its main render is platform-free; the **only** `.tsx`/`.native.tsx` pair is
+`rnc-translation-label-suggestions`, the floating autocomplete list. That split exists for a reason
+worth remembering: CSS `overflow-y-auto` (the `RncDialog` panel on web) **counts
+absolutely-positioned descendants toward its scrollable overflow**, so a list anchored inside the
+panel gives the modal a scrollbar — the web variant escapes it by anchoring to the viewport
+(`position: fixed`). React Native's `ScrollView` sizes itself from in-flow children only, so the
+native variant stays a plain absolute overlay. (`Popover` is **not** usable here: on native it
+portals to the app-root `PortalHost`, which renders *behind* the RN `Modal` the dialog uses.) Its
+chrome is translated via `common:translationLabel.*`. Behaviour is specced in
+`docs/screens/shared/translation-label-field.md`.
 
 ## ⛔ The synchronized-pair contract (mandatory)
 

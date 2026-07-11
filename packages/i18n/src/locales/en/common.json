@@ -31,5 +31,18 @@
     "search": "Search...",
     "noOptions": "No options found",
     "selectAll": "Select All"
+  },
+  "translationLabel": {
+    "title": "Translation",
+    "empty": "No text yet",
+    "defaultBadge": "default",
+    "globalNamespace": "Use the global namespace",
+    "suggestions": "Existing labels",
+    "noSuggestions": "No matching labels",
+    "disclaimer": "Changes are only written when you press Save.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveError": "The translation could not be saved. Please try again.",
+    "languagesUnavailable": "Languages are not available yet. Try again in a moment."
   }
 }
