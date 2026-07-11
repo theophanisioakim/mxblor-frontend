@@ -16,13 +16,17 @@
   },
   "peerDependencies": {
     "expo-linking": "*",
-    "expo-web-browser": "*"
+    "expo-web-browser": "*",
+    "react-native": "*"
   },
   "peerDependenciesMeta": {
     "expo-linking": {
       "optional": true
     },
     "expo-web-browser": {
+      "optional": true
+    },
+    "react-native": {
       "optional": true
     }
   },
@@ -32,6 +36,7 @@
     "@workspace/typescript-config": "workspace:*",
     "expo-linking": "catalog:",
     "expo-web-browser": "catalog:",
+    "react-native": "catalog:",
     "typescript": "catalog:"
   },
   "exports": {
