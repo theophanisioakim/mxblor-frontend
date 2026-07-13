@@ -396,9 +396,19 @@ canonical pattern. Rules when adding or changing a `ui` primitive:
    `ui`/`app`/`api-client` ripples into both web and native.
 8. **Update the docs with the change.** Before declaring done, review whether your change made any of
    these stale and fix it in the same change set: this root **`AGENTS.md`**; the relevant per-package
+   **`packages/<pkg>/AGENTS.md`** / **`apps/<app>/AGENTS.md`**; the relevant **screen SDD(s) under
+   `docs/screens/`** (see item 9); relevant code comments. Edit the `AGENTS.md` files (not the
+   `CLAUDE.md` import shims) so Claude Code and Codex stay in sync. Note which docs you updated (or
+   that none applied) when reporting.
    **`packages/<pkg>/AGENTS.md`** / **`apps/<app>/AGENTS.md`**; relevant code comments. Edit the
    `AGENTS.md` files (not the `CLAUDE.md` import shims) so Claude Code and Codex stay in sync. Note
    which docs you updated (or that none applied) when reporting.
+9. **Keep the screen SDDs in sync.** `docs/screens/` holds a Screen Design Document per screen
+   (what the user sees and does — layout, fields, validation, states, actions; **no** implementation
+   detail). Whenever a task adds, removes, or changes a screen's fields, validation, states, actions,
+   navigation, or layout, update the matching SDD (`docs/screens/<domain>/<screen>.md`)
+   **in the same change set**, and add a new SDD when you build a screen that doesn't have one yet.
+   Keep them behaviour-only — leave API/data/component specifics to code and the `AGENTS.md` files.
 
 ---
 

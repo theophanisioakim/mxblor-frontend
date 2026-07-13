@@ -90,6 +90,7 @@ export interface RncGridContextValue<T, S, F extends Record<string, unknown>> {
   actions: RncGridActions<T> | undefined
   hasActions: boolean
   actionsWidth: number
+  handleViewPress: (row: T) => void
   handleEditPress: (row: T) => void
   handleDeletePress: (row: T) => void
 

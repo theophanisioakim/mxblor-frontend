@@ -69,6 +69,8 @@ export default function RncInputRender(props: Readonly<RncInputRenderProps>) {
             editable={!isDisabled}
             readOnly={isReadOnly}
             secureTextEntry={type === "password" && !showPassword}
+            multiline={props.multiline}
+            numberOfLines={props.numberOfLines}
             keyboardType={keyboardType}
             autoCapitalize={autoCapitalize}
             autoComplete={autoComplete}
