@@ -164,6 +164,14 @@ export function ExpenseListScreen() {
       // Seeded (editable=false) expenses are system defaults: view-only, no
       // edit and no delete. Only user-created (editable=true) expenses can be
       // changed or removed.
+      //
+      // View and Edit deliberately point at the same route: the form reads the
+      // expense's own `editable` flag and renders itself read-only when it is
+      // false, so a locked row needs no separate screen — only a different icon.
+      view: {
+        hidden: (row) => row.editable !== false,
+        route: (row) => `/expenses/${row.id}`,
+      },
       edit: {
         hidden: (row) => !row.editable,
         route: (row) => `/expenses/${row.id}`,

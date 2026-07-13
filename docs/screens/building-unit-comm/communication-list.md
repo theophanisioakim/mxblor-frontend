@@ -32,15 +32,20 @@ Default sort: most recent contact first.
 
 | Column | Content | Notes |
 |---|---|---|
-| Unit | Building unit | Which unit the communication concerns. |
-| Contact | Person | The contacted person. |
-| Phone(s) | Contact phone numbers | Read from the contact. |
-| Email | Contact email | Read from the contact. |
+| Unit | Building unit | Which unit the communication concerns — its code. |
+| Contact | Person | The contacted person, shown by the same composed name the contacts screens use. |
+| Contacted at | Date | When contact happened. Default sort, most recent first. |
 | Description | Communication text | May be truncated in the grid. |
-| Contacted at | Date | When contact happened. |
-| Attachments | Count / indicator | Files attached to the log entry. |
 
 Grid supports sorting and paging (10 / 25 / 50 per page).
+
+### Deferred columns
+
+- **Phone(s)** and **Email** — the contacted person's numbers and address. Not shown: they live on
+  the contact's sub-collections, and loading them per row would cost a query per row on every page.
+  They need a batched read before they are worth adding.
+- **Attachments** — no file-upload surface exists in the app yet (see
+  [Create Communication](./create-communication.md)).
 
 ---
 

@@ -57,7 +57,7 @@ Grid supports paging (10 / 25 / 50 per page).
 | Filter | Control | Behaviour |
 |---|---|---|
 | Code | Text | Partial, case-insensitive match on the code. |
-| Category | Single-select (searchable) | Restrict to expenses in the chosen category. Options are the tenant's expense categories. |
+| Category | Single-select (searchable) | Restrict to expenses in the chosen category. Options are **all** the tenant's expense categories, system defaults included — seeded expenses live in seeded categories, so those must stay filterable. (The create/edit **form** offers a narrower list; see [Create Expense](./create-expense.md) §5.) |
 | Editable only | Tri-state checkbox | Unset = all; checked = only editable (user-created); unchecked = only non-editable (system defaults). |
 
 ---
@@ -69,14 +69,18 @@ Grid supports paging (10 / 25 / 50 per page).
 | **Search** / **Clear** | Filters panel | All roles | Apply / reset the filters. |
 | **Refresh** | Toolbar | All roles | Re-fetches the current page. |
 | **Add** | Toolbar | All roles | Opens [Create Expense](./create-expense.md). |
+| **View** | Row action | **Only for non-editable (system-default) expenses** | Opens [Edit Expense](./edit-expense.md) **read-only** for that row. |
 | **Edit** | Row action | **Only for editable (user-created) expenses** | Opens [Edit Expense](./edit-expense.md) for that row. |
 | **Delete** | Row action (destructive) | **Only for editable (user-created) expenses** | Deletes the expense after confirmation. |
 
 ### The editable rule (system defaults are view-only)
 
-- **Seeded / system-default expenses carry `editable = false`.** They are **view-only**: the
-  **Edit** and **Delete** row actions are **not shown** for them, and they cannot be modified.
+- **Seeded / system-default expenses carry `editable = false`.** They are **view-only**: they show a
+  **View** action instead of Edit, and **no Delete**.
 - **User-created expenses carry `editable = true`** and expose the **Edit** and **Delete** actions.
+- **View and Edit lead to the same screen.** It reads the expense's own locked/unlocked state and
+  renders itself read-only or editable — there is no separate "view screen", only a different icon
+  on the row.
 - `editable` is **never** set by the client — it is assigned and enforced by the server (new
   expenses are always editable; seeded expenses are locked). A direct API attempt to modify or
   delete a locked expense is rejected by the server.

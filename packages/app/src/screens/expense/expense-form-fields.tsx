@@ -19,9 +19,23 @@ export type ExpenseFormValues = {
 
 export function ExpenseFormFields({
   disabled,
-}: Readonly<{ disabled?: boolean }>) {
+  categoryLocked,
+}: Readonly<{
+  disabled?: boolean
+  /** Pins the category (e.g. when adding an expense from inside a category). */
+  categoryLocked?: boolean
+}>) {
   const { t } = useTranslation(["screens"])
-  const { options: categoryOptions } = useExpenseCategoryOptions()
+  // Only offer user-created categories — an expense may never be filed under a
+  // system-default one (the server rejects it; see ExpenseService).
+  //
+  // Except in view mode: a locked expense lives in a *seeded* category, which by
+  // definition is not in the editable-only list. Asking for the full catalog
+  // there is what lets the disabled select still render its category's name
+  // instead of showing an unresolved blank.
+  const { options: categoryOptions } = useExpenseCategoryOptions({
+    editableOnly: !disabled,
+  })
 
   return (
     <View className="w-full gap-4">
@@ -43,6 +57,7 @@ export function ExpenseFormFields({
             placeholder={t("expense.form.fields.categoryPlaceholder")}
             required
             disabled={disabled}
+            readOnly={categoryLocked}
             searchable
             options={categoryOptions}
           />

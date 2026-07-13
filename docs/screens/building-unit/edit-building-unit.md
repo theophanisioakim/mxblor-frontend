@@ -54,6 +54,21 @@ Same form as create (pre-filled), with a read-only audit block added and a Delet
 
 Identical to [Create Building Unit](./create-building-unit.md) — Code*, Floor, Confined space*, Covered terraces, Uncovered terraces, Store room, Roof gardens, and the **Contacts** sub-grid — **pre-filled** with the unit's current values and editable. Required rules and validation behave exactly as on create.
 
+### What the Contacts sub-grid means on save
+
+The contacts list is submitted as **the complete desired state**:
+
+- a row the user **changed** is updated,
+- a row the user **added** links that person to the unit,
+- a row the user **removed** **unlinks** that person — because it is no longer in what was sent.
+
+There is no separate delete step and no per-row confirmation, and nothing is persisted until
+**Save**, so removing a row and then cancelling leaves the unit untouched.
+
+Unlinking a person here does **not** delete the person: contacts are tenant-wide and are maintained
+on the [contacts screens](../contact/contacts-list.md). A row always names an **existing** contact;
+this screen never creates one.
+
 ### 4.2 Read-only audit (edit only)
 
 | Field | Shown as | Notes |

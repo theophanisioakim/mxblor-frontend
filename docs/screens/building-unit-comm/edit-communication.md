@@ -4,6 +4,10 @@
 > Scoped to a parent building. Shares its form with
 > [Create Communication](./create-communication.md); this doc covers what edit adds.
 
+> **Attachments are deferred.** The original design put file attachments on a communication. The app
+> has no file-upload surface yet, so this screen has none — no empty attachment panel, no dead
+> button. It joins when uploads exist.
+
 ---
 
 ## 1. Screen

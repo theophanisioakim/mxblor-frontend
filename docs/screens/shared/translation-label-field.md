@@ -124,3 +124,7 @@ Only when the field is **required**:
 
 - [Create Expense](../expense/create-expense.md) — expense name and description.
 - [Edit Expense](../expense/edit-expense.md) — same two fields.
+- [Create Expense Category](../expense-category/create-expense-category.md) — category name and
+  description.
+- [Edit / View Expense Category](../expense-category/edit-expense-category.md) — same two fields
+  (read-only on a system-default category, where the modal cannot be opened).

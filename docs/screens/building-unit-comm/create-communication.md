@@ -5,6 +5,10 @@
 > [Edit Communication](./edit-communication.md); reached from the
 > [Communication list](./communication-list.md).
 
+> **Attachments are deferred.** The original design put file attachments on a communication. The app
+> has no file-upload surface yet, so this screen has none — no empty attachment panel, no dead
+> button. It joins when uploads exist.
+
 ---
 
 ## 1. Screen

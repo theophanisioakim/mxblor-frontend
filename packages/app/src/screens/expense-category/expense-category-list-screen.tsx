@@ -138,7 +138,19 @@ export function ExpenseCategoryListScreen() {
   const actions: RncGridActions<ExpenseCategoryResponseDto> = useMemo(
     () => ({
       // Seeded (editable=false) categories are system defaults: view-only, no
-      // delete. Only user-created (editable=true) categories can be removed.
+      // edit and no delete. Only user-created (editable=true) categories can be
+      // changed or removed.
+      //
+      // View and Edit share a route: the form reads the category's own
+      // `editable` flag and renders itself read-only when it is false.
+      view: {
+        hidden: (row) => row.editable !== false,
+        route: (row) => `/expenses/categories/${row.id}`,
+      },
+      edit: {
+        hidden: (row) => !row.editable,
+        route: (row) => `/expenses/categories/${row.id}`,
+      },
       delete: {
         hidden: (row) => !row.editable,
         onPress: async (row) => {
@@ -185,6 +197,9 @@ export function ExpenseCategoryListScreen() {
         actions={actions}
         filters={{ render: filters }}
         toolbar={{
+          add: {
+            route: "/expenses/categories/new",
+          },
           refresh: {},
           reset: {},
         }}

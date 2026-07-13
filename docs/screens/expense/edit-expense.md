@@ -17,11 +17,16 @@
 
 ## 2. Entry points & navigation
 
-- **Reached from:** the **Edit** row action of the [Expenses List](./expenses-list.md) (route
-  `/expenses/<id>`). That action is only offered for **editable** expenses.
+- **Reached from:** the [Expenses List](./expenses-list.md) or a category's expenses grid
+  ([Edit / View Expense Category](../expense-category/edit-expense-category.md) §6), via **either**
+  row action (route `/expenses/<id>`):
+  - **Edit** — offered for **editable** expenses; the screen opens editable.
+  - **View** — offered for **system-default** expenses; the same screen opens **read-only** (§5).
+
+  There is no separate view screen: this one reads the expense's own locked/unlocked state.
 - **Breadcrumb:** Home › Expenses › Edit Expense.
 - **On success:** returns to the Expenses List showing the updated row.
-- **On cancel:** returns to the Expenses List; nothing is changed.
+- **On cancel / back:** returns to the Expenses List; nothing is changed.
 
 ---
 
@@ -33,7 +38,7 @@ values:
 | Field | Control | Required | Behaviour |
 |---|---|---|---|
 | Code | Text (max 10 characters) | Yes | The expense's code. |
-| Category | Single-select (searchable) | Yes | The parent expense category. |
+| Category | Single-select (searchable) | Yes | The parent expense category. While editing, **only user-created (editable) categories are offered** — an expense may not be *moved* into a system-default category any more than it may be created in one (see [Create Expense](./create-expense.md) §5). In read-only mode the field simply shows the expense's own category, whatever it is. |
 | Name | [Translation Label](../shared/translation-label-field.md) | Yes | Opens with the expense's current name in every language. Shows the **default-language** text when closed. |
 | Description | [Translation Label](../shared/translation-label-field.md) | Yes | Opens with the expense's current description. Shows **all languages** when closed, and offers the **global namespace** toggle. |
 

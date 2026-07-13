@@ -5,7 +5,7 @@ import {
   useCreateExpense,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useRouter } from "@workspace/router"
+import { useRouter, useSearchParams } from "@workspace/router"
 import { Button, RncForm, RncSubmitButton, Text, View } from "@workspace/ui"
 import { useCallback, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
@@ -18,8 +18,17 @@ import {
 export function CreateExpenseScreen() {
   const { t } = useTranslation(["screens"])
   const router = useRouter()
+  const searchParams = useSearchParams()
   const createMutation = useCreateExpense()
   const [error, setError] = useState<string>()
+
+  // Reached from an expense category's own screen ("Add expense" on its
+  // expenses grid), which passes the category through the query string. The
+  // category is then pinned, and cancelling goes back where the user came from.
+  const presetCategoryId = searchParams.get("categoryId") ?? undefined
+  const cancelRoute = presetCategoryId
+    ? `/expenses/categories/${presetCategoryId}`
+    : "/expenses"
 
   const handleSubmit = useCallback(
     async (
@@ -37,14 +46,14 @@ export function CreateExpenseScreen() {
 
       try {
         await createMutation.mutateAsync({ data: payload })
-        router.replace("/expenses")
+        router.replace(cancelRoute)
         return true
       } catch (e: unknown) {
         setError(getApiErrorMessage(e, t("expense.create.error")))
         return false
       }
     },
-    [createMutation, router, t]
+    [createMutation, router, t, cancelRoute]
   )
 
   return (
@@ -63,15 +72,20 @@ export function CreateExpenseScreen() {
         <RncForm<ExpenseFormValues>
           id="CreateExpenseScreen"
           onSubmit={handleSubmit}
+          defaultValues={
+            presetCategoryId
+              ? { expenseCategoryId: presetCategoryId }
+              : undefined
+          }
         >
           <View className="w-full gap-6">
-            <ExpenseFormFields />
+            <ExpenseFormFields categoryLocked={!!presetCategoryId} />
 
             <View className="flex-row gap-3">
               <RncSubmitButton label={t("expense.create.save")} />
               <Button
                 variant="outline"
-                onPress={() => router.replace("/expenses")}
+                onPress={() => router.replace(cancelRoute)}
               >
                 <Text>{t("expense.create.cancel")}</Text>
               </Button>

@@ -14,8 +14,9 @@
 - **Purpose:** Browse the tenant's housekeeping **expense categories** (e.g. Management,
   Cleaning, Water Board) in a searchable, paged grid. Categories group the individual
   [expenses](../expense/expenses-list.md).
-- **Scope:** A read-and-delete catalog grid. Creating and editing categories are separate
-  screens (see §7), not part of this screen.
+- **Scope:** The catalog grid, its filters, and its actions. The category form itself lives on
+  [Create Expense Category](./create-expense-category.md) and
+  [Edit / View Expense Category](./edit-expense-category.md).
 
 ---
 
@@ -60,20 +61,26 @@ Grid supports paging (10 / 25 / 50 per page).
 | Action | Placement | Availability | Outcome |
 |---|---|---|---|
 | **Search** / **Clear** | Filters panel | All roles | Apply / reset the filters. |
+| **Add** | Toolbar (primary) | All roles | Opens [Create Expense Category](./create-expense-category.md). |
 | **Refresh** | Toolbar | All roles | Re-fetches the current page. |
+| **View** | Row action | **Only for non-editable (system-default) categories** | Opens the category **read-only** on [Edit / View Expense Category](./edit-expense-category.md). |
+| **Edit** | Row action | **Only for editable (user-created) categories** | Opens the category for editing on the same screen. |
 | **Delete** | Row action (destructive) | **Only for editable (user-created) categories** | Deletes the category after confirmation. |
 
 ### The editable rule (system defaults are view-only)
 
-- **Seeded / system-default categories carry `editable = false`.** They are **view-only**: the
-  **Delete** row action is **not shown** for them, and they cannot be modified.
-- **User-created categories carry `editable = true`** and expose the **Delete** action.
+- **Seeded / system-default categories carry `editable = false`.** They are **view-only**: they show
+  a **View** action instead of Edit, and **no Delete**.
+- **User-created categories carry `editable = true`** and show **Edit** + **Delete**.
+- **View and Edit lead to the same screen.** It reads the category's own locked/unlocked state and
+  renders itself read-only or editable — there is no separate "view screen", only a different icon
+  on the row. Expenses cannot be assigned to a locked category either, so its expenses grid offers
+  no Add (see [Edit / View](./edit-expense-category.md) §6).
 - `editable` is **never** set by the client — it is assigned and enforced by the server (new
   categories are always editable; seeded categories are locked). A direct API attempt to modify
   or delete a locked category is rejected by the server.
 - Because the seeded catalog ships with every tenant, in a fresh tenant every row is a system
-  default and therefore exposes no Delete action — the screen is effectively read-only until a
-  user creates their own category.
+  default: all rows show only View, and the only way to get an editable category is **Add**.
 
 ---
 
@@ -87,7 +94,7 @@ error state.
 
 ## 7. Out of scope
 
-- **Create Expense Category** and **Edit Expense Category** screens — separate deliverables. When
-  they exist, Add (toolbar) and Edit (row action, shown only for editable rows) are added to this
-  list, following the same editable rule as Delete.
+- [Create Expense Category](./create-expense-category.md) and
+  [Edit / View Expense Category](./edit-expense-category.md) — their own screens (the latter also
+  owns the per-category expenses grid).
 - The [Expenses List](../expense/expenses-list.md) — its own screen.
