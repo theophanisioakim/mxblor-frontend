@@ -48,6 +48,21 @@ export interface RncGridSort<S> {
   direction: "ASC" | "DESC"
 }
 
+/**
+ * Opens a row without offering to change it. Typically paired with `edit` and
+ * the opposite `hidden` predicate, so a row shows exactly one of the two: a
+ * system-default row gets View, a user-created row gets Edit. Both usually point
+ * at the same form route — the form decides for itself whether to render
+ * read-only — so no separate "view screen" is needed.
+ */
+export interface RncGridViewAction<T> {
+  route?: string | ((row: T) => string)
+  onPress?: (row: T) => void
+  /** When it returns true for a row, the view action is not rendered for that
+   * row (e.g. editable rows, which get the edit action instead). */
+  hidden?: (row: T) => boolean
+}
+
 export interface RncGridEditAction<T> {
   route?: string | ((row: T) => string)
   onPress?: (row: T) => void
@@ -77,6 +92,7 @@ export interface RncGridCustomAction<T> {
 }
 
 export interface RncGridActions<T> {
+  view?: RncGridViewAction<T>
   edit?: RncGridEditAction<T>
   delete?: RncGridDeleteAction<T>
   custom?: RncGridCustomAction<T>[]

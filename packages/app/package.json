@@ -12,7 +12,8 @@
     "@workspace/providers": "workspace:*",
     "@workspace/router": "workspace:*",
     "@workspace/ui": "workspace:*",
-    "react": "catalog:"
+    "react": "catalog:",
+    "react-hook-form": "catalog:"
   },
   "peerDependencies": {
     "expo-linking": "*",

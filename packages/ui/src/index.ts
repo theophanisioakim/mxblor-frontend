@@ -66,6 +66,7 @@ export type {
   RncGridToolbarCustomAction,
   RncGridToolbarRefreshAction,
   RncGridToolbarResetAction,
+  RncGridViewAction,
 } from "./components/grid-components/rnc-grid/rnc-grid-model"
 export { RncBottomSheet } from "./components/overlays/rnc-bottom-sheet/rnc-bottom-sheet"
 export type { RncBottomSheetProps } from "./components/overlays/rnc-bottom-sheet/rnc-bottom-sheet-model"

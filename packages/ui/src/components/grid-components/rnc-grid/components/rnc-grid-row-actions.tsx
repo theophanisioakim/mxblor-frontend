@@ -1,6 +1,14 @@
 import { cn } from "@workspace/ui/lib/utils"
 import { useRncFormContext } from "../../../form-components/rnc-form/rnc-form-context"
-import { Check, Icon, Pencil, Trash2, Undo2, X } from "../../../primitives/icon"
+import {
+  Check,
+  Eye,
+  Icon,
+  Pencil,
+  Trash2,
+  Undo2,
+  X,
+} from "../../../primitives/icon"
 import { Pressable } from "../../../primitives/pressable"
 import type { PressableEvent } from "../../../primitives/pressable.shared"
 import { useRncGridContext } from "../rnc-grid-context"
@@ -33,6 +41,7 @@ export function RncGridRowActions<T>({
     addEditMode,
     inlineEdit,
     actions,
+    handleViewPress,
     handleEditPress,
     handleDeletePress,
     cancelEditingRow,
@@ -101,6 +110,15 @@ export function RncGridRowActions<T>({
       style={{ width: actionsWidth }}
       onPress={stopPress}
     >
+      {actions?.view && !isDraftRow(row) && !actions.view.hidden?.(row) && (
+        <Pressable
+          className={cn(ICON_BTN, "cursor-pointer hover:bg-accent")}
+          onPress={() => handleViewPress(row)}
+          aria-label="View"
+        >
+          <Icon as={Eye} size={16} className="text-muted-foreground" />
+        </Pressable>
+      )}
       {actions?.edit && !isDraftRow(row) && !actions.edit.hidden?.(row) && (
         <Pressable
           className={cn(ICON_BTN, "cursor-pointer hover:bg-accent")}

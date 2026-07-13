@@ -1,6 +1,7 @@
 "use client"
 
 import { Input as WebUiInput } from "@workspace/web-ui/components/ui/input"
+import { Textarea as WebUiTextarea } from "@workspace/web-ui/components/ui/textarea"
 import { useEffect, useRef } from "react"
 
 type InputSelection = { start: number; end: number }
@@ -37,6 +38,13 @@ type InputProps = {
   autoComplete?: string
   maxLength?: number
   autoFocus?: boolean
+  /**
+   * Renders a multi-line field: a `<textarea>` on web, `TextInput multiline` on
+   * native. `numberOfLines` sets its initial height (RN's prop name; mapped to
+   * `rows` on web).
+   */
+  multiline?: boolean
+  numberOfLines?: number
   selection?: InputSelection
   onSelectionChange?: (e: {
     nativeEvent: { selection: InputSelection }
@@ -66,6 +74,8 @@ function Input({
   selection,
   onSelectionChange,
   type,
+  multiline,
+  numberOfLines,
   ...props
 }: Readonly<InputProps>) {
   const ref = useRef<HTMLInputElement>(null)
@@ -87,6 +97,23 @@ function Input({
       }
     }
   }, [selection])
+
+  // A multi-line field is a different DOM element, not a variant of <input>.
+  // The selection/Enter-to-submit behaviour above is single-line-only by design:
+  // in a textarea, Enter inserts a newline.
+  if (multiline) {
+    return (
+      <WebUiTextarea
+        rows={numberOfLines}
+        value={value}
+        disabled={disabled || editable === false}
+        onChange={(e) => onChangeText?.(e.target.value)}
+        onBlur={() => onBlur?.()}
+        onFocus={() => onFocus?.()}
+        {...props}
+      />
+    )
+  }
 
   return (
     <WebUiInput

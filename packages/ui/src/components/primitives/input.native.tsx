@@ -1,4 +1,5 @@
 import { Input as NativeUiInput } from "@workspace/native-ui/components/ui/input"
+import { Textarea as NativeUiTextarea } from "@workspace/native-ui/components/ui/textarea"
 import type { TextInputProps } from "react-native"
 import type { InputProps } from "./input"
 
@@ -23,8 +24,22 @@ function Input({
   "aria-invalid": _ariaInvalid,
   "aria-describedby": _ariaDescribedby,
   "aria-required": _ariaRequired,
+  multiline,
+  numberOfLines,
   ...props
 }: Readonly<InputProps>) {
+  // The rnr Input is a fixed-height single-line TextInput; its Textarea is the
+  // multi-line one. Mirrors the web variant, which swaps <input> for <textarea>.
+  if (multiline) {
+    return (
+      <NativeUiTextarea
+        editable={editable ?? (disabled ? false : undefined)}
+        numberOfLines={numberOfLines}
+        {...props}
+      />
+    )
+  }
+
   return (
     <NativeUiInput
       editable={editable ?? (disabled ? false : undefined)}

@@ -564,6 +564,7 @@ export default function useRncGridState<
   // ── Row actions ──
   const actions = props.actions
   const hasActions = !!(
+    actions?.view ||
     actions?.edit ||
     actions?.delete ||
     (actions?.custom && actions.custom.length > 0)
@@ -572,6 +573,11 @@ export default function useRncGridState<
     props.addEditMode === "inline" && props.inlineEdit?.mode === "all"
 
   let actionsCount = 0
+  // `view` and `edit` are counted separately even though a grid that declares
+  // both usually shows only one per row (opposite `hidden` predicates). Nothing
+  // enforces that, so reserving a slot for each is the only width that can never
+  // clip; the cost is one empty slot on grids that do pair them.
+  if (actions?.view) actionsCount++
   if (actions?.edit) actionsCount++
   if (actions?.delete) actionsCount++
   if (actions?.custom) actionsCount += actions.custom.length
@@ -1030,6 +1036,24 @@ export default function useRncGridState<
     return success
   }
 
+  function handleViewPress(row: T) {
+    if (!actions?.view) return
+    if (isDraftRow(row)) return
+    // Unlike edit, view never starts an inline or modal edit session — it only
+    // opens the row somewhere read-only.
+    if (actions.view.route) {
+      const route =
+        typeof actions.view.route === "function"
+          ? actions.view.route(row)
+          : actions.view.route
+      props.onNavigate?.(route)
+      return
+    }
+    if (actions.view.onPress) {
+      actions.view.onPress(row)
+    }
+  }
+
   function handleEditPress(row: T) {
     if (!actions?.edit) return
     if (isDraftRow(row)) return
@@ -1311,6 +1335,7 @@ export default function useRncGridState<
     actions,
     hasActions,
     actionsWidth,
+    handleViewPress,
     handleEditPress,
     handleDeletePress,
     addEditMode: props.addEditMode ?? "default",

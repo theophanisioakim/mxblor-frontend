@@ -25,6 +25,10 @@ export interface RncInputProps {
   disabled?: boolean
   hidden?: boolean
   readOnly?: boolean
+  /** Renders a multi-line field (textarea on web, multiline TextInput on native). */
+  multiline?: boolean
+  /** Initial visible rows of a multiline field. */
+  numberOfLines?: number
   textValidationRules?: {
     maxLength?: number
     minLength?: number

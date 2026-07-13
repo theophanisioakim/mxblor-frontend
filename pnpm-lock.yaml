@@ -593,6 +593,9 @@ importers:
       react:
         specifier: 19.2.0
         version: 19.2.0
+      react-hook-form:
+        specifier: 'catalog:'
+        version: 7.77.0(react@19.2.0)
     devDependencies:
       '@biomejs/biome':
         specifier: 'catalog:'

@@ -1,4 +1,4 @@
-import { Icon, Pencil, Trash2 } from "../../../primitives/icon"
+import { Eye, Icon, Pencil, Trash2 } from "../../../primitives/icon"
 import { Pressable } from "../../../primitives/pressable"
 import { Text } from "../../../primitives/text"
 import { View } from "../../../primitives/view"
@@ -19,6 +19,7 @@ export function RncGridExpandedDetail<T>({
     expandableRender,
     hasActions,
     actions,
+    handleViewPress,
     handleEditPress,
     handleDeletePress,
   } = useRncGridContext()
@@ -34,7 +35,21 @@ export function RncGridExpandedDetail<T>({
     <View className="gap-2 border-border border-t bg-muted/50 px-4 py-3">
       {hasActions && (
         <View className="flex-row items-center justify-end gap-1">
-          {actions?.edit && (
+          {/* The `hidden` predicates are honoured here exactly as in
+              RncGridRowActions — this is the same action set, just rendered in
+              the expanded detail when the row's columns overflow. Without them a
+              system-default row would still offer Edit and Delete on a narrow
+              viewport. */}
+          {actions?.view && !actions.view.hidden?.(row) && (
+            <Pressable
+              className="size-9 cursor-pointer items-center justify-center rounded-md hover:bg-accent"
+              onPress={() => handleViewPress(row)}
+              aria-label="View"
+            >
+              <Icon as={Eye} size={18} className="text-muted-foreground" />
+            </Pressable>
+          )}
+          {actions?.edit && !actions.edit.hidden?.(row) && (
             <Pressable
               className="size-9 cursor-pointer items-center justify-center rounded-md hover:bg-accent"
               onPress={() => handleEditPress(row)}
@@ -43,7 +58,7 @@ export function RncGridExpandedDetail<T>({
               <Icon as={Pencil} size={18} className="text-muted-foreground" />
             </Pressable>
           )}
-          {actions?.delete && (
+          {actions?.delete && !actions.delete.hidden?.(row) && (
             <Pressable
               className="size-9 cursor-pointer items-center justify-center rounded-md hover:bg-red-100"
               onPress={() => handleDeletePress(row)}
