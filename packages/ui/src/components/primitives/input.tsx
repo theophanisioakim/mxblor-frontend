@@ -24,6 +24,12 @@ type InputProps = {
    */
   onSubmitEditing?: () => void
   /**
+   * Called when the user presses Escape in the field. Mapped from the DOM
+   * `keydown` here; from `TextInput.onKeyPress` on native, where it only fires
+   * with a hardware keyboard (soft keyboards have no Escape key).
+   */
+  onEscape?: () => void
+  /**
    * Return/Enter key label on mobile keyboards. Maps to `TextInput.returnKeyType`
    * on native and the `enterKeyHint` attribute on web (the value names overlap).
    */
@@ -66,6 +72,7 @@ function Input({
   onBlur,
   onFocus,
   onSubmitEditing,
+  onEscape,
   returnKeyType,
   editable,
   disabled,
@@ -129,6 +136,9 @@ function Input({
         // `isComposing` guards IME (e.g. CJK) Enter that confirms a candidate.
         if (e.key === "Enter" && !e.nativeEvent.isComposing) {
           onSubmitEditing?.()
+        }
+        if (e.key === "Escape") {
+          onEscape?.()
         }
       }}
       onSelect={(e) => {
