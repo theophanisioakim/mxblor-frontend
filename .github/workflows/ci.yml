@@ -53,7 +53,7 @@ jobs:
       # workspaces skip build/typecheck. Each run writes a fresh sha-keyed entry
       # and restores the most recent prior one via the restore-keys prefix.
       - name: Cache Turborepo
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .turbo
           key: ${{ runner.os }}-turbo-${{ github.sha }}
@@ -63,7 +63,7 @@ jobs:
       # Next.js manages .next/cache itself (it's excluded from Turbo outputs),
       # so cache it separately to speed up the apps/web build.
       - name: Cache Next.js build
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: apps/web/.next/cache
           key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/**/*.[jt]s', 'apps/web/**/*.[jt]sx') }}
