@@ -101,7 +101,10 @@
         "notes": "Notes",
         "distributions": "Distribution tables",
         "budgets": "Yearly budget",
-        "bankAccounts": "Bank accounts"
+        "bankAccounts": "Bank accounts",
+        "currentExpenses": "Current expenses",
+        "payments": "Payments",
+        "collections": "Collections"
       },
       "notFound": "This building could not be found.",
       "loadError": "This building could not be loaded.",
@@ -792,6 +795,220 @@
       "loadError": "Could not load the bank account.",
       "notFound": "Bank account not found.",
       "missingVersion": "This account was loaded without a version and cannot be saved. Reload the page."
+    }
+  },
+  "tExpense": {
+    "months": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    },
+    "list": {
+      "title": "Current Expenses",
+      "add": "Add",
+      "back": "Back",
+      "columns": {
+        "period": "Period",
+        "expense": "Expense",
+        "collectionType": "Collection type",
+        "amount": "Amount",
+        "distributionTable": "Distribution table",
+        "description": "Description"
+      },
+      "filters": {
+        "year": "Year",
+        "month": "Month",
+        "monthPlaceholder": "Any month",
+        "expense": "Expense",
+        "expensePlaceholder": "Any expense",
+        "collectionType": "Collection type",
+        "collectionTypePlaceholder": "Any type"
+      },
+      "summary": {
+        "capital": "Capital",
+        "monthly": "Monthly",
+        "nondistributed": "Non-distributed",
+        "savings": "Savings",
+        "bank": "Bank deposit / withdrawal",
+        "yearHint": "Totals for {{year}} (updates when you filter by year)."
+      },
+      "delete": {
+        "title": "Delete Expense",
+        "description": "Delete \"{{description}}\"? Linked payment and collection rows that are not yet posted will be removed too."
+      }
+    },
+    "form": {
+      "fields": {
+        "expense": "Expense",
+        "expensePlaceholder": "Choose an expense...",
+        "collectionType": "Collection type",
+        "collectionTypePlaceholder": "Choose a type...",
+        "distributionTable": "Distribution table",
+        "distributionTablePlaceholder": "Choose a table...",
+        "periodStart": "Start month",
+        "periodEnd": "End month",
+        "referenceDate": "Reference month",
+        "amount": "Amount",
+        "description": "Description",
+        "descriptionHelp": "Generated from the expense and period; not typed in directly."
+      },
+      "noDistributionTables": "This building has no distribution tables yet.",
+      "validation": {
+        "distributionRequired": "A distribution table is required for this collection type."
+      }
+    },
+    "create": {
+      "title": "New Expense",
+      "save": "Save",
+      "error": "Could not create the expense."
+    },
+    "edit": {
+      "title": "Edit Expense",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "error": "Could not save the expense.",
+      "deleteError": "Could not delete the expense.",
+      "loadError": "Could not load the expense.",
+      "notFound": "Expense not found.",
+      "missingVersion": "This expense was loaded without a version and cannot be saved. Reload the page.",
+      "audit": {
+        "title": "Audit",
+        "created": "Created {{at}} by {{by}}",
+        "updated": "Updated {{at}} by {{by}}"
+      }
+    }
+  },
+  "tPayment": {
+    "list": {
+      "title": "Payments",
+      "add": "Add",
+      "back": "Back",
+      "columns": {
+        "period": "Period",
+        "expense": "Expense",
+        "amount": "Amount",
+        "dueDate": "Due date",
+        "invoiceNo": "Invoice no",
+        "description": "Description"
+      },
+      "filters": {
+        "year": "Year",
+        "expense": "Expense",
+        "expensePlaceholder": "Any expense"
+      },
+      "delete": {
+        "title": "Delete Payment",
+        "description": "Delete \"{{description}}\"? This removes the payment row only; it does not change any expense."
+      }
+    },
+    "form": {
+      "fields": {
+        "expense": "Expense",
+        "expensePlaceholder": "Choose an expense...",
+        "referenceDate": "Reference month",
+        "amount": "Amount",
+        "dueDate": "Due date",
+        "invoiceNo": "Invoice no",
+        "description": "Description"
+      }
+    },
+    "create": {
+      "title": "New Payment",
+      "save": "Save",
+      "error": "Could not create the payment."
+    },
+    "edit": {
+      "title": "Edit Payment",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "error": "Could not save the payment.",
+      "deleteError": "Could not delete the payment.",
+      "loadError": "Could not load the payment.",
+      "notFound": "Payment not found.",
+      "missingVersion": "This payment was loaded without a version and cannot be saved. Reload the page.",
+      "audit": {
+        "title": "Audit",
+        "created": "Created {{at}} by {{by}}",
+        "updated": "Updated {{at}} by {{by}}"
+      }
+    }
+  },
+  "tCollection": {
+    "list": {
+      "title": "Collections",
+      "add": "Add",
+      "back": "Back",
+      "columns": {
+        "period": "Period",
+        "unit": "Unit",
+        "expense": "Expense",
+        "collectionType": "Collection type",
+        "amount": "Amount",
+        "receiptNo": "Receipt no",
+        "paymentChannel": "Payment channel"
+      },
+      "filters": {
+        "year": "Year",
+        "unit": "Unit",
+        "unitPlaceholder": "Any unit",
+        "expense": "Expense",
+        "expensePlaceholder": "Any expense",
+        "collectionType": "Collection type",
+        "collectionTypePlaceholder": "Any type"
+      },
+      "delete": {
+        "title": "Delete Collection",
+        "description": "Delete \"{{description}}\"? This removes the collection row only; it does not change any expense."
+      }
+    },
+    "form": {
+      "fields": {
+        "unit": "Unit",
+        "unitPlaceholder": "Choose a unit...",
+        "expense": "Expense",
+        "expensePlaceholder": "Choose an expense...",
+        "collectionType": "Collection type",
+        "collectionTypePlaceholder": "Choose a type...",
+        "referenceDate": "Reference month",
+        "amount": "Amount",
+        "dueDate": "Due date",
+        "paymentChannel": "Payment channel",
+        "paymentChannelPlaceholder": "Choose a channel...",
+        "receiptNo": "Receipt no",
+        "description": "Description"
+      }
+    },
+    "create": {
+      "title": "New Collection",
+      "save": "Save",
+      "error": "Could not create the collection."
+    },
+    "edit": {
+      "title": "Edit Collection",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "error": "Could not save the collection.",
+      "deleteError": "Could not delete the collection.",
+      "loadError": "Could not load the collection.",
+      "notFound": "Collection not found.",
+      "missingVersion": "This collection was loaded without a version and cannot be saved. Reload the page.",
+      "audit": {
+        "title": "Audit",
+        "created": "Created {{at}} by {{by}}",
+        "updated": "Updated {{at}} by {{by}}"
+      }
     }
   }
 }

@@ -1,9 +1,9 @@
-# Screen SDD — Expenses List (by year)
+# Screen SDD — Expenses List (flat)
 
 > Screen design document — behaviour only, no implementation/API/data detail.
 > Scoped to a single building; reached from the **Current Expenses** tile on the
 > [Edit Building](../building/edit-building.md) hub. Entry point to
-> [Create Expense](./create-expense.md) and (via drill-down) [Edit Expense](./edit-expense.md).
+> [Create Expense](./create-expense.md) and [Edit Expense](./edit-expense.md).
 
 ---
 
@@ -11,8 +11,8 @@
 
 - **Name:** Current Expenses
 - **Location:** Buildings → *(a building)* → Current Expenses
-- **Purpose:** Show the building's expenses **summarised per year**, with category totals, and act as the launch point for adding an expense and drilling into a year's detail.
-- **Scope:** The year-summary grid + Add. Per-month/per-expense detail views are **related screens** (out of scope here — see §7).
+- **Purpose:** Show the building's expenses in one filterable grid, with a year summary strip for type totals, and act as the launch point for adding or editing an expense.
+- **Scope:** Summary strip + expense grid + Add. No year→month drill-down.
 
 ---
 
@@ -22,62 +22,78 @@
 - **Breadcrumb:** Home › Buildings › *(building name)* › Current Expenses.
 - **Back:** returns to the parent building.
 - **Add:** opens [Create Expense](./create-expense.md).
-- **Open a row (year):** drills into that year's detail (by-month view), from where an individual expense can be opened and edited.
+- **Edit row:** opens [Edit Expense](./edit-expense.md) for that expense.
 
 ---
 
-## 3. Grid columns
+## 3. Year summary strip
 
-Rows are **years**. Default sort: most recent year first.
+Above the grid, show totals for the **selected filter year** (default: current calendar year):
+
+| Tile | Content |
+|---|---|
+| Capital | Sum of capital-type expenses that year. |
+| Monthly | Sum of monthly-type expenses. |
+| Non-distributed | Sum of non-distributed expenses. |
+| Savings | Sum of savings-type expenses. |
+| Bank deposit / withdrawal | Net bank movements (deferred until the 191/192 engine exists — may show zero). |
+
+The strip updates when the user filters by year.
+
+---
+
+## 4. Grid columns
+
+Rows are **individual expenses** (one row per reference month). Default sort: most recent reference month first.
 
 | Column | Content |
 |---|---|
-| Year | The reference year. |
-| Total capital | Sum of capital-type expenses that year. |
-| Total monthly | Sum of monthly-type expenses. |
-| Non-distributed | Sum of non-distributed expenses. |
-| Savings | Sum of savings-type expenses. |
-| Bank deposit / withdrawal | Net bank movements. |
+| Period | Reference month (e.g. 3/2026). |
+| Expense | Catalog expense code and name. |
+| Collection type | Monthly / Capital / Savings / Non-distributed. |
+| Amount | Expense amount. |
+| Distribution table | Table name (blank for non-distributed). |
+| Description | Auto-generated description. |
 
 Paging 10 / 25 / 50 per page.
 
 ---
 
-## 4. Filters
+## 5. Filters
 
 | Filter | Control |
 |---|---|
 | Year | Year picker |
+| Month | Month dropdown (optional) |
+| Expense | Expense catalog dropdown |
+| Collection type | Collection type dropdown |
 
 ---
 
-## 5. Actions
+## 6. Actions
 
 | Action | Placement | Availability | Outcome |
 |---|---|---|---|
 | **Add** | Toolbar (primary) | All roles | Opens [Create Expense](./create-expense.md). |
-| **Open year** | Row action | All roles | Drills into the year's detail (by-month). |
+| **Edit** | Row action | All roles | Opens [Edit Expense](./edit-expense.md). |
+| **Delete** | Row action | Non-`user` roles | Confirms, deletes unposted expense and its correlated payment/collection rows. |
 | **Back** | Above grid | All roles | Returns to the parent building. |
-
-> The year-summary rows themselves are not directly editable/deletable; individual expenses are edited/deleted from the year drill-down.
 
 ---
 
-## 6. States
+## 7. States
 
 Loading / Loaded / Empty (no expenses) / failure — as standard.
 
 ---
 
-## 7. Related screens (out of scope for now)
+## 8. Out of scope
 
-- **Expenses by month / by year** drill-down views.
-- **Expense view** (a single expense with its collections/payments).
-These will get their own SDDs if/when the specialized views are specced.
+- Per-unit **collections** and building **payments** screens (separate balance-sheet ledgers).
+- Bank-balancing synthetic expenses (191/192).
 
 ---
 
-## 8. Open questions
+## 9. Open questions
 
-- Should the summary show a **grand-total row** across years?
-- Confirm the exact **category columns** (taken from v2: capital / monthly / non-distributed / savings / bank).
+- None — flat layout supersedes the earlier year drill-down design.

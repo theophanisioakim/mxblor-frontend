@@ -207,8 +207,7 @@ export function EditBuildingScreen({ id }: Readonly<{ id: string }>) {
 
       {/* ── Sub-entity hub ─────────────────────────────────────────────────
           A tile is added here in the same change set as the screen it opens, so
-          the hub never offers a link that goes nowhere. The remaining transaction
-          sub-entities (payments, collections) join when theirs are built. */}
+          the hub never offers a link that goes nowhere. */}
       <View className="gap-3">
         <Text className="font-semibold text-foreground text-xl">
           {t("building.edit.manage")}
@@ -248,6 +247,21 @@ export function EditBuildingScreen({ id }: Readonly<{ id: string }>) {
             icon="Landmark"
             label={t("building.edit.tiles.bankAccounts")}
             onPress={() => router.push(`/buildings/${id}/bank-accounts`)}
+          />
+          <HubTile
+            icon="Receipt"
+            label={t("building.edit.tiles.currentExpenses")}
+            onPress={() => router.push(`/buildings/${id}/current-expenses`)}
+          />
+          <HubTile
+            icon="CreditCard"
+            label={t("building.edit.tiles.payments")}
+            onPress={() => router.push(`/buildings/${id}/payments`)}
+          />
+          <HubTile
+            icon="HandCoins"
+            label={t("building.edit.tiles.collections")}
+            onPress={() => router.push(`/buildings/${id}/collections`)}
           />
         </View>
       </View>

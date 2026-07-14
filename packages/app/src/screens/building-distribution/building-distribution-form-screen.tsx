@@ -92,7 +92,7 @@ export function BuildingDistributionFormScreen({
 
     const load = async () => {
       const [unitPage, tablePage] = await Promise.all([
-        searchBuildingUnits({ page: 0, size: 200, buildingId }),
+        searchBuildingUnits({ page: 0, size: 100, buildingId }),
         searchBuildingDistributions({ page: 0, size: 100, buildingId }),
       ])
 
