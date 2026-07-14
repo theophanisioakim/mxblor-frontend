@@ -33,12 +33,13 @@ Default sort: by name.
 | Column | Content | Notes |
 |---|---|---|
 | Name | Table name | e.g. "By area", "Equal shares". |
-| Default | Yes/No | Whether it's the building's default table. |
-| Created at / by, Updated at / by | Date/time / user | Audit info. |
+| Default | Yes/No | Whether it's the building's default table. At most one per building. |
+| Hidden | Yes/No | Whether it's hidden from selection lists elsewhere. |
 
 Grid supports sorting and paging (10 / 25 / 50 per page).
 
-> Hidden tables (see the Edit screen's *Hidden* flag) may be excluded from selection lists elsewhere but still appear here for management — confirm (open question).
+> Hidden tables (see the Edit screen's *Hidden* flag) are excluded from selection lists elsewhere but
+> **still appear here**, so they can be managed.
 
 ---
 
@@ -56,7 +57,7 @@ Grid supports sorting and paging (10 / 25 / 50 per page).
 |---|---|---|---|
 | **Add** | Toolbar (primary) | All roles | Opens Create Distribution Table. |
 | **Edit** | Row action | All roles | Opens Edit Distribution Table. |
-| **Delete** | Row action (destructive) | Non-`user` roles | Deletes after confirmation (see open questions re: tables in use). |
+| **Delete** | Row action (destructive) | Non-`user` roles | Deletes after confirmation. **Refused** while a budget month is billed through the table. |
 | **Search** / **Clear** | Filters panel | All roles | Apply / reset filters. |
 | **Back** | Above grid | All roles | Returns to the parent building. |
 
@@ -74,8 +75,10 @@ Loading / Loaded / Empty / Deleting / success / failure — as standard.
 
 ---
 
-## 8. Open questions
+## 8. Resolved
 
-- Should **hidden** tables be shown here (assumed yes, for management)?
-- Should **Delete** be blocked when a table is referenced by a monthly budget/expense?
-- Show a **count of units / whether percentages total 100%** as a column?
+- **Hidden tables are shown here**, so they remain manageable; they are only hidden from selection
+  lists elsewhere.
+- **Delete is blocked** while a monthly budget is billed through the table.
+- **No "totals 100%" column.** A table can no longer be saved unless it totals 100, so the column
+  would report the same value on every row.

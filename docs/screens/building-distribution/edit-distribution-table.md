@@ -37,9 +37,9 @@ Created at / by, Updated at / by.
 ## 4. Behaviour & interactions
 
 - **Pre-fill** on open, including current percentages and the units.
-- **Re-running a calculation method** overwrites current percentages — confirm whether a warning is shown (open question).
-- **New units:** if units were added to the building after this table was created, confirm how they appear here (open question).
-- **Delete:** non-`user` roles; confirm-first; deletes and returns to the list. Destructive, separated from Save. Also a row action on the list.
+- **Re-running a calculation method overwrites the whole grid**, including hand-typed values. No warning is shown — the method is an explicit choice, and the running total makes the result visible immediately.
+- **New units appear at 0%.** A unit added to the building after this table was written is shown with no share, which forces the user to give it one before the total can reach 100. v1 quietly appended such units at 0% and left the total at 100, so the new unit simply paid nothing and nobody noticed.
+- **Delete:** non-`user` roles; confirm-first; deletes and returns to the list. Destructive, separated from Save. Also a row action on the list. **Blocked when a budget month is billed through the table** — those months would lose the split that decides what each unit owes; the error names the number of months.
 
 ---
 
@@ -59,8 +59,9 @@ Loading / Loaded / Submitting / Confirming delete / Success / Validation error /
 
 ---
 
-## 7. Open questions
+## 7. Resolved
 
-- Warn before a chosen calculation method **overwrites** manually-tuned percentages?
-- How are **units added after creation** reflected — auto-added at 0% or requiring a recalculation?
-- Block **Delete** when the table is referenced by a monthly budget/expense?
+- **No warning** before a calculation method overwrites manually-tuned percentages: it is an explicit
+  choice and the running total shows the result at once.
+- **Units added after creation appear at 0%**, and must be given a share before the total reaches 100.
+- **Delete is blocked** while a monthly budget is billed through the table.

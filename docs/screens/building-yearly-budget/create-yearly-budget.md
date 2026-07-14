@@ -66,15 +66,19 @@ Twelve fixed rows (one per month; rows cannot be added or removed).
 - **Set amount from month:** enter an amount + a starting month → applies that amount to that month and every later month.
 - **Set distribution from month:** pick a distribution table + a starting month → applies it to that month and every later month.
 
-Both open a small modal and update the grid in place; changes persist when the budget is saved.
+Both open a small modal and update the grid in place; changes persist when the budget is saved. They
+are disabled while the building has no distribution tables.
 
 ---
 
 ## 6. Behaviour & interactions
 
-- **Fixed 12 months:** you set values per month; you don't add/remove months.
+- **Fixed 12 months:** you set values per month; you don't add/remove months. A month nobody is billed for is a gap that only shows up when the money doesn't arrive, so the server refuses anything but twelve.
 - **Bulk helpers** are the fast path for buildings with the same amount/table most of the year; individual months can still be tuned afterwards.
-- **Distribution tables** must already exist for this building; if none exist, see open questions.
+- **Distribution tables must already exist.** With none, the grid is replaced by a message telling the user to create one first, and **Save is disabled** — there would be no way to share any month's cost across the units.
+- **Every month is pre-pointed at the building's *default* distribution table** (or its first, if none is marked default), which is the choice the user would make for nearly every month anyway.
+- **A month may only name a table of *this* building.** One from another building would split the cost across units that live somewhere else; the server rejects it.
+- **The year defaults to the current year.**
 - **Save enablement:** requires a year and valid amounts/tables on all months.
 
 ---
@@ -114,8 +118,10 @@ Initial (12 months, empty amounts) / Submitting / Success / Validation error / S
 
 ---
 
-## 11. Open questions
+## 11. Resolved
 
-- If the building has **no distribution tables**, should creating a budget be blocked or should the user be prompted to create one first?
-- Should the year default to the **next/current year**?
-- One budget **per year** enforced here?
+- **A budget cannot be created while the building has no distribution tables.** The form says so and
+  Save is disabled.
+- **The year defaults to the current year.**
+- **One budget per building per year**, enforced by the server (and by a database constraint behind
+  it). A second attempt is refused with a readable message naming the year, which the form shows.

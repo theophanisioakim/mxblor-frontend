@@ -58,7 +58,10 @@ Loading / Loaded / Submitting / Confirming delete / Success / Validation error /
 
 ---
 
-## 7. Open questions
+## 7. Resolved
 
-- Should the **reference year** be editable after creation, or fixed once set?
-- Should Delete be **blocked** when the year already has posted expenses/collections?
+- **The reference year stays editable.** Moving a budget to a year that already has one is refused by
+  the server with a readable message, so there is no need to lock the field.
+- **Delete is not blocked.** Deleting a budget takes its twelve months with it. Guarding it against
+  posted expenses/collections is deferred to the feature that introduces them — nothing points at a
+  budget month today.

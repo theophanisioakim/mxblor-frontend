@@ -36,7 +36,7 @@ Default sort: by account number.
 | Bank name | Bank | |
 | Account type | Type | e.g. operating, savings, fund. |
 | IBAN | IBAN number | |
-| Balance | Current balance | Running balance (starts from the initial balance set on creation). |
+| Balance | Current balance | The sum of the account's transactions, kept on the record so it can be sorted and filtered on. |
 
 Grid supports sorting and paging (10 / 25 / 50 per page).
 
@@ -59,7 +59,7 @@ Grid supports sorting and paging (10 / 25 / 50 per page).
 |---|---|---|---|
 | **Add** | Toolbar (primary) | All roles | Opens Create Bank Account. |
 | **Edit** | Row action | All roles | Opens Edit Bank Account. |
-| **Delete** | Row action (destructive) | Non-`user` roles | Deletes after confirmation (see open questions re: accounts with transactions). |
+| **Delete** | Row action (destructive) | Non-`user` roles | Deletes after confirmation, **taking the account's transactions with it**. |
 | **Search** / **Clear** | Filters panel | All roles | Apply / reset filters. |
 | **Back** | Above grid | All roles | Returns to the parent building. |
 
@@ -77,7 +77,9 @@ Loading / Loaded / Empty / Deleting / success / failure — as standard.
 
 ---
 
-## 8. Open questions
+## 8. Resolved
 
-- Should **Delete** be blocked when an account has transactions?
-- Confirm **Delete** role rule (hidden for `user`).
+- **Delete is not blocked by transactions.** Every account has at least an opening Balance B/F row, so
+  such a guard would make every account undeletable — the bug v1 shipped. Deleting an account removes
+  its transactions with it.
+- **Delete is hidden for the `user` role**, as everywhere else.

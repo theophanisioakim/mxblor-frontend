@@ -34,7 +34,7 @@
 | **Account no** | Text | Yes | Account number. |
 | IBAN no | Text | No | Max 255 chars. |
 | SWIFT / BIC | Text | No | Max 255 chars. |
-| Account type | Dropdown | No | e.g. operating, savings, fund. |
+| Account type | Dropdown | **Yes** | Current / Savings / Deposit / Checking / Business. |
 | **Initial balance** | Number | Yes | Opening balance. On this screen the field is labelled **Initial balance**; on edit it becomes the (read-only) running **Balance**. |
 | Description | Multi-line text (4 rows) | No | Free notes. |
 
@@ -44,8 +44,10 @@
 
 ## 4. Behaviour & interactions
 
-- **Initial balance** is editable only at creation; after the account exists the balance is driven by transactions and shown read-only (see [Edit Bank Account](./edit-bank-account.md)).
-- Bank name, Account no, and Initial balance are required.
+- **Initial balance** is editable only at creation. It is not stored as a bare number: the server records it as an opening **Balance B/F** transaction, so the balance always has a movement behind it and reconciles against the transactions list on the edit screen. After that, only a transaction can move it (see [Edit Bank Account](./edit-bank-account.md)).
+- An account opened at **zero** gets no transaction at all.
+- **SWIFT/BIC is upper-cased** on save — the codes are upper case by definition.
+- Bank name, Account no, Account type and Initial balance are required.
 
 ---
 
@@ -82,7 +84,12 @@ Initial / Submitting / Success / Validation error / Save failure — as standard
 
 ---
 
-## 9. Open questions
+## 9. Resolved
 
-- Should **IBAN / account no** be validated for format, and unique within the building?
-- Can Initial balance be **negative** (overdraft)?
+- **Initial balance may be negative** (an overdraft is a real state), and so may any transaction —
+  the amount is a single signed number.
+
+## 10. Open questions
+
+- Should **IBAN / account no** be validated for format, and unique within the building? Neither v1
+  nor v2 does either; both are free text today.

@@ -1,12 +1,18 @@
 "use client"
 
-import type { SelectOptionDto } from "@workspace/api-client"
+import type {
+  DistributionCalcTypeOptionDto,
+  SelectOptionDto,
+} from "@workspace/api-client"
 import {
+  useGetBuildingDistributionCalcTypes,
   useGetBuildingRelatedPersonTypes,
   useGetBuildingUnitContactTypes,
   useGetContactAddressTypes,
   useGetContactEmailTypes,
   useGetContactPhoneNumberTypes,
+  useGetTBankAccountAccountTypes,
+  useGetTBankAccountTransactionTypes,
 } from "@workspace/api-client"
 import { useMemo } from "react"
 
@@ -75,4 +81,51 @@ export function useBuildingUnitContactTypeOptions(): ReferenceOptions {
 export function useBuildingRelatedPersonTypeOptions(): ReferenceOptions {
   const { data = [] } = useGetBuildingRelatedPersonTypes()
   return useMemo(() => toOptions(data), [data])
+}
+
+/** Current / Savings / Deposit / … — a bank account's type. */
+export function useBankAccountTypeOptions(): ReferenceOptions {
+  const { data = [] } = useGetTBankAccountAccountTypes()
+  return useMemo(() => toOptions(data), [data])
+}
+
+/**
+ * Balance b/f / Administrative / the transfers / Other — the transaction types a
+ * user may enter on the bank-account screen.
+ *
+ * The endpoint serves only the *manual* types, on purpose: payment and collection
+ * rows are written by the system to record the bank side of a receipt, and the
+ * save rejects an attempt to enter one. A dropdown offering them would be
+ * offering something that is then refused.
+ */
+export function useTransactionTypeOptions(): ReferenceOptions {
+  const { data = [] } = useGetTBankAccountTransactionTypes()
+  return useMemo(() => toOptions(data), [data])
+}
+
+/**
+ * The distribution table's calculation methods.
+ *
+ * Deliberately *not* shaped like the lookups above. The form does not merely
+ * display these — it has to act on the one the user picks, applying the right
+ * formula (split evenly, weight by confined space, …), and it cannot tell them
+ * apart by a label that changes with the language. So the endpoint returns a
+ * stable `key` alongside the id, and the form switches on that; see
+ * `distribution-calc.ts`.
+ */
+export function useDistributionCalcTypeOptions(): {
+  options: DistributionCalcTypeOptionDto[]
+  keyById: Map<string, string>
+} {
+  const { data = [] } = useGetBuildingDistributionCalcTypes()
+
+  return useMemo(() => {
+    const keyById = new Map<string, string>()
+    for (const option of data) {
+      if (option.id && option.key) {
+        keyById.set(option.id, option.key)
+      }
+    }
+    return { options: data, keyById }
+  }, [data])
 }

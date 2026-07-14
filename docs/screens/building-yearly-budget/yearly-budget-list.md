@@ -72,7 +72,9 @@ Loading / Loaded / Empty / Deleting / success / failure — as standard.
 
 ---
 
-## 8. Open questions
+## 8. Resolved
 
-- Should the list prevent **two budgets for the same year** (assume one budget per year)?
-- Confirm **Delete** role rule (hidden for `user`).
+- **One budget per building per year.** The server (and a database constraint) enforces it; a second
+  attempt is refused on the create screen with a message naming the year.
+- **Delete is hidden for the `user` role**, as everywhere else.
+- The **Total** column is computed from the twelve months, so it cannot be sorted on.

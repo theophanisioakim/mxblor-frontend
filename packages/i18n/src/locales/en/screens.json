@@ -98,7 +98,10 @@
         "units": "Building units",
         "relatedPeople": "Related people",
         "communication": "Communication",
-        "notes": "Notes"
+        "notes": "Notes",
+        "distributions": "Distribution tables",
+        "budgets": "Yearly budget",
+        "bankAccounts": "Bank accounts"
       },
       "notFound": "This building could not be found.",
       "loadError": "This building could not be loaded.",
@@ -594,6 +597,201 @@
       "loadError": "This communication could not be loaded.",
       "missingVersion": "The record is incomplete and cannot be saved.",
       "error": "The communication could not be updated."
+    }
+  },
+  "buildingDistribution": {
+    "list": {
+      "title": "Distribution Tables",
+      "add": "Add",
+      "back": "Back",
+      "columns": {
+        "name": "Name",
+        "isDefault": "Default",
+        "isHidden": "Hidden"
+      },
+      "filters": {
+        "name": "Name",
+        "namePlaceholder": "Search name..."
+      },
+      "delete": {
+        "title": "Delete Distribution Table",
+        "description": "Are you sure you want to delete \"{{name}}\"? A table a budget is billed through cannot be deleted."
+      }
+    },
+    "form": {
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "e.g. By area",
+        "isDefault": "Default",
+        "isDefaultHelp": "The table used when an expense names none.",
+        "isHidden": "Hidden"
+      },
+      "calc": {
+        "method": "Calculation method",
+        "placeholder": "Choose a method...",
+        "copyFrom": "Copy from \"{{name}}\""
+      },
+      "percentages": {
+        "title": "Percentages",
+        "percentage": "Percentage (%)",
+        "total": "Total",
+        "mustTotal": "Percentages must total 100%.",
+        "noUnits": "This building has no units yet, so there is nothing to distribute across. Add its units first."
+      }
+    },
+    "create": {
+      "title": "New Distribution Table",
+      "save": "Save",
+      "error": "Could not create the distribution table."
+    },
+    "edit": {
+      "title": "Edit Distribution Table",
+      "save": "Save",
+      "cancel": "Cancel",
+      "error": "Could not save the distribution table.",
+      "loadError": "Could not load the distribution table.",
+      "notFound": "Distribution table not found.",
+      "missingVersion": "This table was loaded without a version and cannot be saved. Reload the page."
+    }
+  },
+  "yearlyBudget": {
+    "months": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    },
+    "list": {
+      "title": "Yearly Budget",
+      "add": "Add",
+      "back": "Back",
+      "columns": {
+        "year": "Year",
+        "total": "Total"
+      },
+      "filters": {
+        "year": "Year"
+      },
+      "delete": {
+        "title": "Delete Budget",
+        "description": "Are you sure you want to delete the budget for {{year}}? This action cannot be undone."
+      }
+    },
+    "form": {
+      "fields": {
+        "refYear": "Reference year"
+      },
+      "bulk": {
+        "setAmount": "Set amount from month…",
+        "setAmountHelp": "Applies the amount to that month and every later month.",
+        "setTable": "Set distribution from month…",
+        "setTableHelp": "Applies the distribution table to that month and every later month.",
+        "fromMonth": "From month",
+        "apply": "Apply",
+        "cancel": "Cancel"
+      },
+      "months": {
+        "title": "Monthly budget",
+        "amount": "Amount",
+        "table": "Distribution table",
+        "tablePlaceholder": "Choose a table...",
+        "total": "Total",
+        "noTables": "This building has no distribution tables yet, so there is nothing to share each month's cost across. Create one first."
+      }
+    },
+    "create": {
+      "title": "New Yearly Budget",
+      "save": "Save",
+      "error": "Could not create the budget."
+    },
+    "edit": {
+      "title": "Edit Yearly Budget",
+      "save": "Save",
+      "cancel": "Cancel",
+      "error": "Could not save the budget.",
+      "loadError": "Could not load the budget.",
+      "notFound": "Budget not found.",
+      "missingVersion": "This budget was loaded without a version and cannot be saved. Reload the page."
+    }
+  },
+  "bankAccount": {
+    "list": {
+      "title": "Bank Accounts",
+      "add": "Add",
+      "back": "Back",
+      "columns": {
+        "accountNo": "Account no",
+        "bankName": "Bank name",
+        "accountType": "Account type",
+        "iban": "IBAN",
+        "balance": "Balance"
+      },
+      "filters": {
+        "accountNo": "Account no",
+        "accountNoPlaceholder": "Search account no...",
+        "bankName": "Bank name",
+        "bankNamePlaceholder": "Search bank...",
+        "accountType": "Account type",
+        "accountTypePlaceholder": "Any type",
+        "iban": "IBAN",
+        "ibanPlaceholder": "Search IBAN..."
+      },
+      "delete": {
+        "title": "Delete Bank Account",
+        "description": "Are you sure you want to delete account \"{{accountNo}}\"? Its transactions go with it."
+      }
+    },
+    "form": {
+      "fields": {
+        "bankName": "Bank name",
+        "accountName": "Account name",
+        "accountNo": "Account no",
+        "iban": "IBAN",
+        "swiftBic": "SWIFT / BIC",
+        "accountType": "Account type",
+        "accountTypePlaceholder": "Any type",
+        "initialBalance": "Initial balance",
+        "initialBalanceHelp": "Recorded as an opening 'Balance B/F' transaction.",
+        "balance": "Balance",
+        "balanceHelp": "The sum of this account's transactions. Add a transaction below to move it.",
+        "description": "Description"
+      },
+      "transactions": {
+        "title": "Transactions",
+        "add": "Add transaction",
+        "help": "Only manual transactions can be entered here. Rows created by a payment or a collection belong to their receipt and are not listed.",
+        "empty": "No transactions on this account yet.",
+        "date": "Date",
+        "type": "Type",
+        "typePlaceholder": "Select a type",
+        "amount": "Amount",
+        "amountHelp": "Positive is money in, negative is money out.",
+        "description": "Description",
+        "remove": "Remove",
+        "balance": "Balance"
+      }
+    },
+    "create": {
+      "title": "New Bank Account",
+      "save": "Save",
+      "error": "Could not create the bank account."
+    },
+    "edit": {
+      "title": "Edit Bank Account",
+      "save": "Save",
+      "cancel": "Cancel",
+      "error": "Could not save the bank account.",
+      "loadError": "Could not load the bank account.",
+      "notFound": "Bank account not found.",
+      "missingVersion": "This account was loaded without a version and cannot be saved. Reload the page."
     }
   }
 }

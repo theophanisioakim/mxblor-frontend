@@ -30,22 +30,26 @@
 Bank name*, Account name, Account no*, IBAN, SWIFT/BIC, Account type, Description — pre-filled and editable.
 
 ### 3.2 Balance (read-only on edit)
-The **Balance** field shows the running balance and cannot be edited directly — it is driven by the account's transactions (the initial balance was set at creation).
+The **Balance** field shows the running balance and cannot be edited directly — it *is* the sum of the
+account's transactions. The server recomputes it on every save and ignores any balance a client sends,
+so the only way to move it is to add, change or remove a transaction below.
 
-### 3.3 Transactions grid (edit only, non-`user` roles)
-A read-only list of the account's transactions, newest first:
+### 3.3 Transactions (edit only, non-`user` roles)
+The account's transactions, editable in place. A row captures **date**, **type**, **amount** and
+**description**; rows can be added and removed, and the balance follows.
 
-| Column | Content |
-|---|---|
-| Unit | The building unit involved (if the transaction relates to a collection). |
-| Transaction date | Date of the transaction. |
-| Type | Transaction type (balance b/f, administrative, transfers, other, collection-related, …). |
-| Related | Reference (e.g. receipt no) where applicable. |
-| Credit | Amount in, when positive. |
-| Debit | Amount out, when negative. |
+- **Amount is one signed number:** positive is money in, negative is money out. (The record keeps a
+  single signed amount rather than a credit/debit pair — v1 kept two columns and then wrote negative
+  amounts into the debit one anyway.)
+- Only the **manual** types are offered and accepted: *balance b/f, administrative, transfer from the
+  building savings account, transfer from the building fund, other*. **Payment** and **collection**
+  rows are written by the system to record the bank side of a receipt; the type dropdown does not
+  offer them and the server refuses them, so a receipt's bank movement can never be edited out from
+  under the receipt.
+- The running total under the grid is what the account's **Balance** becomes on save.
 
-- Only **manual** transaction types (balance b/f, administrative, transfers to/from savings/fund, other) can be **edited/deleted** here; system-generated ones (e.g. from collections) are read-only.
-- Adding a manual transaction captures amount, date, type, and description.
+> **Not yet shown:** the *Unit* and *Related (receipt no)* columns. Both describe a transaction
+> created by a collection, and collections do not exist yet. They arrive with that feature.
 
 ### 3.4 Read-only audit (edit only)
 Created at / by, Updated at / by.
@@ -57,7 +61,7 @@ Created at / by, Updated at / by.
 - **Pre-fill** on open.
 - **Balance is read-only** on edit; it reflects transactions.
 - **Transactions grid** and audit are visible only on edit and only to non-`user` roles.
-- **Delete:** non-`user` roles; confirm-first; deletes and returns to the list. Destructive, separated from Save. Also a row action on the list.
+- **Delete:** non-`user` roles; confirm-first; deletes and returns to the list, **taking the account's transactions with it**. Destructive, separated from Save. Also a row action on the list.
 
 ---
 
@@ -78,8 +82,17 @@ Loading / Loaded / Submitting / Confirming delete / Success / Validation error /
 
 ---
 
-## 7. Open questions
+## 7. Resolved
 
-- Should **Delete account** be blocked when transactions exist (assume yes / soft-guard)?
-- Should the transactions grid be **paged/filterable** by date range or type?
-- Confirm which transaction types are **manually editable** (list in §3.3 taken from v2).
+- **Delete is not blocked by transactions.** Every account has at least the opening Balance B/F row,
+  so such a guard would make every account undeletable — which is exactly the bug v1 shipped (it
+  guarded with `is_null($account->transactions)`, never true for a `hasMany`). Deleting an account
+  removes its transactions with it.
+- **Manually editable types** are: balance b/f, administrative, transfer from the building savings
+  account, transfer from the building fund, other. Payment and collection are system-generated and
+  refused.
+
+## 8. Open questions
+
+- Should the transactions list be **paged/filterable** by date range or type? It is a plain list
+  today; worth revisiting once collections start writing rows into it.
