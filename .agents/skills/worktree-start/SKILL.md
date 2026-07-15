@@ -1,6 +1,6 @@
 ---
 name: worktree-start
-description: Start a new feature in an isolated git worktree on its own feat/<feature-name> branch, in a sibling directory of the repo root. Use ONLY after the user has confirmed (per AGENTS.md §12) they want a worktree rather than working directly on main.
+description: Start a new feature in an isolated git worktree on its own feature branch in a sibling directory of the repository root. Use only after the user has confirmed (per AGENTS.md §12) they want a worktree rather than working directly on main.
 ---
 
 <!-- Purpose: create an isolated worktree + branch for a new feature. Canonical body; .claude/skills/worktree-start is a thin stub. -->

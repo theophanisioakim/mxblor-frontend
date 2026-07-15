@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add Cross-Platform Screen"
+  short_description: "Build a shared web and native screen"
+  default_prompt: "Use $add-screen to build this feature as a shared web and native screen."

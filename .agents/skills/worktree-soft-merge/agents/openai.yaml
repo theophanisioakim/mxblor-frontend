@@ -1,0 +1,4 @@
+interface:
+  display_name: "Soft-Merge Worktree"
+  short_description: "Stage a worktree feature on main"
+  default_prompt: "Use $worktree-soft-merge to stage this worktree feature on main without committing."

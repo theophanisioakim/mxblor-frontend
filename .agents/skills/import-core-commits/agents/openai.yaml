@@ -1,0 +1,4 @@
+interface:
+  display_name: "Import Core Commits"
+  short_description: "Cherry-pick child core commits into core"
+  default_prompt: "Use $import-core-commits to import core-prefixed commits from a chosen child repository."

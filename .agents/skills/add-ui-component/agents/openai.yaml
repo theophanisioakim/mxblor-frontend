@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add UI Component"
+  short_description: "Add a synchronized web and native primitive"
+  default_prompt: "Use $add-ui-component to add a synchronized cross-platform UI primitive."

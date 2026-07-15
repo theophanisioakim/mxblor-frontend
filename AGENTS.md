@@ -662,3 +662,60 @@ git branch -D feat/<feature-name>
 
 Changes remain **staged** on `main` until the user commits. Use `git reset` to unstage only if the
 user asks.
+
+---
+
+## 13. Child repositories — synchronize with core
+
+Child projects inherit two portable Git workflows from `.agents/skills/`. The upstream remote's
+alias is not prescribed; the skill identifies the remote whose URL repository name is
+`react-mono-core`.
+
+These workflows are **child-only**. If either skill is invoked in `react-mono-core` or
+`springboot-core`, it exits successfully before fetching or changing Git state.
+
+### Merge a core ref into a child (`merge-from-upstream`)
+
+Use `.agents/skills/merge-from-upstream/SKILL.md` when a child project needs a core update.
+
+- Require the user to choose the exact ref type (`tag` or `branch`) and ref name; never default to
+  `main` or the latest tag.
+- Merge the fetched ref into the child's current branch with normal Git merge semantics. Do not
+  rebase, squash, or rewrite history.
+- Require a clean child worktree, preview incoming commits, run the child's full validation gate,
+  and do not push unless separately asked.
+
+### Contribute core commits from a child (`push-to-upstream`)
+
+Use `.agents/skills/push-to-upstream/SKILL.md` when work developed in a child belongs in core.
+
+- Require the user to choose both the child source branch and the `react-mono-core` destination
+  branch; never infer either one.
+- Transfer every not-yet-upstream commit whose **subject starts exactly with the case-sensitive
+  prefix `core:`**. A `core:` string later in the subject or only in the body does not qualify.
+- Replay only those commits, in order, on a temporary branch/worktree based on the fetched upstream
+  tip. Validate there before pushing.
+- Push only to the chosen destination branch and never force-push or bypass branch protection.
+- Leave the child source branch untouched and remove only temporary resources after success.
+
+Canonical skill bodies live under `.agents/skills/`; `.claude/skills/` contains thin command stubs.
+
+---
+
+## 14. Core repository — import child core commits
+
+The inverse core-side workflow is `.agents/skills/import-core-commits/SKILL.md`. Use it only from
+`react-mono-core` when a child repository contains commits that belong in core. Outside this core
+repository, it exits before fetching or changing Git state.
+
+- Require the user to choose the existing child repository/remote, child source branch, and local
+  core destination branch; never infer any of them.
+- Fetch only the selected child branch and select every not-yet-core commit whose **subject starts
+  exactly with the case-sensitive prefix `core:`**.
+- Preview the selected commits, omit only patch-equivalent changes already present in core, and
+  cherry-pick the remaining commits in chronological/topological order.
+- Never bring child-only commits into core merely to satisfy a dependency. Stop on ambiguous merge
+  commits or conflicts and ask the user for direction.
+- Run `pnpm check:all` after importing. Leave pushing to a separate explicit user request.
+
+The Claude command stub lives at `.claude/skills/import-core-commits/SKILL.md`.

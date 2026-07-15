@@ -1,0 +1,4 @@
+interface:
+  display_name: "Merge Worktree"
+  short_description: "Merge and clean up a feature worktree"
+  default_prompt: "Use $worktree-merge to merge this completed feature worktree into main."

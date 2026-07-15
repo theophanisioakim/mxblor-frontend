@@ -1,0 +1,4 @@
+interface:
+  display_name: "Format Source"
+  short_description: "Format the workspace with Biome"
+  default_prompt: "Use $source-command-format to format the workspace and report changed files."

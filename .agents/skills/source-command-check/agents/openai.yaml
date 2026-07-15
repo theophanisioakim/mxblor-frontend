@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run Source Checks"
+  short_description: "Run the complete workspace quality gate"
+  default_prompt: "Use $source-command-check to run the full workspace quality gate and report failures."

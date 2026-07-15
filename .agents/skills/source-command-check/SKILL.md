@@ -1,6 +1,6 @@
 ---
 name: "source-command-check"
-description: "Run the full CI gate (pnpm check:all = generate -> format -> typecheck -> lint -> build)."
+description: "Run the full CI gate with pnpm check:all: generate → format → typecheck → lint → build."
 ---
 
 # source-command-check

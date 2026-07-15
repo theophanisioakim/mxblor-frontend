@@ -1,0 +1,4 @@
+interface:
+  display_name: "Push to Upstream"
+  short_description: "Send core-prefixed commits upstream safely"
+  default_prompt: "Use $push-to-upstream to send core-prefixed commits from a child branch to a chosen upstream branch."
