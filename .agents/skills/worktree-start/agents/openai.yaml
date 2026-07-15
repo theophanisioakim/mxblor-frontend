@@ -1,0 +1,4 @@
+interface:
+  display_name: "Start Worktree"
+  short_description: "Create an isolated feature worktree"
+  default_prompt: "Use $worktree-start to create an isolated worktree for this feature."

@@ -400,6 +400,9 @@ canonical pattern. Rules when adding or changing a `ui` primitive:
    `docs/screens/`** (see item 9); relevant code comments. Edit the `AGENTS.md` files (not the
    `CLAUDE.md` import shims) so Claude Code and Codex stay in sync. Note which docs you updated (or
    that none applied) when reporting.
+   **`packages/<pkg>/AGENTS.md`** / **`apps/<app>/AGENTS.md`**; relevant code comments. Edit the
+   `AGENTS.md` files (not the `CLAUDE.md` import shims) so Claude Code and Codex stay in sync. Note
+   which docs you updated (or that none applied) when reporting.
 9. **Keep the screen SDDs in sync.** `docs/screens/` holds a Screen Design Document per screen
    (what the user sees and does — layout, fields, validation, states, actions; **no** implementation
    detail). Whenever a task adds, removes, or changes a screen's fields, validation, states, actions,
@@ -428,8 +431,6 @@ react-mono-core/
 ├── pnpm-workspace.yaml       ← workspaces, catalog (single-sourced versions), nodeLinker, overrides
 ├── turbo.json                ← task graph (build/dev/typecheck/test/test:e2e/generate; lint/format run via Biome, not Turbo)
 ├── biome.json                ← Biome config — format + lint, single source for the workspace
-├── docs/
-│   └── screens/               ← Screen Design Documents (one per screen; behaviour-only, no impl) — §8.9
 ├── apps/
 │   ├── web/        ← Next.js 16 app (App Router)                 (AGENTS.md)
 │   └── native/     ← Expo SDK 55 / RN 0.83 app (expo-router)     (AGENTS.md — Expo note)
@@ -567,7 +568,8 @@ The worktree approach is a **per-task choice, not an automatic default.**
 
 - **Branch:** `feat/<feature-name>`
 - **Worktree directory:** a **sibling of the repo root** named `../<repo-name>-<feature-name>`
-  (for this repo, `<repo-name>` is `react-mono-core`, so e.g. `../react-mono-core-search-filters`).
+  (`<repo-name>` is the **basename of the repo root directory** — the folder you checked out).
+  For this repo, `<repo-name>` is `react-mono-core`, e.g. `../react-mono-core-search-filters`.
 
 ### Two hard constraints
 
@@ -576,10 +578,21 @@ The worktree approach is a **per-task choice, not an automatic default.**
 2. **Merge into `main` from the main worktree.** The `git merge` must be run from the worktree that
    has `main` checked out (the repo root), **not** from the feature worktree.
 
-### The three worktree skills
+### The four worktree skills
 
 Canonical bodies live in `.agents/skills/` (read by every agent tool); `.claude/skills/` holds thin
 stubs pointing there. The exact commands:
+
+When a worktree feature is **finished**, the agent **MUST ask the user** how to land it:
+
+> "Merge the worktree commits onto main, soft-merge as staged changes (no commit), or discard?"
+
+- **Merge** → Skill B (`worktree-merge`) — normal merge; feature commits land on `main`.
+- **Soft merge** → Skill D (`worktree-soft-merge`) — squash to **staged, uncommitted** changes on
+  `main` for manual review / a single commit of the user's choice.
+- **Discard** → Skill C (`worktree-discard`) — throw the work away.
+
+Wait for the answer before running any landing skill.
 
 #### Skill A — Start a feature in a new worktree
 
@@ -626,3 +639,83 @@ git branch -D feat/<feature-name>
 # 4. Optional: clear any stale worktree metadata:
 git worktree prune
 ```
+
+#### Skill D — Soft-merge a worktree onto main (staged, no commit)
+
+**Use when:** the user wants the feature **on `main`** but **not** as the worktree's commits — they
+prefer a staged diff to review, edit, test, and commit themselves.
+
+```bash
+# 1. Move into the main worktree:
+cd <path-to-main-worktree>
+# 2. Ensure you are on main (stash or commit any WIP on main first):
+git checkout main
+# 3. Squash-merge — stages all feature changes, does NOT commit:
+git merge --squash feat/<feature-name>
+# 4. Run the test suite (one branch at a time if merging several):
+pnpm test
+# 5. On success, remove the worktree:
+git worktree remove ../<repo-name>-<feature-name>
+# 6. Delete the feature branch (squash does not mark it merged — use -D):
+git branch -D feat/<feature-name>
+```
+
+Changes remain **staged** on `main` until the user commits. Use `git reset` to unstage only if the
+user asks.
+
+---
+
+## 13. Child repositories — synchronize with core
+
+Child projects inherit two portable Git workflows from `.agents/skills/`. The upstream remote's
+alias is not prescribed; the skill identifies the remote whose URL repository name is
+`react-mono-core`.
+
+These workflows are **child-only**. If either skill is invoked in `react-mono-core` or
+`springboot-core`, it exits successfully before fetching or changing Git state.
+
+### Merge a core ref into a child (`merge-from-upstream`)
+
+Use `.agents/skills/merge-from-upstream/SKILL.md` when a child project needs a core update.
+
+- Require the user to choose the exact ref type (`tag` or `branch`) and ref name; never default to
+  `main` or the latest tag.
+- Merge the fetched ref into the child's current branch with normal Git merge semantics. Do not
+  rebase, squash, or rewrite history.
+- Require a clean child worktree, preview incoming commits, run the child's full validation gate,
+  and do not push unless separately asked.
+
+### Contribute core commits from a child (`push-to-upstream`)
+
+Use `.agents/skills/push-to-upstream/SKILL.md` when work developed in a child belongs in core.
+
+- Require the user to choose both the child source branch and the `react-mono-core` destination
+  branch; never infer either one.
+- Transfer every not-yet-upstream commit whose **subject starts exactly with the case-sensitive
+  prefix `core:`**. A `core:` string later in the subject or only in the body does not qualify.
+- Replay only those commits, in order, on a temporary branch/worktree based on the fetched upstream
+  tip. Validate there before pushing.
+- Push only to the chosen destination branch and never force-push or bypass branch protection.
+- Leave the child source branch untouched and remove only temporary resources after success.
+
+Canonical skill bodies live under `.agents/skills/`; `.claude/skills/` contains thin command stubs.
+
+---
+
+## 14. Core repository — import child core commits
+
+The inverse core-side workflow is `.agents/skills/import-core-commits/SKILL.md`. Use it only from
+`react-mono-core` when a child repository contains commits that belong in core. Outside this core
+repository, it exits before fetching or changing Git state.
+
+- Require the user to choose the existing child repository/remote, child source branch, and local
+  core destination branch; never infer any of them.
+- Fetch only the selected child branch and select every not-yet-core commit whose **subject starts
+  exactly with the case-sensitive prefix `core:`**.
+- Preview the selected commits, omit only patch-equivalent changes already present in core, and
+  cherry-pick the remaining commits in chronological/topological order.
+- Never bring child-only commits into core merely to satisfy a dependency. Stop on ambiguous merge
+  commits or conflicts and ask the user for direction.
+- Run `pnpm check:all` after importing. Leave pushing to a separate explicit user request.
+
+The Claude command stub lives at `.claude/skills/import-core-commits/SKILL.md`.

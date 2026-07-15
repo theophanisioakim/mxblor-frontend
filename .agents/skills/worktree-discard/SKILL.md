@@ -1,6 +1,6 @@
 ---
 name: worktree-discard
-description: Abandon a feature worktree and throw its work away — force-remove the worktree and force-delete its unmerged feat/<feature-name> branch from the main worktree. Use when the user wants to discard a worktree feature without merging.
+description: Abandon a feature worktree and throw its work away by force-removing the sibling worktree and force-deleting its unmerged feature branch from the main worktree. Use when the user wants to discard a worktree feature without merging.
 ---
 
 <!-- Purpose: destroy a feature worktree and its branch. Canonical body; .claude/skills/worktree-discard is a thin stub. -->

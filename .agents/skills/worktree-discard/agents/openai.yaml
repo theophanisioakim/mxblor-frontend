@@ -1,0 +1,4 @@
+interface:
+  display_name: "Discard Worktree"
+  short_description: "Delete an abandoned feature worktree"
+  default_prompt: "Use $worktree-discard to remove an abandoned feature worktree and branch."

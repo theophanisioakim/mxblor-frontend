@@ -1,0 +1,4 @@
+interface:
+  display_name: "Merge from Upstream"
+  short_description: "Merge a core ref into a child repository"
+  default_prompt: "Use $merge-from-upstream to merge a selected core tag or branch into this child repository."
