@@ -43,7 +43,9 @@ Two consequences the UI must not fight:
 Every unit gets **two** zero opening-balance rows when it is created — one per collection-type ledger
 (Capital, Monthly). They are what makes a unit's balance meaningful from day one. They are also the
 only ledger rows a user sets directly: a **positive** amount means the unit owes, a **negative** one
-means it is in credit.
+means it is in credit. They can be edited only from the building-wide
+[Building Unit Balances](../building-unit/building-unit-balances.md) screen; generic collection Add,
+Edit, Delete, and bulk actions cannot change a Balance B/F row.
 
 ---
 

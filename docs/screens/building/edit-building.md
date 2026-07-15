@@ -45,7 +45,7 @@ A single scrollable screen: the editable building form, then the sub-entity navi
 │         [ Save ]   [ Back ]              [ 🗑 Delete ]           │
 │                                                                 │
 │  ── MANAGE (navigation tiles) ──                                │
-│   [🏠 Building units]                                            │
+│   [🏠 Building units] [⚖ Unit balances]                          │
 └────────────────────────────────────────────────────────────────┘
 ```
 
@@ -81,6 +81,7 @@ A row of tiles; each navigates to that sub-entity's list for this building.
 | Tile | Goes to |
 |---|---|
 | Building units | [Units list](../building-unit/building-units-list.md) for this building |
+| Unit balances | [Building Unit Balances](../building-unit/building-unit-balances.md) for this building |
 
 **A tile appears only once the screen it opens exists** — the hub never offers a link that goes
 nowhere. **Related people**, **Communication** and **Notes** join the hub when their screens are
@@ -112,8 +113,7 @@ the screen does not pretend otherwise (no empty panels, no zeroed counts):
   and updated by/at).
 - **Summary figures** — months active, total area.
 - **Counts on the hub tiles.**
-- The finance and transaction tiles (distribution tables, yearly budget, bank accounts, expenses,
-  revenues, payments, collections).
+- Revenue screens.
 
 ---
 

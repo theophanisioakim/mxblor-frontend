@@ -219,6 +219,11 @@ export function EditBuildingScreen({ id }: Readonly<{ id: string }>) {
             onPress={() => router.push(`/buildings/${id}/units`)}
           />
           <HubTile
+            icon="Scale"
+            label={t("building.edit.tiles.unitBalances")}
+            onPress={() => router.push(`/buildings/${id}/unit-balances`)}
+          />
+          <HubTile
             icon="Users"
             label={t("building.edit.tiles.relatedPeople")}
             onPress={() => router.push(`/buildings/${id}/related-people`)}

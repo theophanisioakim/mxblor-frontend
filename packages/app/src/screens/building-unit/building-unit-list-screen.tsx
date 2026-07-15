@@ -13,6 +13,7 @@ import { useAuth, useBreadcrumbs } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
+  iconFor,
   RncGrid,
   type RncGridActions,
   type RncGridColumn,
@@ -281,7 +282,10 @@ export function BuildingUnitListScreen({
   return (
     <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
       <View className="flex-row items-center gap-3">
-        <Button variant="ghost" onPress={() => router.push("/buildings")}>
+        <Button
+          variant="ghost"
+          onPress={() => router.push(`/buildings/${buildingId}`)}
+        >
           {t("buildingUnit.list.back")}
         </Button>
       </View>
@@ -312,6 +316,15 @@ export function BuildingUnitListScreen({
         actions={actions}
         filters={{ render: filters }}
         toolbar={{
+          custom: [
+            {
+              key: "unit-balances",
+              icon: iconFor("Scale", 15),
+              label: t("buildingUnit.list.balances"),
+              onPress: () =>
+                router.push(`/buildings/${buildingId}/unit-balances`),
+            },
+          ],
           add: {
             route: `/buildings/${buildingId}/units/new`,
             label: t("buildingUnit.list.add"),

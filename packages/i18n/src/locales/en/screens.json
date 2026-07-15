@@ -104,7 +104,8 @@
         "bankAccounts": "Bank accounts",
         "currentExpenses": "Current expenses",
         "payments": "Payments",
-        "collections": "Collections"
+        "collections": "Collections",
+        "unitBalances": "Unit balances"
       },
       "notFound": "This building could not be found.",
       "loadError": "This building could not be loaded.",
@@ -118,6 +119,7 @@
       "title": "Units",
       "add": "Add",
       "back": "Back",
+      "balances": "Unit balances",
       "columns": {
         "code": "Code",
         "confinedSpace": "Confined space",
@@ -180,6 +182,31 @@
       "loadError": "This building unit could not be loaded.",
       "missingVersion": "The building unit record is incomplete and cannot be saved.",
       "error": "The building unit could not be updated."
+    }
+  },
+  "buildingUnitBalances": {
+    "title": "Unit balances",
+    "back": "Back to building",
+    "referenceDate": "Opening balance reference date",
+    "referenceDateHelp": "This date is shared by every Capital and Monthly opening balance.",
+    "guidance": "Enter signed opening balances to two decimal places. Positive means the unit owes money; negative means the unit is in credit. Live balances update as you type.",
+    "columns": {
+      "unit": "Unit",
+      "openingCapital": "Opening Capital",
+      "openingMonthly": "Opening Monthly",
+      "liveCapital": "Live Capital",
+      "liveMonthly": "Live Monthly",
+      "total": "Total"
+    },
+    "saveAll": "Save all",
+    "loading": "Loading unit balances…",
+    "empty": "This building has no units yet.",
+    "loadError": "The unit balances could not be loaded.",
+    "saveError": "The opening balances could not be saved. Your entries have been kept so you can retry.",
+    "success": "All opening balances were saved.",
+    "retry": "Retry",
+    "validation": {
+      "referenceDate": "Choose a reference date."
     }
   },
   "expenseCategory": {

@@ -23,6 +23,8 @@
 - **Breadcrumb:** Home › Buildings › *(building name)* › Units.
 - **Back:** a Back action returns to the parent building's edit/detail screen.
 - **Add:** opens [Create Building Unit](./create-building-unit.md) for this building.
+- **Unit balances:** opens the building-wide [Building Unit Balances](./building-unit-balances.md)
+  screen.
 - **Open a row (Edit):** opens [Edit Building Unit](./edit-building-unit.md).
 - Every action stays within the parent building's context.
 
@@ -34,7 +36,7 @@
 ┌──────────────────────────────────────────────────────────────────────┐
 │ Home › Buildings › (building name) › Units                             │
 │ [ ‹ Back ]                                                             │
-│ 🏠 Units                                                    [ + Add ]   │
+│ 🏠 Units                                  [ ⚖ Unit balances ] [ + Add ]   │
 ├──────────────────────────────────────────────────────────────────────┤
 │ ▸ Filters                                                              │
 │   [ Code ] [ Confined ] [ Covered ] [ Uncovered ] [ Store ] [ Roof ]   │
@@ -91,6 +93,7 @@ All optional; combining narrows the list. Search applies; Clear resets.
 | Action | Placement | Availability | Outcome |
 |---|---|---|---|
 | **Add** | Toolbar (primary) | All roles | Opens [Create Building Unit](./create-building-unit.md) for this building. |
+| **Unit balances** | Toolbar | All roles | Opens [Building Unit Balances](./building-unit-balances.md) for this building. |
 | **Edit** | Row action | All roles | Opens [Edit Building Unit](./edit-building-unit.md). |
 | **Delete** | Row action (destructive) | Non-`user` roles (mirrors Buildings list) | Deletes the unit after confirmation; on success the row is removed and the list refreshes. |
 | **Search** | Filters panel | All roles | Applies the current filters. |
