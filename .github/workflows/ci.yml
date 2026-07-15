@@ -111,8 +111,7 @@ jobs:
       # SDK-vs-dependency version alignment, app.json schema, Metro config, duplicate
       # native modules — catching native breaks that typecheck can't see.
       - name: Expo Doctor (native)
-        working-directory: apps/native
-        run: npx --yes expo-doctor
+        run: pnpm doctor:native
 
       - name: Build
         run: pnpm build

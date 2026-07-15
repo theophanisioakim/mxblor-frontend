@@ -6,6 +6,7 @@
     "prepare": "husky",
     "build": "turbo build",
     "dev": "turbo dev",
+    "doctor:native": "expo-doctor apps/native",
     "test": "turbo test",
     "test:e2e": "turbo test:e2e",
     "lint": "biome lint .",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@biomejs/biome": "catalog:",
     "@workspace/typescript-config": "workspace:*",
+    "expo-doctor": "catalog:",
     "husky": "catalog:",
     "lint-staged": "catalog:",
     "sherif": "catalog:",
