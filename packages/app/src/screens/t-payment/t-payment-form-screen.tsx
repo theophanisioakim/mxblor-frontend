@@ -97,7 +97,10 @@ export function TPaymentFormScreen({
           ? (data?.expenseId ?? values.expenseId)
           : values.expenseId,
         referenceDate,
-        amount: Number(values.amount) || 0,
+        // A hand-entered payment is money paid out — a debit. The credit side of the ledger is
+        // written by the expense that raised the obligation, never typed in here.
+        debitAmount: Number(values.amount) || 0,
+        creditAmount: 0,
         dueDate: values.dueDate
           ? toPaymentReferenceDate(values.dueDate)
           : undefined,
@@ -269,7 +272,7 @@ function toFormValues(
     referenceDate: payment?.referenceDate
       ? new Date(payment.referenceDate)
       : monthStart,
-    amount: Number(payment?.amount ?? 0),
+    amount: Number(payment?.debitAmount ?? 0),
     dueDate: payment?.dueDate ? new Date(payment.dueDate) : undefined,
     invoiceNo: payment?.invoiceNo ?? "",
     description: payment?.description ?? "",

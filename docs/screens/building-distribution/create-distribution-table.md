@@ -53,10 +53,12 @@
 | Default | Checkbox | — | Off | Marks this as the building's default table — the one used when an expense names none. **Exclusive:** marking a table Default clears the flag on the building's other tables. |
 | Hidden | Checkbox | — | Off | Hides the table from selection lists elsewhere. |
 
-> A *Bank* flag also exists on the record (it marks the table that splits the building-fund
-> surplus/deficit). It is **deliberately not on this form** — neither v1 nor v2 ever let a user set
-> it, and it only becomes meaningful once the building-fund expense engine exists. That feature will
-> decide how it gets set; until then it keeps its default of off.
+> A *Bank* flag also exists on the record: it marks the table the building-fund engine uses to split
+> the monthly surplus/shortfall (the 191/192 balancing expense) across the units. It is
+> **deliberately not on this form** — neither v1 nor v2 ever let a user set it. The engine picks its
+> table by falling back in order: the one named by that month's budget, else the table flagged *Bank*,
+> else the *Default* one, else the building's first. So the flag only matters as a fallback, and a
+> building that names a table on each month of its budget never needs it.
 
 ---
 

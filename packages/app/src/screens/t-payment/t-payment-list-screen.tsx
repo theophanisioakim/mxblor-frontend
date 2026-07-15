@@ -154,16 +154,30 @@ export function TPaymentListScreen({
               ? (expenseCatalog.byId.get(row.expenseId) ?? row.expenseId)
               : "",
         },
+        // The two sides of the balance sheet. A credit is what we owe the supplier (raised by an
+        // expense); a debit is what we have paid out against it. What remains is the difference —
+        // never a stored "outstanding" field, and it may legitimately be negative.
         {
-          key: "amount",
-          header: t("tPayment.list.columns.amount"),
+          key: "creditAmount",
+          header: t("tPayment.list.columns.creditAmount"),
           minWidth: 120,
           sortable: true,
-          sortKey: TPaymentSortOrderField.AMOUNT,
+          sortKey: TPaymentSortOrderField.CREDITAMOUNT,
           type: "number",
           editable: false,
           priority: 3,
-          renderCell: (row) => formatAmount(row.amount),
+          renderCell: (row) => formatAmount(row.creditAmount),
+        },
+        {
+          key: "debitAmount",
+          header: t("tPayment.list.columns.debitAmount"),
+          minWidth: 120,
+          sortable: true,
+          sortKey: TPaymentSortOrderField.DEBITAMOUNT,
+          type: "number",
+          editable: false,
+          priority: 3,
+          renderCell: (row) => formatAmount(row.debitAmount),
         },
         {
           key: "dueDate",

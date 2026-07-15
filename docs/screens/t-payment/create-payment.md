@@ -11,8 +11,8 @@
 
 - **Name:** Create Payment
 - **Location:** Buildings → *(a building)* → Current Expenses / Revenues → *(an item)* → Pay
-- **Purpose:** Record a payment **against a specific expense** (money paid out) **or revenue** (money received), settling all or part of its outstanding amount and posting it to a bank account.
-- **Scope:** One payment tied to one expense or revenue. The expense/revenue and building come from context.
+- **Purpose:** Record money **paid out against a specific expense** and post it to a bank account. The payment is written as a **contra entry** — a new debit row on the supplier ledger — and the obligation it was paid against is left untouched.
+- **Scope:** One payment tied to one expense. The expense and building come from context.
 
 ---
 
@@ -30,7 +30,7 @@
 | Field | Control | Required | Notes |
 |---|---|---|---|
 | Expense **or** Revenue | Dropdown | Yes | The item being paid; pre-selected from context and locked. Exactly one of the two applies. |
-| **Amount** | Number | Yes | Not negative, 2 decimals. **Cannot exceed the item's outstanding amount** (enforced with a max). |
+| **Amount** | Number | Yes | Positive, 2 decimals. **Not capped.** The outstanding amount is shown for guidance, but paying more than is owed is allowed — the balance simply goes negative, meaning the supplier owes us. |
 | Reference date | Date | Yes (auto) | Derived from the item; shown read-only. |
 | **Transaction date** | Date | Yes | The date the money actually moved. |
 | Due date | Month | Yes (auto) | Derived; shown read-only. |
@@ -45,7 +45,8 @@
 
 ## 4. Behaviour & interactions
 
-- **Amount is capped** at the item's remaining outstanding balance.
+- **Amount is not capped.** The screen shows what is still outstanding (total credit minus total debit for that expense and month) so the user can settle it in one click, but it does not prevent a larger amount: an overpayment is a real, recordable state, not an error.
+- **An obligation can be paid any number of times.** Each payment is its own debit row. There is no "already paid" state that closes it, and no remainder row to reconcile — what remains is always just the difference between the two columns.
 - **Reference date / Due date** are derived from the item and read-only; **Transaction date** is entered by the user.
 - **Bank account** selection posts the movement to that account (affecting its balance).
 - **Description** auto-fills from the item and date but can be overridden.
@@ -56,7 +57,7 @@
 
 | Field | Rule | Message |
 |---|---|---|
-| Amount | Required, ≥ 0, ≤ outstanding | "Amount cannot exceed the outstanding amount ({max})." |
+| Amount | Required, > 0 | "Amount must be greater than zero." |
 | Transaction date | Required | "Transaction date is required." |
 | Bank account | Required | "Bank account is required." |
 
@@ -90,4 +91,8 @@ Initial / Submitting / Success / Validation error / Save failure — as standard
 
 - Can a single payment be **split across multiple bank accounts** (assume no — one account)?
 - Should **Transaction date** default to today?
-- Are **overpayments** ever allowed, or is the outstanding cap absolute?
+
+> **Resolved:** *Are overpayments allowed?* **Yes, and there is no cap.** This is a balance sheet:
+> paying more than is owed leaves a negative balance, which means the supplier owes us. v2 capped the
+> amount only because it rewrote the obligation row in place; nothing here rewrites history, so
+> nothing here needs a cap.

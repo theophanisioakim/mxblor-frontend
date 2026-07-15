@@ -896,7 +896,8 @@
       "columns": {
         "period": "Period",
         "expense": "Expense",
-        "amount": "Amount",
+        "debitAmount": "Debit",
+        "creditAmount": "Credit",
         "dueDate": "Due date",
         "invoiceNo": "Invoice no",
         "description": "Description"
@@ -954,7 +955,8 @@
         "unit": "Unit",
         "expense": "Expense",
         "collectionType": "Collection type",
-        "amount": "Amount",
+        "debitAmount": "Debit",
+        "creditAmount": "Credit",
         "receiptNo": "Receipt no",
         "paymentChannel": "Payment channel"
       },

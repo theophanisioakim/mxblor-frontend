@@ -36,7 +36,7 @@ Above the grid, show totals for the **selected filter year** (default: current c
 | Monthly | Sum of monthly-type expenses. |
 | Non-distributed | Sum of non-distributed expenses. |
 | Savings | Sum of savings-type expenses. |
-| Bank deposit / withdrawal | Net bank movements (deferred until the 191/192 engine exists — may show zero). |
+| Bank deposit / withdrawal | Net building-fund movement for the year: the budget minus what was actually spent each month, posted as the 191 (surplus, paid into the fund) and 192 (shortfall, drawn from it) balancing expenses. |
 
 The strip updates when the user filters by year.
 
@@ -90,7 +90,9 @@ Loading / Loaded / Empty (no expenses) / failure — as standard.
 ## 8. Out of scope
 
 - Per-unit **collections** and building **payments** screens (separate balance-sheet ledgers).
-- Bank-balancing synthetic expenses (191/192).
+- **Editing** a bank-balancing expense (191/192). The engine posts and re-derives these itself
+  whenever the budget or the month's expenses change; they appear in the grid like any other row, but
+  a user never creates or edits one (the expense picker excludes the bank category).
 
 ---
 

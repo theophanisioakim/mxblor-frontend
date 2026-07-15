@@ -103,7 +103,11 @@ export function TCollectionFormScreen({
           ? (data?.collectionTypeId ?? values.collectionTypeId)
           : values.collectionTypeId,
         referenceDate,
-        amount: Number(values.amount) || 0,
+        // Which side of the ledger the amount lands on is decided by the payment channel — v1's own
+        // discriminator. A channel means money actually came in from the unit, so it is a credit;
+        // without one the row is a charge raised against the unit, so it is a debit.
+        debitAmount: values.paymentChannelId ? 0 : Number(values.amount) || 0,
+        creditAmount: values.paymentChannelId ? Number(values.amount) || 0 : 0,
         dueDate: values.dueDate
           ? toCollectionReferenceDate(values.dueDate)
           : undefined,
@@ -287,7 +291,8 @@ function toFormValues(
     referenceDate: collection?.referenceDate
       ? new Date(collection.referenceDate)
       : monthStart,
-    amount: Number(collection?.amount ?? 0),
+    // Collapse the ledger's two legs back into the one number the form edits.
+    amount: Number(collection?.debitAmount || collection?.creditAmount || 0),
     dueDate: collection?.dueDate ? new Date(collection.dueDate) : undefined,
     paymentChannelId: collection?.paymentChannelId ?? "",
     receiptNo: collection?.receiptNo ?? "",

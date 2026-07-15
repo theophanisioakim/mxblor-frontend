@@ -193,16 +193,30 @@ export function TCollectionListScreen({
             ? (collectionTypes.byId.get(row.collectionTypeId) ?? "")
             : "",
       },
+      // The two sides of the balance sheet. A debit is what the unit was charged (its share of an
+      // expense); a credit is what it has actually paid. The unit's balance is the difference —
+      // never a stored field, and negative simply means the unit is in credit.
       {
-        key: "amount",
-        header: t("tCollection.list.columns.amount"),
+        key: "debitAmount",
+        header: t("tCollection.list.columns.debitAmount"),
         minWidth: 120,
         sortable: true,
-        sortKey: TCollectionSortOrderField.AMOUNT,
+        sortKey: TCollectionSortOrderField.DEBITAMOUNT,
         type: "number",
         editable: false,
         priority: 5,
-        renderCell: (row) => formatAmount(row.amount),
+        renderCell: (row) => formatAmount(row.debitAmount),
+      },
+      {
+        key: "creditAmount",
+        header: t("tCollection.list.columns.creditAmount"),
+        minWidth: 120,
+        sortable: true,
+        sortKey: TCollectionSortOrderField.CREDITAMOUNT,
+        type: "number",
+        editable: false,
+        priority: 5,
+        renderCell: (row) => formatAmount(row.creditAmount),
       },
       {
         key: "receiptNo",

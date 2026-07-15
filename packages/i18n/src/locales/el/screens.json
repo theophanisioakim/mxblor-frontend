@@ -896,7 +896,8 @@
       "columns": {
         "period": "Περίοδος",
         "expense": "Έξοδο",
-        "amount": "Ποσό",
+        "debitAmount": "Χρέωση",
+        "creditAmount": "Πίστωση",
         "dueDate": "Ημερομηνία λήξης",
         "invoiceNo": "Αρ. τιμολογίου",
         "description": "Περιγραφή"
@@ -954,7 +955,8 @@
         "unit": "Διαμέρισμα",
         "expense": "Έξοδο",
         "collectionType": "Τύπος είσπραξης",
-        "amount": "Ποσό",
+        "debitAmount": "Χρέωση",
+        "creditAmount": "Πίστωση",
         "receiptNo": "Αρ. απόδειξης",
         "paymentChannel": "Τρόπος πληρωμής"
       },
