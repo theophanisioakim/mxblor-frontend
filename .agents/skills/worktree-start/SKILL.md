@@ -14,8 +14,8 @@ do not run this — ask first.
 **Naming (AGENTS.md §12):**
 
 - Branch: `feat/<feature-name>`
-- Worktree directory: sibling of the repo root, `../<repo-name>-<feature-name>` (this repo's
-  `<repo-name>` is `react-mono-core`).
+- Worktree directory: sibling of the repo root, `../<repo-name>-<feature-name>` (`<repo-name>` is
+  the basename of the repo root directory — for this repo, `react-mono-core`).
 
 **Constraint:** git will not check out the same branch in two worktrees, so the new worktree gets its
 own `feat/<feature-name>` branch — never `main`.
@@ -33,4 +33,5 @@ cd ../<repo-name>-<feature-name>
 #    Do NOT push unless the user explicitly asks.
 ```
 
-When the feature is done: keep it with **worktree-merge**, or throw it away with **worktree-discard**.
+When the feature is done: land it with **worktree-merge** (commits on `main`), **worktree-soft-merge**
+(staged diff on `main`, no commit), or throw it away with **worktree-discard**.

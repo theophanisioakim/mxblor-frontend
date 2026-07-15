@@ -568,7 +568,8 @@ The worktree approach is a **per-task choice, not an automatic default.**
 
 - **Branch:** `feat/<feature-name>`
 - **Worktree directory:** a **sibling of the repo root** named `../<repo-name>-<feature-name>`
-  (for this repo, `<repo-name>` is `react-mono-core`, so e.g. `../react-mono-core-search-filters`).
+  (`<repo-name>` is the **basename of the repo root directory** — the folder you checked out).
+  For this repo, `<repo-name>` is `react-mono-core`, e.g. `../react-mono-core-search-filters`.
 
 ### Two hard constraints
 
@@ -577,10 +578,21 @@ The worktree approach is a **per-task choice, not an automatic default.**
 2. **Merge into `main` from the main worktree.** The `git merge` must be run from the worktree that
    has `main` checked out (the repo root), **not** from the feature worktree.
 
-### The three worktree skills
+### The four worktree skills
 
 Canonical bodies live in `.agents/skills/` (read by every agent tool); `.claude/skills/` holds thin
 stubs pointing there. The exact commands:
+
+When a worktree feature is **finished**, the agent **MUST ask the user** how to land it:
+
+> "Merge the worktree commits onto main, soft-merge as staged changes (no commit), or discard?"
+
+- **Merge** → Skill B (`worktree-merge`) — normal merge; feature commits land on `main`.
+- **Soft merge** → Skill D (`worktree-soft-merge`) — squash to **staged, uncommitted** changes on
+  `main` for manual review / a single commit of the user's choice.
+- **Discard** → Skill C (`worktree-discard`) — throw the work away.
+
+Wait for the answer before running any landing skill.
 
 #### Skill A — Start a feature in a new worktree
 
@@ -627,3 +639,26 @@ git branch -D feat/<feature-name>
 # 4. Optional: clear any stale worktree metadata:
 git worktree prune
 ```
+
+#### Skill D — Soft-merge a worktree onto main (staged, no commit)
+
+**Use when:** the user wants the feature **on `main`** but **not** as the worktree's commits — they
+prefer a staged diff to review, edit, test, and commit themselves.
+
+```bash
+# 1. Move into the main worktree:
+cd <path-to-main-worktree>
+# 2. Ensure you are on main (stash or commit any WIP on main first):
+git checkout main
+# 3. Squash-merge — stages all feature changes, does NOT commit:
+git merge --squash feat/<feature-name>
+# 4. Run the test suite (one branch at a time if merging several):
+pnpm test
+# 5. On success, remove the worktree:
+git worktree remove ../<repo-name>-<feature-name>
+# 6. Delete the feature branch (squash does not mark it merged — use -D):
+git branch -D feat/<feature-name>
+```
+
+Changes remain **staged** on `main` until the user commits. Use `git reset` to unstage only if the
+user asks.

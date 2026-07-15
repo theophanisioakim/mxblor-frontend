@@ -1,6 +1,6 @@
 ---
 name: worktree-merge
-description: Merge a completed feature worktree's feat/<feature-name> branch into main from the main worktree, run the tests, then remove the worktree and delete the branch. Use when a worktree feature is finished and the user wants to keep it.
+description: Merge a completed feature worktree's feat/<feature-name> branch into main from the main worktree, run the tests, then remove the worktree and delete the branch. Use when a worktree feature is finished and the user wants to keep its commits on main. For staged changes without a commit, use worktree-soft-merge instead.
 ---
 
 <!-- Purpose: land a feature worktree into main and clean it up. Canonical body; .claude/skills/worktree-merge is a thin stub. -->
