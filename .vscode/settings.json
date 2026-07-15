@@ -1,4 +1,5 @@
 {
+  // Formatting and save actions
   "editor.defaultFormatter": "biomejs.biome",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
@@ -23,12 +24,36 @@
   "[jsonc]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
+
+  // JavaScript and TypeScript
+  "debug.javascript.autoAttachFilter": "smart",
+  "js/ts.referencesCodeLens.enabled": true,
+  "js/ts.referencesCodeLens.showOnAllFunctions": true,
+  "js/ts.implementationsCodeLens.enabled": true,
+  "js/ts.implementationsCodeLens.showOnInterfaceMethods": true,
+  "js/ts.updateImportsOnFileMove.enabled": "always",
+  "js/ts.tsserver.useSyntaxServer": "auto",
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
   "js/ts.tsdk.path": "node_modules/typescript/lib",
+
+  // Package, styling, and test tools
   "npm.packageManager": "pnpm",
   "tailwindCSS.classFunctions": ["cva", "cn", "clsx", "tw"],
   "tailwindCSS.classAttributes": ["class", "className", "ngClass"],
   "jest.runMode": "on-demand",
   "jest.rootPath": "apps/native",
+
+  // Workflow files
+  "yaml.disableSchemaDetection": [
+    "**/.github/workflows/*.yml",
+    "**/.github/workflows/*.yaml",
+    "**/.gitea/workflows/*.yml",
+    "**/.gitea/workflows/*.yaml",
+    "**/.forgejo/workflows/*.yml",
+    "**/.forgejo/workflows/*.yaml"
+  ],
+
+  // Search and file watching
   "search.exclude": {
     "**/node_modules": true,
     "**/.next": true,
@@ -49,4 +74,10 @@
     "**/build/**": true,
     "**/.expo/**": true
   }
+
+  // ============================================================
+  //  Settings Inbox — Sort on the Next Organization Pass
+  // ============================================================
+  // Put new or uncategorized settings below this comment. When organizing
+  // this file, move every setting from this inbox into its usage section.
 }
