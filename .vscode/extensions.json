@@ -1,0 +1,18 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "bradlc.vscode-tailwindcss",
+    "expo.vscode-expo-tools",
+    "ms-playwright.playwright",
+    "Orta.vscode-jest",
+    "Anthropic.claude-code",
+    "openai.chatgpt",
+    "GitHub.copilot-chat",
+    "eamodio.gitlens",
+    "PKief.material-icon-theme",
+    "GitHub.vscode-github-actions",
+    "ms-vscode-remote.remote-containers",
+    "ms-vscode-remote.remote-ssh",
+    "ms-vscode-remote.remote-wsl"
+  ]
+}

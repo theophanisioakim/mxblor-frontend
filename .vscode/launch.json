@@ -1,0 +1,52 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "web: dev (server)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter web dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "web: debug full stack",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter web dev",
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "pattern": "- Local:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
+    },
+    {
+      "name": "web: debug client",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/apps/web"
+    },
+    {
+      "name": "native: Expo start",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter native start",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "native: Jest current file",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
+      "args": [
+        "${relativeFile}",
+        "--runInBand",
+        "--config",
+        "${workspaceFolder}/apps/native/jest.config.js"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/apps/native"
+    }
+  ]
+}
