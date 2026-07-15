@@ -1,6 +1,6 @@
-# Pre-push gate — mirrors the CI "check" job's read-only checks
-# (see .github/workflows/ci.yml). Bypass in an emergency with
-# `git push --no-verify` (discouraged — CI runs the same checks).
+# Pre-push gate — runs the CI "check" job's read-only checks, including the web
+# E2E suite (see .github/workflows/ci.yml). Bypass in an emergency with
+# `git push --no-verify` (discouraged — CI still runs its own gate).
 echo "[pre-push] dependency hygiene (sherif)…"
 pnpm lint:deps
 
@@ -12,6 +12,9 @@ pnpm typecheck
 
 echo "[pre-push] test…"
 pnpm test
+
+echo "[pre-push] expo doctor (native)…"
+pnpm doctor:native
 
 echo "[pre-push] build…"
 pnpm build
