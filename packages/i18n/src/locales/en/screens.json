@@ -1039,5 +1039,72 @@
         "updated": "Updated {{at}} by {{by}}"
       }
     }
+  },
+  "reports": {
+    "title": "Report Centre",
+    "description": "Generate current, bilingual PDF reports directly from the live ledger.",
+    "open": "Open report",
+    "back": "Back to reports",
+    "generate": "Generate PDF",
+    "items": {
+      "building-shares": {
+        "title": "Building shares",
+        "description": "Monthly Capital, Monthly and Savings charges, arrears or credit, distributions and bank balances."
+      },
+      "apartment-shares": {
+        "title": "Apartment shares",
+        "description": "The selected unit's persisted monthly charges, contacts, totals and remittance accounts."
+      },
+      "building-financial": {
+        "title": "Building financial",
+        "description": "Income, expenditure, unit and supplier balances, analyses and bank reconciliation for a date range."
+      },
+      "building-unit-financial": {
+        "title": "Building-unit financial",
+        "description": "A dated unit ledger with Balance B/F, scoped movements, monthly subtotals and running balance."
+      },
+      "attendance-sheet": {
+        "title": "Attendance sheet",
+        "description": "Every building unit, its owners and selected distribution percentage with signature fields."
+      }
+    },
+    "fields": {
+      "building": "Building",
+      "buildingPlaceholder": "Choose a building...",
+      "unit": "Unit",
+      "unitPlaceholder": "Choose a unit...",
+      "distribution": "Distribution table",
+      "distributionPlaceholder": "Choose a distribution table...",
+      "referenceMonth": "Reference month",
+      "dateFrom": "Date from",
+      "dateTo": "Date to",
+      "scope": "Scope",
+      "locale": "PDF language"
+    },
+    "scopes": {
+      "all": "All",
+      "capital": "Capital",
+      "monthly": "Monthly"
+    },
+    "locales": {
+      "en": "English",
+      "el": "Greek"
+    },
+    "states": {
+      "loadingOptions": "Loading report options...",
+      "optionsError": "Some report options could not be loaded. Try again.",
+      "noBuildings": "No buildings are available.",
+      "generateError": "The PDF could not be generated. Your form has been kept so you can retry."
+    },
+    "validation": {
+      "dateOrder": "Date from must be on or before date to."
+    },
+    "result": {
+      "title": "Generated PDF",
+      "preview": "Generated report PDF preview",
+      "download": "Download",
+      "open": "Open or share PDF",
+      "shareError": "The PDF could not be opened or shared on this device."
+    }
   }
 }
