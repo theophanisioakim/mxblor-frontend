@@ -25,7 +25,9 @@ manual edit under `src/generated/` is deleted on the next run.
 - Import everything from the package root (`@workspace/api-client`) — `index.ts` re-exports the axios
   utilities, the query provider, and `export *` of all generated hooks/schemas.
 - The Axios mutator is `customInstance` (`override.mutator` in `orval.config.ts`); auth/OTP/401
-  behavior lives in `axios-instance.ts` — extend it there, not in generated code.
+  behavior lives in `axios-instance.ts` — extend it there, not in generated code. Generated binary
+  responses declared as `blob` are normalized to `arraybuffer` for browser/React Native parity;
+  JSON error buffers are decoded before the shared OTP and authorization handlers inspect them.
 - `channel.ts`/`channel.native.ts` is the cross-platform split (web → `CHANNEL_WEB`; native →
   mobile/tablet by screen size). Follow the `.native.ts` pattern (root `AGENTS.md` §6). `react-native`
   (imported only by `channel.native.ts`) is declared as an **optional peer**, not a hard dependency,
