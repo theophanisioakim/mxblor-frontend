@@ -75,6 +75,10 @@ export type {
   RncDialogIcon,
   RncDialogProps,
 } from "./components/overlays/rnc-dialog/rnc-dialog-model"
+export {
+  PdfResult,
+  type PdfResultProps,
+} from "./components/pdf-result/pdf-result"
 export { Apple } from "./components/primitives/apple-icon"
 export type { ButtonProps } from "./components/primitives/button"
 export { Button, buttonVariants } from "./components/primitives/button"

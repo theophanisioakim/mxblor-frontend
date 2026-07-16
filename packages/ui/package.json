@@ -18,10 +18,18 @@
     "react-hook-form": "catalog:"
   },
   "peerDependencies": {
+    "expo-file-system": "*",
+    "expo-sharing": "*",
     "nativewind": "catalog:",
     "react-native": "*"
   },
   "peerDependenciesMeta": {
+    "expo-file-system": {
+      "optional": true
+    },
+    "expo-sharing": {
+      "optional": true
+    },
     "nativewind": {
       "optional": true
     },
@@ -35,6 +43,8 @@
     "@types/react": "catalog:",
     "@biomejs/biome": "catalog:",
     "@workspace/typescript-config": "workspace:*",
+    "expo-file-system": "catalog:",
+    "expo-sharing": "catalog:",
     "nativewind": "catalog:",
     "react-native": "catalog:",
     "tailwindcss": "catalog:",

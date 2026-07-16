@@ -18,6 +18,8 @@ Layout:
 - `src/components/overlays/` — `RncDialog` + `RncBottomSheet` (web fixed-overlay / native RN `Modal`
   variants + a shared `*-model.ts`), built from primitives (no vendored dialog/sheet)
 - `src/components/grid-components/` — the cross-platform data grid (`RncGrid`); see below
+- `src/components/pdf-result/` — `PdfResult`, with browser preview/download and native cache/share
+  variants backed by one shared props contract
 - `src/hooks/` — cross-platform hooks: `use-is-mobile` (web `matchMedia` / native
   `useWindowDimensions`) and `use-container-width` (web `ResizeObserver` / native `onLayout`), each a
   `.ts`/`.native.ts` pair with a shared types file
@@ -35,6 +37,14 @@ the navigation chrome in `@workspace/app`. `Input`/`Checkbox`/`Switch` expose a 
 (`onPress`) so shared composite components (the grid's rows/cells/icon-buttons) can be interactive on
 both platforms from a single file; on web it renders an accessible `<div role="button">` with
 keyboard handling.
+
+### `src/components/pdf-result/` — `PdfResult`
+
+`PdfResult` presents in-memory PDF bytes after a successful API request. The web variant owns a
+temporary object URL, previews it in an iframe, downloads it with the supplied filename, and revokes
+the URL on cleanup. The native variant writes the bytes to the Expo cache and opens the operating
+system share/preview flow, reporting unavailable or failed sharing through `onError`. Keep the
+shared props synchronized and keep platform APIs inside the paired implementations/helpers.
 
 ### `src/components/grid-components/` — `RncGrid`
 

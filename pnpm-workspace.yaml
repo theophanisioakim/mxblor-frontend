@@ -92,10 +92,12 @@ catalog:
   'expo-constants': "~55.0.17"
   'expo-device': "~55.0.19"
   'expo-font': "~55.0.8"
+  'expo-file-system': "~55.0.24"
   'expo-glass-effect': "~55.0.11"
   'expo-image': "~55.0.11"
   'expo-linking': "~55.0.16"
   'expo-router': "~55.0.17"
+  'expo-sharing': "~55.0.22"
   'expo-splash-screen': "~55.0.23"
   'expo-status-bar': "~55.0.6"
   'expo-symbols': "~55.0.9"
@@ -187,3 +189,4 @@ minimumReleaseAgeExclude:
   - expo-web-browser@55.0.18
   - expo@55.0.28
   - jest-expo@55.0.20
+  - expo-sharing@55.0.22
