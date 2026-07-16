@@ -44,7 +44,7 @@ jobs:
 
       # Node version is read from the root package.json `engines.node` field.
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: package.json
           cache: pnpm
