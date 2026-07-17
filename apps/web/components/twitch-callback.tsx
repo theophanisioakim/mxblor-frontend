@@ -32,7 +32,7 @@ export function TwitchCallback() {
     loginWithTwitch(code, state).then((result) => {
       if (active) {
         // Drop `?code&state`; on failure send the user back to the login screen.
-        router.replace(result.success ? "/" : "/login")
+        router.replace(result.success ? "/dashboard" : "/login")
       }
     })
 

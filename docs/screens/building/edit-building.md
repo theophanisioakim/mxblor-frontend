@@ -31,21 +31,21 @@
 
 ## 3. Layout
 
-A single scrollable screen: the editable building form, then the sub-entity navigation hub.
+A single scrollable screen: the sub-entity navigation hub, then the editable building form.
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
 │ Home › Buildings › (building name)                              │
 ├────────────────────────────────────────────────────────────────┤
+│  ── MANAGE (navigation tiles with counts) ──                   │
+│   [🏠 Units 12] [⚖ Unit balances 12] [👥 People 18] […]       │
+│   [🏦 Bank accounts 2 · Balance €950.25] […]                 │
+│                                                                 │
 │  ── EDITABLE FORM (same fields as Create, pre-filled) ──        │
 │   Code* · Name* · Active · Manager · Email · Email/SMS          │
-│   transmission · Auto-comm. day · Acquired ·                    │
-│   Address(No / Street* / Post code / Area / City* / Country)    │
+│   transmission · Auto-comm. day · Acquired · Address             │
 │                                                                 │
 │         [ Save ]   [ Back ]              [ 🗑 Delete ]           │
-│                                                                 │
-│  ── MANAGE (navigation tiles) ──                                │
-│   [🏠 Building units] [⚖ Unit balances]                          │
 └────────────────────────────────────────────────────────────────┘
 ```
 
@@ -76,19 +76,27 @@ address; it does not create a second one.
 
 ## 6. Sub-entity navigation hub
 
-A row of tiles; each navigates to that sub-entity's list for this building.
+A responsive set of tiles above the form. Every tile shows its current item count and navigates to
+that sub-entity's list for this building. Four financial tiles also show a locale-formatted EUR
+amount.
 
-| Tile | Goes to |
-|---|---|
-| Building units | [Units list](../building-unit/building-units-list.md) for this building |
-| Unit balances | [Building Unit Balances](../building-unit/building-unit-balances.md) for this building |
+| Tile | Displayed value | Goes to |
+|---|---|---|
+| Building units | Number of units | [Units list](../building-unit/building-units-list.md) |
+| Unit balances | Number of unit balances | [Building Unit Balances](../building-unit/building-unit-balances.md) |
+| Related people | Number of related people | Related people list |
+| Communication | Number of communications | Communication list |
+| Notes | Number of notes | Notes list |
+| Distribution tables | Number of distribution tables | Distribution tables list |
+| Yearly budget | Number of yearly budgets | Yearly budget list |
+| Bank accounts | Number of accounts; combined account balance | Bank accounts list |
+| Current expenses | Number of expenses; combined expense total | Current expenses list |
+| Payments | Number of payments; outstanding credit less debit | Payments list |
+| Collections | Number of collections; outstanding debit less credit | Collections list |
 
-**A tile appears only once the screen it opens exists** — the hub never offers a link that goes
-nowhere. **Related people**, **Communication** and **Notes** join the hub when their screens are
-built; the remaining sub-entities (distribution tables, yearly budget, bank accounts, and the
-transaction screens) follow after that.
-
-The tiles show **no counts** (see §8).
+While the summary loads, tiles remain visible with a dash in place of each count; financial amounts
+appear with the loaded summary. If it cannot be loaded, the screen shows a retry action and the
+tiles remain available for navigation.
 
 ---
 
@@ -105,14 +113,13 @@ The tiles show **no counts** (see §8).
 ## 8. Deferred — deliberately not built
 
 The original design for this screen carried considerably more. These are **not** implemented, and
-the screen does not pretend otherwise (no empty panels, no zeroed counts):
+the screen does not pretend otherwise (no empty panels):
 
 - **Publish** and **Create external users** lifecycle actions.
 - **Photos** and **attached files** — there is no file-upload surface in the app yet.
 - **Read-only history / audit block** (published at, ended at, last activated/deactivated, created
   and updated by/at).
 - **Summary figures** — months active, total area.
-- **Counts on the hub tiles.**
 - Revenue screens.
 
 ---
@@ -120,7 +127,10 @@ the screen does not pretend otherwise (no empty panels, no zeroed counts):
 ## 9. States
 
 - **Loading:** a loading indicator until the building's data arrives.
-- **Loaded:** fields pre-filled; hub shown.
+- **Loaded:** hub shown above the pre-filled fields. Every tile shows a count; financial tiles also
+  show their amount.
+- **Summary loading/failure:** the building and form remain usable; tiles show placeholders and a
+  failed summary can be retried.
 - **Not found / load failure:** an error message instead of the form.
 - **Submitting:** Save (or Delete) shows a busy/disabled state.
 - **Validation error:** invalid fields flagged inline; no save occurs.

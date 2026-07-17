@@ -1,10 +1,100 @@
 {
-  "home": {
-    "title": "Project ready!",
-    "crossPlatform": "One screen, shared by the web and native apps.",
-    "buttonLabel": "Example button",
-    "formLink": "View form components",
-    "gridLink": "View data grid"
+  "landing": {
+    "eyebrow": "Building management, reimagined",
+    "title": "Easy. Quick. Transparent.",
+    "description": "Manage buildings, common expenses, people and financial records from one secure workspace designed for professional building management.",
+    "actions": {
+      "login": "Sign in to MXBLOR",
+      "dashboard": "Open dashboard",
+      "contact": "Book a demonstration"
+    },
+    "preview": {
+      "title": "Portfolio overview",
+      "subtitle": "The information that matters, at a glance",
+      "buildings": "Buildings",
+      "units": "Building units",
+      "contacts": "Contacts",
+      "expenses": "Expense types",
+      "activity": "Portfolio activity"
+    },
+    "features": {
+      "title": "Everything your building portfolio needs",
+      "description": "MXBLOR brings the essential operational and financial workflows from the original platform into a modern, connected experience.",
+      "expenses": {
+        "title": "Common expenses",
+        "description": "Organize budgets, expense types and monthly building costs without losing the accounting trail behind each amount."
+      },
+      "roles": {
+        "title": "Users and roles",
+        "description": "Give each team member access to the buildings and actions they need while keeping sensitive operations protected."
+      },
+      "reports": {
+        "title": "Financial reporting",
+        "description": "Prepare clear building and unit information for committees, owners and residents from consistent source data."
+      },
+      "audit": {
+        "title": "Record auditing",
+        "description": "Keep an accountable history of important changes so administrators can understand what changed and when."
+      }
+    },
+    "capabilities": {
+      "title": "Built for the way you work now",
+      "description": "Use the same dependable workflows at the office or on the move, with a platform designed around multi-tenant building management.",
+      "mobile": {
+        "title": "Web and mobile",
+        "description": "Work from a large desktop canvas or a native mobile experience without learning a second workflow."
+      },
+      "insight": {
+        "title": "Clear portfolio insight",
+        "description": "See useful totals and move directly into the records behind them instead of navigating through disconnected tools."
+      },
+      "languages": {
+        "title": "English and Greek",
+        "description": "Serve teams and customers in their preferred supported language throughout the shared application."
+      },
+      "security": {
+        "title": "Tenant-aware security",
+        "description": "Keep each management portfolio isolated with schema, role and permission controls enforced by the platform."
+      }
+    },
+    "pricing": {
+      "eyebrow": "Pricing and onboarding",
+      "title": "A setup shaped around your building portfolio",
+      "description": "Contact M. Halloumas C.C. Ltd for a demonstration, pricing information and guidance through the onboarding process."
+    },
+    "contact": {
+      "email": "Email us",
+      "phone": "Call us",
+      "company": "Visit M. Halloumas C.C. Ltd"
+    },
+    "footer": {
+      "trademark": "MXBLOR® is a trademark of M. Halloumas C.C. Ltd.",
+      "facebook": "Facebook",
+      "x": "X",
+      "youtube": "YouTube"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "A current overview of the records in your selected building-management portfolio.",
+    "loading": "Loading dashboard metrics…",
+    "metrics": {
+      "buildings": "Buildings",
+      "buildingUnits": "Building units",
+      "contacts": "Contacts",
+      "expenses": "Expense types",
+      "open": "View {{name}}"
+    },
+    "error": {
+      "title": "Dashboard metrics are unavailable",
+      "description": "We could not load the latest totals. Check your connection and try again.",
+      "retry": "Try again"
+    },
+    "forbidden": {
+      "title": "Dashboard unavailable",
+      "description": "Your account does not have permission to view these portfolio totals.",
+      "back": "Return to the landing page"
+    }
   },
   "building": {
     "list": {
@@ -94,6 +184,14 @@
       "back": "Back",
       "delete": "Delete Building",
       "manage": "Manage",
+      "summaryLoading": "Loading management summary…",
+      "summaryLoadError": "The management summary could not be loaded.",
+      "summaryRetry": "Retry",
+      "metrics": {
+        "balance": "Balance",
+        "total": "Total",
+        "outstanding": "Outstanding"
+      },
       "tiles": {
         "units": "Building units",
         "relatedPeople": "Related people",

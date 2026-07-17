@@ -1,7 +1,7 @@
-import { HomeScreen } from "@workspace/app"
+import { LandingScreen } from "@workspace/app"
 
 /**
- * Native home route. Renders the exact same `HomeScreen` that the Next.js
+ * Native home route. Renders the exact same `LandingScreen` that the Next.js
  * web app renders — it comes from `@workspace/app`. The `@workspace/ui`
  * primitives it uses resolve to their react-native-reusables implementations
  * here (via Metro's `.native.tsx` resolution).
@@ -10,5 +10,5 @@ import { HomeScreen } from "@workspace/app"
  * so screens render their content directly without a `SafeAreaView`.
  */
 export default function Index() {
-  return <HomeScreen />
+  return <LandingScreen />
 }

@@ -55,13 +55,13 @@ export function TopBar() {
 
         <NavLink href="/">
           <View className="flex-row items-center gap-2">
-            <View className="size-8 items-center justify-center rounded-md bg-primary">
-              <Text className="font-bold text-base text-primary-foreground">
+            <View className="size-8 items-center justify-center rounded-md bg-brand">
+              <Text className="font-bold text-base text-brand-foreground">
                 M
               </Text>
             </View>
             <Text className="font-semibold text-base text-foreground max-sm:hidden">
-              MyApp
+              MXBLOR
             </Text>
           </View>
         </NavLink>

@@ -111,7 +111,7 @@ export function LoginScreen({
   // Redirect away once authenticated.
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/")
+      router.replace("/dashboard")
     }
   }, [isAuthenticated, router])
 
@@ -174,7 +174,7 @@ export function LoginScreen({
 
     const session = await loginWithTwitch(result.code, result.state)
     if (session.success) {
-      router.replace("/")
+      router.replace("/dashboard")
     } else {
       setError(session.errorMessage)
       setOauthLoading(null)
@@ -201,7 +201,7 @@ export function LoginScreen({
             <Text className="font-bold text-lg text-primary">M</Text>
           </View>
           <Text className="font-semibold text-lg text-primary-foreground tracking-tight">
-            Monocore
+            MXBLOR
           </Text>
         </View>
 
@@ -269,7 +269,7 @@ export function LoginScreen({
               setNotice(null)
               const result = await login(data)
               if (result.success) {
-                router.replace("/")
+                router.replace("/dashboard")
                 return true
               }
               setError(result.errorMessage)

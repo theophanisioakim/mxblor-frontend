@@ -89,6 +89,11 @@ export {
 } from "./screens/building-yearly-budget/building-yearly-budget-list-screen"
 export { ContactFormScreen } from "./screens/contact/contact-form-screen"
 export { ContactListScreen } from "./screens/contact/contact-list-screen"
+export {
+  type DashboardMetrics,
+  DashboardScreen,
+  fetchDashboardMetrics,
+} from "./screens/dashboard-screen"
 export { ErrorScreen, type ErrorScreenProps } from "./screens/error-screen"
 export { CreateExpenseScreen } from "./screens/expense/create-expense-screen"
 export { EditExpenseScreen } from "./screens/expense/edit-expense-screen"
@@ -97,7 +102,7 @@ export { ExpenseCategoryFormScreen } from "./screens/expense-category/expense-ca
 export { ExpenseCategoryListScreen } from "./screens/expense-category/expense-category-list-screen"
 export { FormShowcaseScreen } from "./screens/form-showcase-screen"
 export { GridShowcaseScreen } from "./screens/grid-showcase-screen"
-export { HomeScreen } from "./screens/home-screen"
+export { LandingScreen } from "./screens/landing-screen"
 export { LoadingScreen } from "./screens/loading-screen"
 export { LoginScreen } from "./screens/login-screen"
 export { NotFoundScreen } from "./screens/not-found-screen"

@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals"
 import { render } from "@testing-library/react-native"
+import { AppProviders } from "@workspace/providers"
 import type React from "react"
 import RootLayout from "../src/app/_layout"
 import Index from "../src/app/index"
@@ -42,9 +43,13 @@ describe("native startup", () => {
     expect(getByTestId("portal-host")).toBeTruthy()
   })
 
-  it("mounts the initial route and shared home screen", async () => {
-    const { getByText } = await render(<Index />)
+  it("mounts the initial route and shared landing screen", async () => {
+    const { getByText } = await render(
+      <AppProviders>
+        <Index />
+      </AppProviders>
+    )
 
-    expect(getByText("Project ready!")).toBeTruthy()
+    expect(getByText("Easy. Quick. Transparent.")).toBeTruthy()
   })
 })
