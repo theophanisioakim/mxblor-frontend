@@ -26,6 +26,8 @@ import {
 export interface AuthContextValue {
   user: AuthenticatedUserResponseDto | undefined
   isAuthenticated: boolean
+  /** True once any stored session has either been restored or rejected. */
+  isAuthReady: boolean
   selectedSchema: string | null
   login: (
     data: LoginRequestDto
@@ -57,12 +59,16 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
   const [selectedSchema, setSelectedSchema] = useState<string | null>(() =>
     myLocalStorage.getItem(StorageKeys.SELECTED_SCHEMA)
   )
+  const [isAuthReady, setIsAuthReady] = useState(
+    () => myLocalStorage.getItem(StorageKeys.JWT_TOKEN) === null
+  )
 
   const clearAuthState = useCallback(() => {
     myLocalStorage.removeItem(StorageKeys.JWT_TOKEN)
     myLocalStorage.removeItem(StorageKeys.SELECTED_SCHEMA)
     setUser(undefined)
     setSelectedSchema(null)
+    setIsAuthReady(true)
   }, [])
 
   const onUnauthorized = useCallback((): void => {
@@ -108,9 +114,11 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
 
       const shouldFetchUser = previousTokenValue !== jwtToken || !user
       if (!shouldFetchUser) {
+        setIsAuthReady(true)
         return
       }
 
+      setIsAuthReady(false)
       try {
         const authenticatedUser = await getAuthenticatedUser()
         if (!active) {
@@ -125,6 +133,10 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
         setJwtToken(null)
         clearAuthState()
         router.replace("/login")
+      } finally {
+        if (active) {
+          setIsAuthReady(true)
+        }
       }
     }
 
@@ -154,6 +166,7 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
 
     myLocalStorage.setItem(StorageKeys.SELECTED_SCHEMA, schema)
     setSelectedSchema(schema)
+    setIsAuthReady(false)
     setJwtToken(token)
 
     return { success: true, errorMessage: "" }
@@ -211,13 +224,22 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
     () => ({
       user,
       isAuthenticated: user !== undefined,
+      isAuthReady,
       selectedSchema,
       login,
       loginWithTwitch,
       getTwitchRedirectUrl,
       logout,
     }),
-    [user, selectedSchema, login, loginWithTwitch, getTwitchRedirectUrl, logout]
+    [
+      user,
+      isAuthReady,
+      selectedSchema,
+      login,
+      loginWithTwitch,
+      getTwitchRedirectUrl,
+      logout,
+    ]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
