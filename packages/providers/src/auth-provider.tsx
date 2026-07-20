@@ -1,14 +1,29 @@
 "use client"
 
 import {
-  type AuthenticatedUserResponseDto,
-  getAuthenticatedUser,
+  type AuthenticationOutcomeDto,
+  applyAuthenticationOutcome,
+  applySessionResponse,
+  clearPendingSchemaSelection,
+  clearStoredSession,
   getTwitchAuthenticationRedirectUrl,
+  isExpired,
   type LoginRequestDto,
-  type LoginResponseDto,
+  type PendingSchemaSelection,
+  queryClient,
+  readPendingSchemaSelection,
+  readStoredSession,
+  refreshStoredSession,
+  login as requestLogin,
+  logout as requestLogout,
+  logoutAll as requestLogoutAll,
+  logoutAllUsers as requestLogoutAllUsers,
+  selectSchema as requestSelectSchema,
+  switchSchema as requestSwitchSchema,
+  type StoredSession,
+  setOnSessionChanged,
   setOnUnauthorized,
   twitchLogin,
-  useLogin,
 } from "@workspace/api-client"
 import { useRouter } from "@workspace/router"
 import { myLocalStorage, StorageKeys } from "@workspace/storage"
@@ -20,26 +35,60 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react"
 
+const AUTH_ACTIONS = [
+  "login",
+  "refresh",
+  "selectSchema",
+  "switchSchema",
+  "logout",
+  "logoutAll",
+  "logoutAllUsers",
+] as const
+
+export type AuthAction = (typeof AUTH_ACTIONS)[number]
+
+export interface AuthActionStatus {
+  errorMessage: string | null
+  isLoading: boolean
+}
+
+export type AuthActionState = Record<AuthAction, AuthActionStatus>
+
+export type AuthenticationResult =
+  | { status: "authenticated" }
+  | { status: "schema-selection-required" }
+  | { status: "error"; errorMessage: string }
+
+export type SessionControlResult =
+  | { success: true }
+  | { success: false; errorMessage: string }
+
 export interface AuthContextValue {
-  user: AuthenticatedUserResponseDto | undefined
+  user: StoredSession | undefined
   isAuthenticated: boolean
   /** True once any stored session has either been restored or rejected. */
   isAuthReady: boolean
   selectedSchema: string | null
-  login: (
-    data: LoginRequestDto
-  ) => Promise<{ errorMessage: string; success: boolean }>
+  pendingSchemaSelection: PendingSchemaSelection | null
+  actionState: AuthActionState
+  login: (data: LoginRequestDto) => Promise<AuthenticationResult>
   /** Exchange a Twitch OAuth `code`/`state` (from the callback) for a session. */
   loginWithTwitch: (
     code: string,
     state: string
-  ) => Promise<{ errorMessage: string; success: boolean }>
+  ) => Promise<AuthenticationResult>
   /** Fetch the Twitch OAuth authorize URL to send the user to, or `null`. */
   getTwitchRedirectUrl: () => Promise<string | null>
-  logout: () => void
+  selectSchema: (schema: string) => Promise<AuthenticationResult>
+  switchSchema: (schema: string) => Promise<SessionControlResult>
+  cancelSchemaSelection: () => void
+  logout: () => Promise<void>
+  logoutAll: () => Promise<SessionControlResult>
+  logoutAllUsers: () => Promise<SessionControlResult>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -48,165 +97,237 @@ export interface AuthProviderProps {
   children: ReactNode
 }
 
-export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
-  const loginMutation = useLogin()
-  const router = useRouter()
+function createInitialActionState(): AuthActionState {
+  return Object.fromEntries(
+    AUTH_ACTIONS.map((action) => [
+      action,
+      { errorMessage: null, isLoading: false },
+    ])
+  ) as AuthActionState
+}
 
-  const [user, setUser] = useState<AuthenticatedUserResponseDto>()
-  const [jwtToken, setJwtToken] = useState<string | null>(() =>
-    myLocalStorage.getItem(StorageKeys.JWT_TOKEN)
-  )
+export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
+  const router = useRouter()
+  const [user, setUser] = useState<StoredSession | undefined>()
   const [selectedSchema, setSelectedSchema] = useState<string | null>(() =>
     myLocalStorage.getItem(StorageKeys.SELECTED_SCHEMA)
   )
-  const [isAuthReady, setIsAuthReady] = useState(
-    () => myLocalStorage.getItem(StorageKeys.JWT_TOKEN) === null
+  const [pendingSchemaSelection, setPendingSchemaSelection] =
+    useState<PendingSchemaSelection | null>(() => readPendingSchemaSelection())
+  const [isAuthReady, setIsAuthReady] = useState(false)
+  const [actionState, setActionState] = useState(createInitialActionState)
+  const userRef = useRef<StoredSession | undefined>(undefined)
+
+  const updateAction = useCallback(
+    (action: AuthAction, isLoading: boolean, errorMessage: string | null) => {
+      setActionState((current) => ({
+        ...current,
+        [action]: { isLoading, errorMessage },
+      }))
+    },
+    []
   )
 
-  const clearAuthState = useCallback(() => {
-    myLocalStorage.removeItem(StorageKeys.JWT_TOKEN)
-    myLocalStorage.removeItem(StorageKeys.SELECTED_SCHEMA)
+  const syncStoredState = useCallback(() => {
+    const token = myLocalStorage.getItem(StorageKeys.JWT_TOKEN)
+    const nextUser = token ? (readStoredSession() ?? undefined) : undefined
+    const previousUser = userRef.current
+    const identityChanged =
+      previousUser?.username !== nextUser?.username ||
+      previousUser?.schema !== nextUser?.schema
+
+    if (identityChanged) {
+      queryClient.clear()
+    }
+
+    userRef.current = nextUser
+    setUser(nextUser)
+    setSelectedSchema(nextUser?.schema ?? null)
+    setPendingSchemaSelection(readPendingSchemaSelection())
+    setIsAuthReady(true)
+  }, [])
+
+  const clearLocalAuth = useCallback(() => {
+    clearStoredSession()
+    queryClient.clear()
+    userRef.current = undefined
     setUser(undefined)
     setSelectedSchema(null)
+    setPendingSchemaSelection(null)
     setIsAuthReady(true)
   }, [])
 
   const onUnauthorized = useCallback((): void => {
-    clearAuthState()
-    setJwtToken(null)
+    clearLocalAuth()
     router.replace("/login")
-  }, [clearAuthState, router])
+  }, [clearLocalAuth, router])
 
   useEffect(() => {
     setOnUnauthorized(onUnauthorized)
+    setOnSessionChanged(syncStoredState)
     return () => {
       setOnUnauthorized(null)
+      setOnSessionChanged(null)
     }
-  }, [onUnauthorized])
-
-  const syncSchemaSelection = useCallback((availableSchemas?: string[]) => {
-    const firstSchema = availableSchemas?.[0]
-    if (!firstSchema) {
-      throw new Error("No available schemas found for the user")
-    }
-
-    const storedSchema = myLocalStorage.getItem(StorageKeys.SELECTED_SCHEMA)
-    const schema =
-      storedSchema && availableSchemas.includes(storedSchema)
-        ? storedSchema
-        : firstSchema
-
-    myLocalStorage.setItem(StorageKeys.SELECTED_SCHEMA, schema)
-    setSelectedSchema(schema)
-  }, [])
+  }, [onUnauthorized, syncStoredState])
 
   useEffect(() => {
     let active = true
 
-    async function syncAuthenticatedUser() {
-      if (!jwtToken) {
-        clearAuthState()
+    async function restoreSession() {
+      const storedSession = readStoredSession()
+      const token = myLocalStorage.getItem(StorageKeys.JWT_TOKEN)
+
+      if (!storedSession) {
+        if (token) {
+          clearStoredSession()
+        }
+        if (active) syncStoredState()
         return
       }
 
-      const previousTokenValue = myLocalStorage.getItem(StorageKeys.JWT_TOKEN)
-      myLocalStorage.setItem(StorageKeys.JWT_TOKEN, jwtToken)
-
-      const shouldFetchUser = previousTokenValue !== jwtToken || !user
-      if (!shouldFetchUser) {
-        setIsAuthReady(true)
+      if (isExpired(storedSession.refreshTokenExpiresAt)) {
+        clearStoredSession()
+        if (active) syncStoredState()
         return
       }
 
-      setIsAuthReady(false)
+      if (token && !isExpired(storedSession.accessTokenExpiresAt, 30_000)) {
+        if (active) syncStoredState()
+        return
+      }
+
+      updateAction("refresh", true, null)
       try {
-        const authenticatedUser = await getAuthenticatedUser()
-        if (!active) {
-          return
-        }
-        setUser(authenticatedUser)
-        syncSchemaSelection(authenticatedUser.availableSchemas)
-      } catch {
-        if (!active) {
-          return
-        }
-        setJwtToken(null)
-        clearAuthState()
-        router.replace("/login")
-      } finally {
+        await refreshStoredSession(token)
         if (active) {
-          setIsAuthReady(true)
+          syncStoredState()
+          updateAction("refresh", false, null)
         }
+      } catch (error: unknown) {
+        if (!active) return
+        // Terminal refresh failures are cleared by the transport. For transient
+        // failures retain metadata so the next API request can retry recovery.
+        const retainedSession = readStoredSession() ?? undefined
+        userRef.current = retainedSession
+        setUser(retainedSession)
+        setSelectedSchema(retainedSession?.schema ?? null)
+        setIsAuthReady(true)
+        updateAction("refresh", false, getErrorMessage(error))
       }
     }
 
-    void syncAuthenticatedUser()
-
+    void restoreSession()
     return () => {
       active = false
     }
-  }, [jwtToken, user, router, clearAuthState, syncSchemaSelection])
+  }, [syncStoredState, updateAction])
 
-  const applyLoginResponse = useCallback((response: LoginResponseDto) => {
-    const schema = response.availableSchemas?.[0]
-    if (!schema) {
-      return {
-        errorMessage: "No available schemas found for the user",
-        success: false,
-      }
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      typeof window.addEventListener !== "function"
+    ) {
+      return
     }
 
-    const token = response.token
-    if (!token) {
-      return {
-        errorMessage: "No token received from the server",
-        success: false,
+    const authKeys = new Set<string>([
+      StorageKeys.JWT_TOKEN,
+      StorageKeys.USER,
+      StorageKeys.SELECTED_SCHEMA,
+      StorageKeys.SCHEMA_SELECTION,
+    ])
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === null || authKeys.has(event.key)) {
+        syncStoredState()
       }
     }
+    window.addEventListener("storage", handleStorage)
+    return () => window.removeEventListener("storage", handleStorage)
+  }, [syncStoredState])
 
-    myLocalStorage.setItem(StorageKeys.SELECTED_SCHEMA, schema)
-    setSelectedSchema(schema)
-    setIsAuthReady(false)
-    setJwtToken(token)
+  useEffect(() => {
+    if (!pendingSchemaSelection) return
+    const remaining = Date.parse(pendingSchemaSelection.expiresAt) - Date.now()
+    if (remaining <= 0) {
+      clearPendingSchemaSelection()
+      updateAction("selectSchema", false, "Schema selection has expired.")
+      return
+    }
+    const timeout = setTimeout(() => {
+      clearPendingSchemaSelection()
+      updateAction("selectSchema", false, "Schema selection has expired.")
+    }, remaining)
+    return () => clearTimeout(timeout)
+  }, [pendingSchemaSelection, updateAction])
 
-    return { success: true, errorMessage: "" }
-  }, [])
+  const applyOutcome = useCallback(
+    (outcome: AuthenticationOutcomeDto): AuthenticationResult => {
+      const applied = applyAuthenticationOutcome(outcome)
+      queryClient.clear()
+      if (applied.status === "authenticated") {
+        userRef.current = applied.session
+        setUser(applied.session)
+        setSelectedSchema(applied.session.schema)
+        setPendingSchemaSelection(null)
+        setIsAuthReady(true)
+        return { status: "authenticated" }
+      }
 
-  const login = useCallback(
-    async (data: LoginRequestDto) => {
+      userRef.current = undefined
+      setUser(undefined)
+      setSelectedSchema(null)
+      setPendingSchemaSelection(applied.challenge)
+      setIsAuthReady(true)
+      return { status: "schema-selection-required" }
+    },
+    []
+  )
+
+  const executeAuthentication = useCallback(
+    async (
+      action: "login" | "selectSchema",
+      request: () => Promise<AuthenticationOutcomeDto>
+    ): Promise<AuthenticationResult> => {
+      updateAction(action, true, null)
       try {
-        const response = await loginMutation.mutateAsync({
-          data: {
-            username: data.username,
-            password: data.password,
-            rememberMe: data.rememberMe ?? true,
-          },
-        })
-
-        return applyLoginResponse(response)
+        const result = applyOutcome(await request())
+        updateAction(action, false, null)
+        return result
       } catch (error: unknown) {
-        return {
-          errorMessage: getLoginErrorMessage(error),
-          success: false,
-        }
+        const errorMessage = getErrorMessage(error)
+        updateAction(action, false, errorMessage)
+        return { status: "error", errorMessage }
       }
     },
-    [loginMutation, applyLoginResponse]
+    [applyOutcome, updateAction]
+  )
+
+  const login = useCallback(
+    (data: LoginRequestDto) => {
+      updateAction("selectSchema", false, null)
+      return executeAuthentication("login", () =>
+        requestLogin({ username: data.username, password: data.password })
+      )
+    },
+    [executeAuthentication, updateAction]
   )
 
   const loginWithTwitch = useCallback(
     async (code: string, state: string) => {
+      updateAction("selectSchema", false, null)
+      updateAction("login", true, null)
       try {
-        const response = await twitchLogin({ code, state })
-        return applyLoginResponse(response)
+        const result = applyOutcome(await twitchLogin({ code, state }))
+        updateAction("login", false, null)
+        return result
       } catch (error: unknown) {
-        return {
-          errorMessage: getLoginErrorMessage(error),
-          success: false,
-        }
+        const errorMessage = getErrorMessage(error)
+        updateAction("login", false, errorMessage)
+        return { status: "error" as const, errorMessage }
       }
     },
-    [applyLoginResponse]
+    [applyOutcome, updateAction]
   )
 
   const getTwitchRedirectUrl = useCallback(async () => {
@@ -214,11 +335,119 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
     return response.redirectUrl ?? null
   }, [])
 
-  const logout = useCallback(() => {
-    setJwtToken(null)
-    clearAuthState()
-    router.replace("/login")
-  }, [router, clearAuthState])
+  const selectSchema = useCallback(
+    async (schema: string): Promise<AuthenticationResult> => {
+      updateAction("selectSchema", true, null)
+      try {
+        const schemaSelectionToken = myLocalStorage.getItem(
+          StorageKeys.SCHEMA_SELECTION_TOKEN
+        )
+        const response = await requestSelectSchema({
+          schema,
+          ...(schemaSelectionToken ? { schemaSelectionToken } : {}),
+        })
+        const session = applySessionResponse(response)
+        queryClient.clear()
+        userRef.current = session
+        setUser(session)
+        setSelectedSchema(session.schema)
+        setPendingSchemaSelection(null)
+        setIsAuthReady(true)
+        updateAction("selectSchema", false, null)
+        return { status: "authenticated" }
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error)
+        updateAction("selectSchema", false, errorMessage)
+        return { status: "error", errorMessage }
+      }
+    },
+    [updateAction]
+  )
+
+  const switchSchema = useCallback(
+    async (schema: string): Promise<SessionControlResult> => {
+      if (schema === userRef.current?.schema) {
+        return { success: true }
+      }
+      updateAction("switchSchema", true, null)
+      try {
+        const refreshToken = myLocalStorage.getItem(StorageKeys.REFRESH_TOKEN)
+        const response = await requestSwitchSchema({
+          schema,
+          ...(refreshToken ? { refreshToken } : {}),
+        })
+        const session = applySessionResponse(response)
+        queryClient.clear()
+        userRef.current = session
+        setUser(session)
+        setSelectedSchema(session.schema)
+        setPendingSchemaSelection(null)
+        updateAction("switchSchema", false, null)
+        router.replace("/")
+        return { success: true }
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error)
+        updateAction("switchSchema", false, errorMessage)
+        return { success: false, errorMessage }
+      }
+    },
+    [router, updateAction]
+  )
+
+  const cancelSchemaSelection = useCallback(() => {
+    clearPendingSchemaSelection()
+    setPendingSchemaSelection(null)
+    updateAction("selectSchema", false, null)
+  }, [updateAction])
+
+  const logout = useCallback(async () => {
+    updateAction("logout", true, null)
+    try {
+      await requestLogout()
+    } catch {
+      // Current-device logout is deliberately best effort.
+    } finally {
+      clearLocalAuth()
+      setActionState(createInitialActionState())
+      router.replace("/login")
+    }
+  }, [clearLocalAuth, router, updateAction])
+
+  const executeBroadLogout = useCallback(
+    async (
+      action: "logoutAll" | "logoutAllUsers",
+      request: () => Promise<unknown>
+    ): Promise<SessionControlResult> => {
+      updateAction(action, true, null)
+      try {
+        await request()
+        clearLocalAuth()
+        setActionState(createInitialActionState())
+        router.replace("/login")
+        return { success: true }
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error)
+        if (getHttpStatus(error) === 401) {
+          clearLocalAuth()
+          router.replace("/login")
+        } else {
+          updateAction(action, false, errorMessage)
+        }
+        return { success: false, errorMessage }
+      }
+    },
+    [clearLocalAuth, router, updateAction]
+  )
+
+  const logoutAll = useCallback(
+    () => executeBroadLogout("logoutAll", requestLogoutAll),
+    [executeBroadLogout]
+  )
+
+  const logoutAllUsers = useCallback(
+    () => executeBroadLogout("logoutAllUsers", requestLogoutAllUsers),
+    [executeBroadLogout]
+  )
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -226,19 +455,33 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
       isAuthenticated: user !== undefined,
       isAuthReady,
       selectedSchema,
+      pendingSchemaSelection,
+      actionState,
       login,
       loginWithTwitch,
       getTwitchRedirectUrl,
+      selectSchema,
+      switchSchema,
+      cancelSchemaSelection,
       logout,
+      logoutAll,
+      logoutAllUsers,
     }),
     [
       user,
       isAuthReady,
       selectedSchema,
+      pendingSchemaSelection,
+      actionState,
       login,
       loginWithTwitch,
       getTwitchRedirectUrl,
+      selectSchema,
+      switchSchema,
+      cancelSchemaSelection,
       logout,
+      logoutAll,
+      logoutAllUsers,
     ]
   )
 
@@ -253,7 +496,7 @@ export function useAuth() {
   return context
 }
 
-function getLoginErrorMessage(error: unknown) {
+function getErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
     const responseData = error.response?.data
     if (isMessageError(responseData)) {
@@ -269,6 +512,10 @@ function getLoginErrorMessage(error: unknown) {
   }
 
   return "An unexpected error occurred. Please try again."
+}
+
+function getHttpStatus(error: unknown): number | undefined {
+  return error instanceof AxiosError ? error.response?.status : undefined
 }
 
 function isMessageError(value: unknown): value is { message: string } {

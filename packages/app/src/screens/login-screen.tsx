@@ -9,9 +9,9 @@ import {
   Github,
   Google,
   Icon,
-  RncCheckbox,
   RncForm,
   RncInput,
+  RncSelect,
   RncSubmitButton,
   Separator,
   Spinner,
@@ -25,8 +25,9 @@ import { startTwitchAuth } from "./twitch-auth"
 type LoginForm = {
   username: string
   password: string
-  rememberMe?: boolean
 }
+
+type SchemaSelectionForm = { schema: string }
 
 export interface LoginScreenProps {
   /**
@@ -81,7 +82,7 @@ const PROVIDERS = [
  * panel collapses and only the form shows — driven by `lg:` breakpoints, with no
  * platform branching.
  *
- * Username/email + password (with "remember me") is the primary path. Twitch
+ * Username/email + password is the primary path. Twitch
  * OAuth is initiated here via `startTwitchAuth`, which diverges by platform: on
  * web it full-page redirects to Twitch and the `/` route's `TwitchCallback`
  * finishes the exchange; on native it opens an in-app auth session that returns
@@ -96,8 +97,16 @@ const PROVIDERS = [
 export function LoginScreen({
   initialTwitchUrl,
 }: Readonly<LoginScreenProps> = {}) {
-  const { login, loginWithTwitch, getTwitchRedirectUrl, isAuthenticated } =
-    useAuth()
+  const {
+    actionState,
+    cancelSchemaSelection,
+    getTwitchRedirectUrl,
+    isAuthenticated,
+    login,
+    loginWithTwitch,
+    pendingSchemaSelection,
+    selectSchema,
+  } = useAuth()
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -114,6 +123,13 @@ export function LoginScreen({
       router.replace("/")
     }
   }, [isAuthenticated, router])
+
+  useEffect(() => {
+    if (pendingSchemaSelection) {
+      setError(null)
+      setOauthLoading(null)
+    }
+  }, [pendingSchemaSelection])
 
   // Resolve the Twitch authorize URL up front so the Twitch option can be hidden
   // entirely when the backend doesn't provide one (empty/unavailable). Skipped
@@ -173,19 +189,22 @@ export function LoginScreen({
     }
 
     const session = await loginWithTwitch(result.code, result.state)
-    if (session.success) {
+    if (session.status === "authenticated") {
       router.replace("/")
-    } else {
+    } else if (session.status === "error") {
       setError(session.errorMessage)
+      setOauthLoading(null)
+    } else {
       setOauthLoading(null)
     }
   }
 
-  const busy = oauthLoading !== null
+  const busy = oauthLoading !== null || actionState.login.isLoading
   // Hide Twitch unless the backend handed us a non-empty redirect URL.
   const providers = PROVIDERS.filter(
     (provider) => provider.id !== "twitch" || Boolean(twitchUrl)
   )
+  const displayedError = error ?? actionState.selectSchema.errorMessage
 
   return (
     <View className="min-h-full flex-1 bg-background lg:flex-row">
@@ -235,21 +254,25 @@ export function LoginScreen({
             </View>
             <View className="gap-2">
               <Text className="font-medium text-muted-foreground text-xs uppercase tracking-widest">
-                Welcome back
+                {pendingSchemaSelection ? "Choose workspace" : "Welcome back"}
               </Text>
               <Text className="font-semibold text-3xl text-foreground tracking-tight">
-                Good to see you again
+                {pendingSchemaSelection
+                  ? "Select a schema"
+                  : "Good to see you again"}
               </Text>
               <Text className="text-muted-foreground text-sm">
-                Sign in to pick up right where you left off.
+                {pendingSchemaSelection
+                  ? "Choose the tenant context for this signed session."
+                  : "Sign in to pick up right where you left off."}
               </Text>
             </View>
           </View>
 
-          {error ? (
+          {displayedError ? (
             <View className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3">
               <Text className="text-center text-destructive text-sm">
-                {error}
+                {displayedError}
               </Text>
             </View>
           ) : null}
@@ -262,80 +285,133 @@ export function LoginScreen({
             </View>
           ) : null}
 
-          <RncForm<LoginForm>
-            id="login-form"
-            onSubmit={async (data) => {
-              setError(null)
-              setNotice(null)
-              const result = await login(data)
-              if (result.success) {
-                router.replace("/")
-                return true
-              }
-              setError(result.errorMessage)
-              return false
-            }}
-          >
-            <RncInput
-              autoCapitalize="none"
-              autoComplete="username"
-              id="username"
-              label="Username or email"
-              placeholder="you@example.com"
-              required
-            />
-            <RncInput
-              autoComplete="current-password"
-              id="password"
-              label="Password"
-              placeholder="••••••••"
-              required
-              type="password"
-            />
-            <View className="flex-row items-center justify-between">
-              <RncCheckbox id="rememberMe" label="Remember me" />
-              <Text className="font-medium text-primary text-sm">
-                Forgot password?
-              </Text>
-            </View>
-            <RncSubmitButton className="h-11 w-full" label="Sign in" />
-          </RncForm>
-
-          {/* Divider */}
-          <View className="flex-row items-center gap-3">
-            <Separator className="flex-1" />
-            <Text className="text-muted-foreground text-xs uppercase tracking-wider">
-              or continue with
-            </Text>
-            <Separator className="flex-1" />
-          </View>
-
-          {/* OAuth providers — each in its brand color */}
-          <View className="flex-row gap-3">
-            {providers.map((provider) => (
-              <Button
-                aria-label={`Continue with ${PROVIDER_LABELS[provider.id]}`}
-                className={cn("h-11 flex-1", provider.className)}
-                disabled={busy}
-                key={provider.id}
-                onPress={() => void handleOAuth(provider.id)}
+          {pendingSchemaSelection ? (
+            <View className="gap-4">
+              <RncForm<SchemaSelectionForm>
+                defaultValues={{
+                  schema: pendingSchemaSelection.availableSchemas[0],
+                }}
+                id="schema-selection-form"
+                onSubmit={async ({ schema }) => {
+                  setError(null)
+                  const result = await selectSchema(schema)
+                  if (result.status === "authenticated") {
+                    router.replace("/")
+                    return true
+                  }
+                  if (result.status === "error") {
+                    setError(result.errorMessage)
+                  }
+                  return false
+                }}
               >
-                {oauthLoading === provider.id ? (
-                  <Spinner />
-                ) : (
-                  <Icon as={provider.icon} className="text-white" size={20} />
-                )}
+                <RncSelect
+                  defaultValue={pendingSchemaSelection.availableSchemas[0]}
+                  id="schema"
+                  label="Schema"
+                  options={pendingSchemaSelection.availableSchemas.map(
+                    (schema) => ({ id: schema, label: schema })
+                  )}
+                  required
+                />
+                <RncSubmitButton className="h-11 w-full" label="Continue" />
+              </RncForm>
+              <Button
+                disabled={actionState.selectSchema.isLoading}
+                onPress={() => {
+                  setError(null)
+                  cancelSchemaSelection()
+                }}
+                variant="ghost"
+              >
+                <Text>Back to sign in</Text>
               </Button>
-            ))}
-          </View>
+            </View>
+          ) : (
+            <>
+              <RncForm<LoginForm>
+                id="login-form"
+                onSubmit={async (data) => {
+                  setError(null)
+                  setNotice(null)
+                  const result = await login(data)
+                  if (result.status === "authenticated") {
+                    router.replace("/")
+                    return true
+                  }
+                  if (result.status === "error") {
+                    setError(result.errorMessage)
+                  }
+                  return false
+                }}
+              >
+                <RncInput
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  id="username"
+                  label="Username or email"
+                  placeholder="you@example.com"
+                  required
+                />
+                <RncInput
+                  autoComplete="current-password"
+                  id="password"
+                  label="Password"
+                  placeholder="••••••••"
+                  required
+                  type="password"
+                />
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-medium text-primary text-sm">
+                    Forgot password?
+                  </Text>
+                </View>
+                <RncSubmitButton className="h-11 w-full" label="Sign in" />
+              </RncForm>
+
+              {/* Divider */}
+              <View className="flex-row items-center gap-3">
+                <Separator className="flex-1" />
+                <Text className="text-muted-foreground text-xs uppercase tracking-wider">
+                  or continue with
+                </Text>
+                <Separator className="flex-1" />
+              </View>
+
+              {/* OAuth providers — each in its brand color */}
+              <View className="flex-row gap-3">
+                {providers.map((provider) => (
+                  <Button
+                    aria-label={`Continue with ${PROVIDER_LABELS[provider.id]}`}
+                    className={cn("h-11 flex-1", provider.className)}
+                    disabled={busy}
+                    key={provider.id}
+                    onPress={() => void handleOAuth(provider.id)}
+                  >
+                    {oauthLoading === provider.id ? (
+                      <Spinner />
+                    ) : (
+                      <Icon
+                        as={provider.icon}
+                        className="text-white"
+                        size={20}
+                      />
+                    )}
+                  </Button>
+                ))}
+              </View>
+            </>
+          )}
 
           {/* Footer */}
-          <View className="flex-row items-center justify-center gap-1">
-            <Text className="text-muted-foreground text-sm">New here?</Text>
-            <Text className="font-medium text-primary text-sm">
-              Create an account
-            </Text>
-          </View>
+          {!pendingSchemaSelection ? (
+            <View className="flex-row items-center justify-center gap-1">
+              <Text className="text-muted-foreground text-sm">New here?</Text>
+              <Text className="font-medium text-primary text-sm">
+                Create an account
+              </Text>
+            </View>
+          ) : null}
         </View>
       </View>
     </View>

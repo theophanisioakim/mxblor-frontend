@@ -21,6 +21,15 @@ login/logout is driven by the query key (`isAuthenticated`, `selectedSchema`).
 - Native leaves `initialMenus` undefined and fetches client-side.
 - Consumers (`@workspace/app` navigation chrome) must not hardcode nav items — read from `useMenu()`.
 
+### Signed sessions (`AuthProvider` / `useAuth`)
+
+Authentication may finish immediately or pause for schema selection. The provider owns that outcome,
+session bootstrap/refresh, schema switching, and current-user/global revocation controls. Schema and
+channel are signed by the backend; never recreate client-controlled schema/channel headers. Web
+refresh and schema challenges use credentialed HttpOnly cookies, while native token bodies are read
+from `@workspace/storage`'s SecureStore-backed keys. Tenant changes clear React Query state before
+navigation so cached data cannot cross schemas.
+
 ## Rules
 
 - Keep this package cross-platform. Put platform-specific shell behavior behind

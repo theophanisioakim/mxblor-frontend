@@ -54,11 +54,11 @@ export interface LanguageConfigProviderProps {
  * cache. Before this, every `RncTranslationLabel` fetched the config itself on
  * mount, and with those defaults nothing was ever reused.
  *
- * The endpoint is public and its answer depends on the caller: the tenant comes
- * from the `x-schema-id` header (falling back to the main schema), so an
- * anonymous visitor gets the system defaults and a logged-in user gets their
- * tenant's override. Login, logout, and tenant switches therefore have to
- * refetch — which is what putting the session in the query key achieves.
+ * The endpoint is public and its answer depends on the caller: authenticated
+ * requests resolve the tenant from the signed bearer session, while anonymous
+ * visitors receive the main schema defaults. Login, logout, and tenant switches
+ * therefore have to refetch — which is what putting the session in the query
+ * key achieves.
  */
 export function LanguageConfigProvider({
   children,

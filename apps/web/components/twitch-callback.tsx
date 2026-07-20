@@ -31,8 +31,8 @@ export function TwitchCallback() {
     let active = true
     loginWithTwitch(code, state).then((result) => {
       if (active) {
-        // Drop `?code&state`; on failure send the user back to the login screen.
-        router.replace(result.success ? "/" : "/login")
+        // Schema selection and failures both continue on the login screen.
+        router.replace(result.status === "authenticated" ? "/" : "/login")
       }
     })
 

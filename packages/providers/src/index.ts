@@ -1,7 +1,15 @@
 export { AppProviders, type AppProvidersProps } from "./app-providers"
 export type { AppThemeProviderProps, ThemeValue } from "./app-theme-provider"
 export { AppThemeProvider, useAppTheme } from "./app-theme-provider"
-export type { AuthContextValue, AuthProviderProps } from "./auth-provider"
+export type {
+  AuthAction,
+  AuthActionState,
+  AuthActionStatus,
+  AuthContextValue,
+  AuthenticationResult,
+  AuthProviderProps,
+  SessionControlResult,
+} from "./auth-provider"
 export { AuthProvider, useAuth } from "./auth-provider"
 export type {
   BreadcrumbItem,

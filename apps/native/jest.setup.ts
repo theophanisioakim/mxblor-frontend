@@ -76,6 +76,20 @@ jest.mock("react-native-mmkv", () => ({
   },
 }))
 
+jest.mock("expo-secure-store", () => {
+  const store = new Map<string, string>()
+  return {
+    __store: store,
+    deleteItemAsync: async (key: string) => {
+      store.delete(key)
+    },
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, value)
+    },
+  }
+})
+
 jest.mock("react-native-safe-area-context", () => {
   const { View } = require("react-native")
 

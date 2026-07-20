@@ -38,6 +38,11 @@ Layout:
 - `src/layout/app-shell.tsx` — composes the chrome around `children`.
 - everything re-exported from `src/index.ts`.
 
+Authentication UI remains shared: `LoginScreen` renders both credential entry and a pending
+schema-selection challenge, while `TopBarUserActions` owns schema switching plus current-device,
+all-device, and global logout controls. Reuse the provider lifecycle methods and existing form,
+popover, and dialog primitives; UI code must never read or submit session tokens directly.
+
 ## Rules
 
 - **Build screens from `@workspace/ui` and `@workspace/router` only.** Never import
