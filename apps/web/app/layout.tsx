@@ -18,11 +18,16 @@ import { cn } from "@workspace/ui/lib/utils"
 import { cookies } from "next/headers"
 import type { ReactNode } from "react"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  preload: false,
+})
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+  preload: false,
 })
 
 export default async function RootLayout({
@@ -49,9 +54,9 @@ export default async function RootLayout({
 
   // Server-side render the user's menu tree on first load so the sidebar/top
   // nav paint immediately instead of waiting for the client `useGetMyMenus`
-  // query. `setServerCookies` above bridged the JWT + selected schema into
-  // `@workspace/storage`, so `getMyMenus` -> `customInstance` attaches the
-  // Authorization / x-schema-id headers during SSR. Only fetch when those
+  // query. `setServerCookies` above bridged the JWT + selected schema marker
+  // into `@workspace/storage`, so `getMyMenus` -> `customInstance` attaches the
+  // signed bearer session during SSR. Only fetch when those
   // cookies exist (matching MenuProvider's `enabled` gating); on any failure
   // we leave `initialMenus` undefined and fall back to client-side fetching.
   let initialMenus: SbfMenuTreeResponseDto | undefined
@@ -66,8 +71,8 @@ export default async function RootLayout({
 
   // The tenant's languages, so a form with an `RncTranslationLabel` paints with
   // its inputs on first load. Unlike the menus this needs no cookie gating: the
-  // endpoint is public, and the schema comes from the x-schema-id header when
-  // one is selected (falling back to the main schema's defaults otherwise).
+  // endpoint is public; authenticated requests resolve the schema from the
+  // signed session while anonymous requests use the main schema defaults.
   let initialLanguageConfig: LanguageConfigResponseDto | undefined
   try {
     initialLanguageConfig = await getLanguageConfig()
