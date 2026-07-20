@@ -52,21 +52,17 @@ export default async function RootLayout({
     : "en"
   ensureI18nInitialized(lang)
 
-  // Server-side render the user's menu tree on first load so the sidebar/top
+  // Server-side render the current menu tree on first load so the sidebar/top
   // nav paint immediately instead of waiting for the client `useGetMyMenus`
-  // query. `setServerCookies` above bridged the JWT + selected schema marker
-  // into `@workspace/storage`, so `getMyMenus` -> `customInstance` attaches the
-  // signed bearer session during SSR. Only fetch when those
-  // cookies exist (matching MenuProvider's `enabled` gating); on any failure
-  // we leave `initialMenus` undefined and fall back to client-side fetching.
+  // query. Authenticated requests attach the signed bearer session; anonymous
+  // requests use the endpoint's public-menu behavior. On any failure we leave
+  // `initialMenus` undefined and fall back to client-side fetching.
   let initialMenus: SbfMenuTreeResponseDto | undefined
-  if (cookieMap.app_jwt_token && cookieMap.app_selected_schema) {
-    try {
-      initialMenus = await getMyMenus()
-    } catch {
-      // SSR fetch failed (e.g. not authenticated, API unreachable) — the
-      // client MenuProvider will retry via React Query.
-    }
+  try {
+    initialMenus = await getMyMenus()
+  } catch {
+    // SSR fetch failed (e.g. API unreachable) — the client MenuProvider will
+    // retry via React Query.
   }
 
   // The tenant's languages, so a form with an `RncTranslationLabel` paints with
