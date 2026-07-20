@@ -20,37 +20,45 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ---
 
-## 0. ⛔ Execution policy — the agent builds and tests, it does not run the apps
+## 0. ⛔ Execution policy — the agent does not start the apps
 
-**Hard rule, no exceptions (not even with explicit permission):** an AI agent working in this repo
-may **only** (a) **build / typecheck / lint / format** code and (b) **run the isolated unit
-tests**. It must **never start a dev server, a device/emulator build, or an end-to-end run.**
-Validate every change through compilation and unit tests — never by launching an app.
+**Hard rule:** an AI agent working in this repo must **never manually start a dev server or a
+device/emulator build.** Validate changes through compilation, automated tests, and the browser
+rules below. The sanctioned E2E commands are allowed and may let their test harness start and stop
+its own test server. Outside an E2E run, browser inspection is allowed only for an app that the
+**user explicitly confirms they started**; that permission applies only to the already-running
+instance and never authorizes the agent to start, restart, stop, or otherwise manage its process.
 
 **✅ Allowed**
 - **Build / typecheck:** `pnpm build`, `pnpm typecheck` (and `pnpm --filter <pkg> …`).
 - **Lint / format:** `pnpm lint` / `lint:strict` / `lint:deps` / `format` / `format:check` /
   `biome:ci`.
 - **Unit tests:** `pnpm test`, `pnpm --filter web test`, `pnpm --filter native test`. These are
-  isolated (jsdom / RN test renderer) — no server, browser, or emulator. This is the sanctioned way
-  to observe behavior.
+  isolated (jsdom / RN test renderer) and require no server, browser, or emulator.
+- **End-to-end tests:** `pnpm test:e2e`, `pnpm --filter web test:e2e`, and
+  `pnpm --filter native test:e2e`. The E2E harness may manage its own test server. Native E2E still
+  requires the user to have prepared and started the emulator/simulator and installed app.
 - **Codegen from the checked-in spec:** `pnpm generate` (Orval reads the local
   `packages/api-client/openapi.json` — it hits no running backend and only rewrites source).
 - **The gate:** `pnpm check:all` (generate → format → lint:deps → typecheck → lint:strict → **test**
   → build) — every step is allowed, since `test` is the unit suite (E2E is intentionally excluded).
+- **Read-only browser inspection of a user-started app:** only after the user explicitly confirms
+  that they started the server. The agent may navigate, inspect DOM/console/network state, take
+  screenshots, and verify behavior, but must not use the running app to perform destructive or
+  externally visible actions unless the user separately requested those actions.
 
 **⛔ Never run — hand these to the user instead**
 - **Dev servers** — `pnpm dev`, `pnpm run dev`, `turbo dev`, `pnpm --filter web dev` (Next dev
   server), `pnpm --filter native start` (Metro).
 - **Native device/emulator builds & launches** — `pnpm --filter native prebuild` / `android` /
   `ios`.
-- **End-to-end tests** — `pnpm test:e2e`, `pnpm --filter web test:e2e` (needs Playwright browsers),
-  `pnpm --filter native test:e2e` (needs a built app on an emulator/simulator + Maestro).
-- Anything else that boots a long-running process or reaches an external device/service.
+- Anything else that manually boots a long-running process or reaches an external device/service
+  outside the sanctioned E2E commands.
 
-When a task would normally need one of the forbidden steps (e.g. "see it in the browser"), **stop
-and hand it to the user with the exact command**, state what you changed and what remains, and don't
-fabricate the result. A `PreToolUse`/permissions layer denies these commands to enforce this
+When a task needs an app to be running and the user has not explicitly confirmed that they started
+it, **stop and hand them the exact command**, state what you changed and what remains, and don't
+fabricate the result. After the user confirms that they started it, the read-only browser exception
+above applies. A `PreToolUse`/permissions layer denies agent-started app commands to enforce this
 (`settings.json`; see `CLAUDE.md`).
 
 ---
@@ -200,11 +208,11 @@ and Linux shells.
 | Regenerate **all** rnr native components ⚠️ | `pnpm rnr-update`                                                 |
 | Dependency hygiene                          | `pnpm outdated-deps` · `pnpm update-deps` · `pnpm dedupe-deps`    |
 
-> **⛔ Agent execution note (§0).** The rows above that **start a process** — `pnpm dev`,
-> `pnpm --filter web dev`, `pnpm --filter native start`, the native `prebuild`/`android`/`ios`
-> builds, and every `test:e2e` variant — are **for the user, not the agent**. The agent validates
-> through build, typecheck, lint, and the **unit** `test` rows only; `settings.json` denies the
-> process-starting commands. Hand any dev-server / device / E2E run to the user.
+> **⛔ Agent execution note (§0).** Manual app commands — `pnpm dev`,
+> `pnpm --filter web dev`, `pnpm --filter native start`, and native
+> `prebuild`/`android`/`ios` builds — are **for the user, not the agent**. E2E commands are allowed;
+> their test harness may manage its own test server. Hand manual dev-server and device/emulator
+> setup to the user.
 
 `pnpm check:all` runs the gate in order: **`generate → format → lint:deps → typecheck → lint:strict → test → build`**. Run it
 (or at least `typecheck` + `lint` for the workspaces you touched) before declaring work done, and
@@ -384,10 +392,10 @@ canonical pattern. Rules when adding or changing a `ui` primitive:
    customize at the `ui` layer.
 4. **Versions go in the catalog** (`pnpm-workspace.yaml`), not in individual `package.json` files (§3).
 5. **Run the gate** — `pnpm check:all` (or at least `typecheck` + `lint` for touched workspaces) —
-   before declaring done. Validate through the gate and the **unit** tests only — **never start a
-   dev server or run E2E to "try it out"** (§0); hand those to the user. After editing, check IDE
-   diagnostics (`mcp__ide__getDiagnostics`) for the files you changed and resolve every finding; if
-   diagnostics look stale, ask the user to refresh rather than assuming clean. Don't suppress
+   before declaring done. Run relevant unit and E2E tests; **never manually start a dev server or
+   device/emulator build** (§0). E2E harness-managed test servers are allowed. After editing, check
+   IDE diagnostics (`mcp__ide__getDiagnostics`) for the files you changed and resolve every finding;
+   if diagnostics look stale, ask the user to refresh rather than assuming clean. Don't suppress
    findings to silence them without approval.
 6. **Don't commit or push unless asked.** When you do, don't bypass the husky hooks with
    `--no-verify` (§11) — pre-commit formats staged files, pre-push runs the full gate, and CI runs it
@@ -520,16 +528,14 @@ modules) → **`build`** → **Playwright Chromium install** → **web E2E**. No
 `engines.node`; pnpm from the `packageManager` field.
 
 **No backend runs in CI.** The job sets `NEXT_PUBLIC_API_URL` to a closed local port
-(`http://127.0.0.1:9999`), because `api-client`'s `BASE_URL` otherwise falls back to a LAN dev host
-the runner can't route to — traffic there is blackholed, so the SSR fetches in
-`apps/web/app/layout.tsx` (`getLanguageConfig` / `getMyMenus`) would block for axios's full 30s
-timeout on every request and exhaust Playwright's navigation budget. Against a closed port the
-connection is refused instantly and the layout takes its intended graceful-degradation path (both
-fetches are wrapped in `try`/`catch`, and React Query runs with `throwOnError: false`), so the shell
-paints with no menus and the default language. It's set at **job level** because `NEXT_PUBLIC_*` is
-inlined at build time — setting it only on the E2E step would leave the LAN host baked into `build`.
-Web E2E therefore covers app startup and shared-screen rendering, **not** data-backed flows; add a
-mock/stub backend before asserting on API-driven content.
+(`http://127.0.0.1:9999`) so SSR requests fail immediately and deterministically instead of
+accidentally reaching a service on the web client's same-host development fallback (port `21001`).
+The layout then takes its intended graceful-degradation path (both fetches are wrapped in
+`try`/`catch`, and React Query runs with `throwOnError: false`), so the shell paints with no menus and
+the default language. It's set at **job level** because `NEXT_PUBLIC_*` is inlined at build time —
+setting it only on the E2E step would leave the default host baked into `build`. Web E2E therefore
+covers app startup and shared-screen rendering, **not** data-backed flows; add a mock/stub backend
+before asserting on API-driven content.
 
 ### Why `biome:ci` (not `format:check` + `lint`)
 
