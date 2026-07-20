@@ -10,6 +10,14 @@ export function RoleFormFields() {
         required
         textValidationRules={{ maxLength: 255 }}
       />
+      <RncInput
+        defaultValue={0}
+        id="managementLevel"
+        label="Management level"
+        numberValidationRules={{ min: 0, max: 999 }}
+        required
+        type="number"
+      />
     </View>
   )
 }
