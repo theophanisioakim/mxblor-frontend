@@ -8,6 +8,7 @@ import {
   useBulkSbfUserConfigurations,
   useUpdateSbfUserConfiguration,
 } from "@workspace/api-client"
+import { usePermission } from "@workspace/providers"
 import {
   RncGrid,
   type RncGridColumn,
@@ -19,6 +20,7 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { inlineEditPermissions } from "../../screen-permissions"
 
 type UserConfigFilters = Omit<
   SbfUserConfigurationSearchRequestDto,
@@ -28,6 +30,12 @@ type UserConfigFilters = Omit<
 export function UserConfigurationTab({ userId }: Readonly<{ userId: string }>) {
   const updateMutation = useUpdateSbfUserConfiguration()
   const bulkMutation = useBulkSbfUserConfigurations()
+  const { hasPermission } = usePermission()
+  // Inline editing saves per-row (PUT) and save-all (bulk POST); without both
+  // grants the grid renders read-only.
+  const canEdit =
+    hasPermission(inlineEditPermissions.userConfiguration.update) &&
+    hasPermission(inlineEditPermissions.userConfiguration.bulk)
 
   const fetchData = useCallback(
     async (
@@ -223,8 +231,8 @@ export function UserConfigurationTab({ userId }: Readonly<{ userId: string }>) {
       columns={columns}
       fetchData={fetchData}
       keyExtractor={(row) => row.id ?? ""}
-      addEditMode="inline"
-      inlineEdit={inlineEdit}
+      addEditMode={canEdit ? "inline" : "default"}
+      inlineEdit={canEdit ? inlineEdit : undefined}
       initialSort={[
         { field: SbfUserConfigurationSortOrderField.KEY, direction: "ASC" },
       ]}

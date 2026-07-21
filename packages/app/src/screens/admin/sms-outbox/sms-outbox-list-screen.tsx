@@ -18,6 +18,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import { viewPermissions } from "../../screen-permissions"
 
 type SmsOutboxListFilters = Omit<
   SbfSmsOutboxSearchRequestDto,
@@ -215,33 +217,35 @@ export function SmsOutboxListScreen() {
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        SMS Outbox
-      </Text>
+    <PermissionGuard permission={viewPermissions.smsOutbox}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          SMS Outbox
+        </Text>
 
-      <RncGrid<
-        SbfSmsOutboxResponseDto,
-        SbfSmsOutboxSortOrderField,
-        SmsOutboxListFilters
-      >
-        id="sms-outbox-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: SbfSmsOutboxSortOrderField.CREATED_AT, direction: "DESC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        filters={filters}
-        toolbar={{ refresh: {}, reset: {} }}
-      />
-    </View>
+        <RncGrid<
+          SbfSmsOutboxResponseDto,
+          SbfSmsOutboxSortOrderField,
+          SmsOutboxListFilters
+        >
+          id="sms-outbox-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: SbfSmsOutboxSortOrderField.CREATED_AT, direction: "DESC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          filters={filters}
+          toolbar={{ refresh: {}, reset: {} }}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

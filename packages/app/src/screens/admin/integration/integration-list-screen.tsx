@@ -7,6 +7,7 @@ import {
   searchSbfIntegrations,
   useDeleteSbfIntegration,
 } from "@workspace/api-client"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Icon,
@@ -23,6 +24,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import { crudPermissions, viewPermissions } from "../../screen-permissions"
 
 type IntegrationListFilters = Omit<
   SbfIntegrationSearchRequestDto,
@@ -32,6 +35,9 @@ type IntegrationListFilters = Omit<
 export function IntegrationListScreen() {
   const router = useRouter()
   const deleteMutation = useDeleteSbfIntegration()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.integration
+  )
 
   const fetchData = useCallback(
     async (
@@ -232,6 +238,7 @@ export function IntegrationListScreen() {
           key: "delete-selected",
           icon: <Icon as={Trash2} size={16} />,
           label: "Delete selected",
+          disabled: !canDelete,
           onPress: async (rows) => {
             await Promise.all(
               rows
@@ -244,13 +251,14 @@ export function IntegrationListScreen() {
         },
       ],
     }),
-    [deleteMutation]
+    [deleteMutation, canDelete]
   )
 
   const actions: RncGridActions<SbfIntegrationResponseDto> = useMemo(
     () => ({
       edit: {
         route: (row) => `/admin/integration/${row.id}`,
+        disabled: () => !canUpdate,
       },
       delete: {
         onPress: async (row) => {
@@ -262,46 +270,56 @@ export function IntegrationListScreen() {
           description: (row) =>
             `Are you sure you want to delete integration "${row.className}.${row.methodName}"? This action cannot be undone.`,
         },
+        disabled: () => !canDelete,
       },
     }),
-    [deleteMutation]
+    [deleteMutation, canUpdate, canDelete]
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        Integrations
-      </Text>
+    <PermissionGuard permission={viewPermissions.integration}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          Integrations
+        </Text>
 
-      <RncGrid<
-        SbfIntegrationResponseDto,
-        SbfIntegrationSortOrderField,
-        IntegrationListFilters
-      >
-        id="integration-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: SbfIntegrationSortOrderField.CREATED_AT, direction: "DESC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        actions={actions}
-        selection={selection}
-        filters={{ render: filters }}
-        toolbar={{
-          add: { route: "/admin/integration/new", label: "Add Integration" },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<
+          SbfIntegrationResponseDto,
+          SbfIntegrationSortOrderField,
+          IntegrationListFilters
+        >
+          id="integration-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            {
+              field: SbfIntegrationSortOrderField.CREATED_AT,
+              direction: "DESC",
+            },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          actions={actions}
+          selection={selection}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              route: "/admin/integration/new",
+              label: "Add Integration",
+              disabled: !canCreate,
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

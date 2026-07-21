@@ -10,6 +10,9 @@ export {
 } from "./axios-instance"
 // All generated hooks + schemas — auto-maintained by Orval
 export * from "./generated"
+// Permission keys for every backend route — emitted from openapi.json by
+// scripts/generate-api-permissions.mjs (runs with `pnpm generate`)
+export * from "./generated/api-permissions"
 export type {
   LanguageConfigContextValue,
   LanguageConfigProviderProps,

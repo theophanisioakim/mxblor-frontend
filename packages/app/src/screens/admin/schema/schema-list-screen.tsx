@@ -7,6 +7,7 @@ import {
   searchSbfSchemas,
   useDeleteSbfSchema,
 } from "@workspace/api-client"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   RncCheckbox,
@@ -20,6 +21,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import { crudPermissions, viewPermissions } from "../../screen-permissions"
 
 type SchemaListFilters = Omit<
   SbfSchemaSearchRequestDto,
@@ -29,6 +32,9 @@ type SchemaListFilters = Omit<
 export function SchemaListScreen() {
   const router = useRouter()
   const deleteMutation = useDeleteSbfSchema()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.schema
+  )
 
   const fetchData = useCallback(
     async (
@@ -164,6 +170,7 @@ export function SchemaListScreen() {
     () => ({
       edit: {
         route: (row) => `/admin/schema/${row.id}`,
+        disabled: () => !canUpdate,
       },
       delete: {
         onPress: async (row) => {
@@ -175,41 +182,52 @@ export function SchemaListScreen() {
           description: (row) =>
             `Are you sure you want to delete schema "${row.name}"? This action cannot be undone.`,
         },
+        disabled: () => !canDelete,
       },
     }),
-    [deleteMutation]
+    [deleteMutation, canUpdate, canDelete]
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        Schemas
-      </Text>
+    <PermissionGuard permission={viewPermissions.schema}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          Schemas
+        </Text>
 
-      <RncGrid<SbfSchemaResponseDto, SbfSchemaSortOrderField, SchemaListFilters>
-        id="schema-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: SbfSchemaSortOrderField.CREATED_AT, direction: "DESC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: { route: "/admin/schema/new", label: "Add Schema" },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<
+          SbfSchemaResponseDto,
+          SbfSchemaSortOrderField,
+          SchemaListFilters
+        >
+          id="schema-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: SbfSchemaSortOrderField.CREATED_AT, direction: "DESC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              route: "/admin/schema/new",
+              label: "Add Schema",
+              disabled: !canCreate,
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

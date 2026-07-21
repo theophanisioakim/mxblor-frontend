@@ -20,6 +20,15 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ---
 
+## Minimal-change policy
+
+- Make the smallest correct diff that satisfies the request.
+- Touch the fewest files and lines possible, and follow existing patterns.
+- Do not refactor, rename, reorganize, reformat, or clean up unrelated code.
+- Do not add abstractions, dependencies, or public API changes unless they are required.
+- Add or update only directly relevant tests.
+- If the fix requires broader changes, stop and explain why before expanding the scope.
+
 ## 0. ⛔ Execution policy — the agent does not start the apps
 
 **Hard rule:** an AI agent working in this repo must **never manually start a dev server or a
@@ -179,6 +188,42 @@ tab bar all render from the menu tree returned by the backend `getMyMenus` API (
 - **`@workspace/app`** — navigation chrome (`src/navigation/`) maps the API tree to UI. To add,
   reorder, or permission-gate a nav entry, change the backend menu data — not a hardcoded link list
   in the frontend.
+
+### API permissions are backend-driven
+
+**Do not hardcode role or permission logic in the frontend.** The backend endpoint
+`GET /sbf-permission/my-permissions` returns the current context's grant list (public permissions
+plus the authenticated user's effective role grants after user blocks and channel restrictions);
+a grant is the `(endpoint, method)` route pair.
+
+- **`@workspace/api-client`** — permission keys are generated from `openapi.json` into
+  `src/generated/api-permissions.ts` (`ApiPermissionKey` = `"<METHOD> <endpoint template>"`,
+  `CrudBasePath`) by `scripts/generate-api-permissions.mjs`, which runs as part of
+  `pnpm generate` — a backend route change surfaces as a type error, not a dead gate.
+- **`@workspace/providers`** — `PermissionProvider` fetches the grants (mirroring `MenuProvider`)
+  and exposes `usePermission()` (`hasPermission(key: ApiPermissionKey)`) plus
+  `useCrudPermissions(basePath: CrudBasePath)` for the generated CRUD route family. Refetch on
+  login/logout is driven by the query key.
+- **`@workspace/app`** — screens read their keys from the central config
+  `packages/app/src/screens/screen-permissions.ts`; never inline a permission string in a screen.
+  **Every admin page screen wraps its content in `PermissionGuard`** (keyed on the page's primary
+  read route via `viewPermissions`/`formPermissions`), so an unauthorized caller gets the
+  access-denied page — during SSR as well as after client navigation.
+- **Hydration safety** — while the SSR seed is active, `PermissionProvider` derives grants directly
+  from the `initialPermissions` prop (byte-identical on server and client via the RSC payload)
+  instead of the React Query cache: the server-side query client is a module-level singleton with
+  `gcTime: 0`, so SSR cache reads are not deterministic and routing the seed through it caused
+  hydration mismatches on permission-gated markup.
+  The audit test `apps/native/__tests__/api-permission-gating.test.ts` enforces the gating rules
+  (ungated mutation hooks, unguarded admin page screens, inline permission strings all fail).
+- **`apps/web`** — `layout.tsx` SSR-fetches `getMyPermissions()` and passes `initialPermissions`
+  into `AppProviders` so gated controls render correctly on first paint (same seed/release pattern
+  as `initialMenus`). **`apps/native`** fetches client-side only.
+- **Every UI control that triggers an API call must be disabled when the user lacks that call's
+  permission** — grid edit/delete/add/bulk actions, form save buttons, inline-edit grids. See
+  `.claude/rules/api-permissions.md` and the reference implementation in
+  `packages/app/src/screens/admin/user/`. The client gate is UX only; the backend remains the
+  enforcement point.
 
 ---
 

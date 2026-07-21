@@ -10,6 +10,8 @@ TanStack Query hooks + Axios client for the **`springboot-core` (`sbf`)** backen
 | Path                                                                                        | Source of truth               | Hand-edit?                                          |
 | ------------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------- |
 | `src/generated/**` (per-tag hooks, `springBootFrameworkAPI.schemas.ts`)                     | **Orval** from `openapi.json` | ❌ Never — `pnpm generate` wipes it (`clean: true`) |
+| `src/generated/api-permissions.ts` (`API_PERMISSIONS`, `ApiPermissionKey`, `CrudBasePath`)  | `scripts/generate-api-permissions.mjs` from `openapi.json` (runs after Orval in `pnpm generate`) | ❌ Never — regenerated every run |
+| `scripts/generate-api-permissions.mjs`                                                      | hand-written                  | ✅                                                  |
 | `src/axios-instance.ts` (`customInstance`, `setOnOtpRequired`, `setOnUnauthorized`)         | hand-written                  | ✅                                                  |
 | `src/query-client-provider.tsx`, `src/language-config-provider.tsx`, `src/channel.ts` / `src/channel.native.ts`, `src/index.ts` | hand-written                  | ✅                                                  |
 | `orval.config.ts`, `openapi.json`                                                           | config / input                | ✅ (regenerate after)                               |

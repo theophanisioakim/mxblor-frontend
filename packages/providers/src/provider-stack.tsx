@@ -4,6 +4,7 @@ import {
   ApiQueryClientProvider,
   type LanguageConfigResponseDto,
   type SbfMenuTreeResponseDto,
+  type SbfMyPermissionsResponseDto,
 } from "@workspace/api-client"
 import {
   changeLanguage,
@@ -21,6 +22,7 @@ import { LanguageProvider } from "./language-provider"
 import { MenuProvider } from "./menu-provider"
 import { OtpProvider } from "./otp-provider"
 import { PathnameProvider } from "./pathname-provider"
+import { PermissionProvider } from "./permission-provider"
 import { SidebarProvider } from "./sidebar-provider"
 
 export type ProviderStackProps = Readonly<{
@@ -30,6 +32,8 @@ export type ProviderStackProps = Readonly<{
   initialMenus?: SbfMenuTreeResponseDto
   /** SSR-fetched tenant language config forwarded to LanguageProvider. */
   initialLanguageConfig?: LanguageConfigResponseDto
+  /** SSR-fetched grant list forwarded to PermissionProvider as `initialData`. */
+  initialPermissions?: SbfMyPermissionsResponseDto
 }>
 
 export function ProviderStack({
@@ -37,6 +41,7 @@ export function ProviderStack({
   initialLanguage,
   initialMenus,
   initialLanguageConfig,
+  initialPermissions,
 }: ProviderStackProps) {
   ensureI18nInitialized(initialLanguage)
 
@@ -54,13 +59,15 @@ export function ProviderStack({
         <ApiQueryClientProvider>
           <AuthProvider>
             <LanguageProvider initialLanguageConfig={initialLanguageConfig}>
-              <MenuProvider initialMenus={initialMenus}>
-                <SidebarProvider>
-                  <BreadcrumbsProvider>
-                    <OtpProvider>{children}</OtpProvider>
-                  </BreadcrumbsProvider>
-                </SidebarProvider>
-              </MenuProvider>
+              <PermissionProvider initialPermissions={initialPermissions}>
+                <MenuProvider initialMenus={initialMenus}>
+                  <SidebarProvider>
+                    <BreadcrumbsProvider>
+                      <OtpProvider>{children}</OtpProvider>
+                    </BreadcrumbsProvider>
+                  </SidebarProvider>
+                </MenuProvider>
+              </PermissionProvider>
             </LanguageProvider>
           </AuthProvider>
         </ApiQueryClientProvider>

@@ -28,6 +28,16 @@ export type {
 } from "./pathname-provider"
 export { PathnameProvider, useMyPathname } from "./pathname-provider"
 export type {
+  CrudPermissions,
+  PermissionContextValue,
+  PermissionProviderProps,
+} from "./permission-provider"
+export {
+  PermissionProvider,
+  useCrudPermissions,
+  usePermission,
+} from "./permission-provider"
+export type {
   SidebarContextValue,
   SidebarProviderProps,
 } from "./sidebar-provider"

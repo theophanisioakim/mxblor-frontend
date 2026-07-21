@@ -9,6 +9,7 @@ import {
   useDeleteSbfUserPhone,
   useUpdateSbfUserPhone,
 } from "@workspace/api-client"
+import { useCrudPermissions } from "@workspace/providers"
 import {
   Icon,
   RncCheckbox,
@@ -25,6 +26,7 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo, useState } from "react"
+import { crudPermissions } from "../../screen-permissions"
 
 type PhoneRow = SbfUserPhoneResponseDto
 type PhoneFilters = Omit<
@@ -36,6 +38,9 @@ export function UserPhonesTab({ userId }: Readonly<{ userId: string }>) {
   const createMutation = useCreateSbfUserPhone()
   const updateMutation = useUpdateSbfUserPhone()
   const deleteMutation = useDeleteSbfUserPhone()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.userPhone
+  )
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const fetchData = useCallback(
@@ -213,6 +218,7 @@ export function UserPhonesTab({ userId }: Readonly<{ userId: string }>) {
           key: "delete-selected",
           icon: <Icon as={Trash2} size={16} />,
           label: "Delete selected",
+          disabled: !canDelete,
           onPress: async (rows) => {
             await Promise.all(
               rows
@@ -226,12 +232,12 @@ export function UserPhonesTab({ userId }: Readonly<{ userId: string }>) {
         },
       ],
     }),
-    [deleteMutation]
+    [deleteMutation, canDelete]
   )
 
   const actions: RncGridActions<PhoneRow> = useMemo(
     () => ({
-      edit: {},
+      edit: { disabled: () => !canUpdate },
       delete: {
         onPress: async (row) => {
           if (!row.id) return
@@ -242,9 +248,10 @@ export function UserPhonesTab({ userId }: Readonly<{ userId: string }>) {
           description: (row) =>
             `Remove phone "${row.phoneNumber}"? This action cannot be undone.`,
         },
+        disabled: () => !canDelete,
       },
     }),
-    [deleteMutation]
+    [deleteMutation, canUpdate, canDelete]
   )
 
   const filters: RncGridFiltersConfig<PhoneRow, PhoneFilters> = useMemo(
@@ -283,7 +290,11 @@ export function UserPhonesTab({ userId }: Readonly<{ userId: string }>) {
         pageNumber: 0,
         pageSizeOptions: [20, 50, 100],
       }}
-      toolbar={{ add: { label: "Add Phone" }, refresh: {}, reset: {} }}
+      toolbar={{
+        add: { label: "Add Phone", disabled: !canCreate },
+        refresh: {},
+        reset: {},
+      }}
       refreshTrigger={refreshTrigger}
       filters={filters}
     />

@@ -37,6 +37,16 @@ Cross-screen state (auth, menus, theme, …) belongs in a provider, not in scree
 - Layout: full width inside the shell (`w-full` + responsive padding); no `max-w-*` at the page
   root unless the UX is genuinely a narrow column. Cap only a form block, scaling up at `lg`/`xl`
   (AGENTS.md §7, `packages/app/AGENTS.md`).
+- **Permission-gate the page and every API-calling control** with the hooks from
+  `@workspace/providers`, reading keys from the central
+  `packages/app/src/screens/screen-permissions.ts` config (typed by the generated
+  `ApiPermissionKey` / `CrudBasePath` from `openapi.json` — add the screen's entry there):
+  wrap the screen in `PermissionGuard` keyed on its primary read route
+  (`viewPermissions`/`formPermissions`); grid edit/delete/add/bulk actions and form save buttons
+  take `disabled`; inline-edit grids fall back to read-only. The `api-permission-gating` audit
+  test (apps/native) fails on ungated mutation hooks, unguarded admin page screens, or inline
+  permission strings (AGENTS.md §2 "API permissions are backend-driven",
+  `.claude/rules/api-permissions.md`).
 
 ## 5. Routes in both apps — always both, in the same change
 

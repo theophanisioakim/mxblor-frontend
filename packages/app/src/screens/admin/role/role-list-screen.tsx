@@ -7,6 +7,7 @@ import {
   searchSbfRoles,
   useDeleteSbfRole,
 } from "@workspace/api-client"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Icon,
@@ -22,12 +23,17 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo, useState } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import { crudPermissions, viewPermissions } from "../../screen-permissions"
 
 type RoleListFilters = Omit<SbfRoleSearchRequestDto, "page" | "size" | "sort">
 
 export function RoleListScreen() {
   const router = useRouter()
   const deleteMutation = useDeleteSbfRole()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.role
+  )
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const fetchData = useCallback(
@@ -141,6 +147,7 @@ export function RoleListScreen() {
           key: "delete-selected",
           icon: <Icon as={Trash2} size={16} />,
           label: "Delete selected",
+          disabled: !canDelete,
           onPress: async (rows) => {
             await Promise.all(
               rows
@@ -154,13 +161,14 @@ export function RoleListScreen() {
         },
       ],
     }),
-    [deleteMutation]
+    [deleteMutation, canDelete]
   )
 
   const actions: RncGridActions<SbfRoleResponseDto> = useMemo(
     () => ({
       edit: {
         route: (row) => `/admin/role/${row.id}`,
+        disabled: () => !canUpdate,
       },
       delete: {
         onPress: async (row) => {
@@ -173,43 +181,50 @@ export function RoleListScreen() {
           description: (row) =>
             `Are you sure you want to delete role "${row.description}"? This action cannot be undone.`,
         },
+        disabled: () => !canDelete,
       },
     }),
-    [deleteMutation]
+    [deleteMutation, canUpdate, canDelete]
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        Roles
-      </Text>
+    <PermissionGuard permission={viewPermissions.role}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          Roles
+        </Text>
 
-      <RncGrid<SbfRoleResponseDto, SbfRoleSortOrderField, RoleListFilters>
-        id="role-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: SbfRoleSortOrderField.CREATED_AT, direction: "DESC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        actions={actions}
-        selection={selection}
-        filters={{ render: filters }}
-        toolbar={{
-          add: { route: "/admin/role/new", label: "Add Role" },
-          refresh: {},
-          reset: {},
-        }}
-        refreshTrigger={refreshTrigger}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<SbfRoleResponseDto, SbfRoleSortOrderField, RoleListFilters>
+          id="role-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: SbfRoleSortOrderField.CREATED_AT, direction: "DESC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          actions={actions}
+          selection={selection}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              route: "/admin/role/new",
+              label: "Add Role",
+              disabled: !canCreate,
+            },
+            refresh: {},
+            reset: {},
+          }}
+          refreshTrigger={refreshTrigger}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

@@ -7,6 +7,7 @@ import {
   searchSbfUsers,
   useDeleteSbfUser,
 } from "@workspace/api-client"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Icon,
@@ -23,12 +24,17 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import { crudPermissions, viewPermissions } from "../../screen-permissions"
 
 type UserListFilters = Omit<SbfUserSearchRequestDto, "page" | "size" | "sort">
 
 export function UserListScreen() {
   const router = useRouter()
   const deleteMutation = useDeleteSbfUser()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.user
+  )
 
   const fetchData = useCallback(
     async (
@@ -164,6 +170,7 @@ export function UserListScreen() {
           key: "delete-selected",
           icon: <Icon as={Trash2} size={16} />,
           label: "Delete selected",
+          disabled: !canDelete,
           onPress: async (rows) => {
             await Promise.all(
               rows
@@ -176,13 +183,14 @@ export function UserListScreen() {
         },
       ],
     }),
-    [deleteMutation]
+    [deleteMutation, canDelete]
   )
 
   const actions: RncGridActions<SbfUserResponseDto> = useMemo(
     () => ({
       edit: {
         route: (row) => `/admin/user/${row.id}`,
+        disabled: () => !canUpdate,
       },
       delete: {
         onPress: async (row) => {
@@ -194,42 +202,49 @@ export function UserListScreen() {
           description: (row) =>
             `Are you sure you want to delete user "${row.username}"? This action cannot be undone.`,
         },
+        disabled: () => !canDelete,
       },
     }),
-    [deleteMutation]
+    [deleteMutation, canUpdate, canDelete]
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        Users
-      </Text>
+    <PermissionGuard permission={viewPermissions.user}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          Users
+        </Text>
 
-      <RncGrid<SbfUserResponseDto, SbfUserSortOrderField, UserListFilters>
-        id="user-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: SbfUserSortOrderField.CREATED_AT, direction: "DESC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        actions={actions}
-        selection={selection}
-        filters={{ render: filters }}
-        toolbar={{
-          add: { route: "/admin/user/new", label: "Add User" },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<SbfUserResponseDto, SbfUserSortOrderField, UserListFilters>
+          id="user-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: SbfUserSortOrderField.CREATED_AT, direction: "DESC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          actions={actions}
+          selection={selection}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              route: "/admin/user/new",
+              label: "Add User",
+              disabled: !canCreate,
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

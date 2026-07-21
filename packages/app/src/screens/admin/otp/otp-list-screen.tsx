@@ -18,6 +18,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import { viewPermissions } from "../../screen-permissions"
 
 type OtpListFilters = Omit<SbfOtpSearchRequestDto, "page" | "size" | "sort">
 
@@ -164,29 +166,31 @@ export function OtpListScreen() {
     )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        OTP
-      </Text>
+    <PermissionGuard permission={viewPermissions.otp}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          OTP
+        </Text>
 
-      <RncGrid<SbfOtpResponseDto, SbfOtpSortOrderField, OtpListFilters>
-        id="otp-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: SbfOtpSortOrderField.CREATED_AT, direction: "DESC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        filters={filters}
-        toolbar={{ refresh: {}, reset: {} }}
-      />
-    </View>
+        <RncGrid<SbfOtpResponseDto, SbfOtpSortOrderField, OtpListFilters>
+          id="otp-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: SbfOtpSortOrderField.CREATED_AT, direction: "DESC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          filters={filters}
+          toolbar={{ refresh: {}, reset: {} }}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

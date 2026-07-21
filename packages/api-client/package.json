@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "generate": "orval --config ./orval.config.ts",
+    "generate": "orval --config ./orval.config.ts && node scripts/generate-api-permissions.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -1,3 +1,4 @@
+import { cn } from "@workspace/ui/lib/utils"
 import { Button } from "../../../primitives/button"
 import { Text } from "../../../primitives/text"
 import { View } from "../../../primitives/view"
@@ -27,6 +28,8 @@ export function RncGridBulkActionBar() {
             key={action.key}
             size="sm"
             onPress={() => action.onPress(getSelectedRows())}
+            disabled={action.disabled}
+            className={cn(action.disabled && "opacity-50")}
           >
             {action.icon}
             <Text className="text-sm">{action.label}</Text>

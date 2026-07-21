@@ -4,8 +4,10 @@ import "@workspace/ui/globals.css"
 import {
   getLanguageConfig,
   getMyMenus,
+  getMyPermissions,
   type LanguageConfigResponseDto,
   type SbfMenuTreeResponseDto,
+  type SbfMyPermissionsResponseDto,
 } from "@workspace/api-client"
 import { AppShell } from "@workspace/app"
 import {
@@ -77,6 +79,18 @@ export default async function RootLayout({
     // will retry via React Query.
   }
 
+  // The current context's permission grants, so permission-gated controls
+  // (disabled edit/delete/add buttons) render correctly on first paint.
+  // Authenticated requests attach the signed bearer session; anonymous
+  // requests receive the public permissions only.
+  let initialPermissions: SbfMyPermissionsResponseDto | undefined
+  try {
+    initialPermissions = await getMyPermissions()
+  } catch {
+    // SSR fetch failed (e.g. API unreachable) — the client PermissionProvider
+    // will retry via React Query.
+  }
+
   return (
     <html
       lang={lang}
@@ -93,6 +107,7 @@ export default async function RootLayout({
           initialLanguage={lang}
           initialMenus={initialMenus}
           initialLanguageConfig={initialLanguageConfig}
+          initialPermissions={initialPermissions}
         >
           <AppShell>{children}</AppShell>
         </AppProviders>

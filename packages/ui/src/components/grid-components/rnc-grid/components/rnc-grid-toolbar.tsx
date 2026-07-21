@@ -124,7 +124,12 @@ export function RncGridToolbar() {
           </Button>
         )}
         {toolbar?.add && (
-          <Button size="sm" onPress={handleAddPress}>
+          <Button
+            size="sm"
+            onPress={handleAddPress}
+            disabled={toolbar.add.disabled}
+            className={cn(toolbar.add.disabled && "opacity-50")}
+          >
             <Icon as={Plus} size={15} />
             <Text className="text-sm">{toolbar.add.label ?? "Add"}</Text>
           </Button>
