@@ -110,6 +110,8 @@ export function LoginScreen({
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null)
+  const [retryDeadline, setRetryDeadline] = useState<number | null>(null)
+  const [retryRemaining, setRetryRemaining] = useState(0)
   // `null` = unavailable or not yet known; a non-empty string = ready to use.
   const [twitchUrl, setTwitchUrl] = useState<string | null>(
     initialTwitchUrl && initialTwitchState && initialTwitchCodeVerifier
@@ -128,8 +130,32 @@ export function LoginScreen({
     if (pendingSchemaSelection) {
       setError(null)
       setOauthLoading(null)
+      setRetryDeadline(null)
+      setRetryRemaining(0)
     }
   }, [pendingSchemaSelection])
+
+  useEffect(() => {
+    if (retryDeadline === null) {
+      return
+    }
+
+    const updateRemaining = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((retryDeadline - Date.now()) / 1000)
+      )
+      setRetryRemaining(remaining)
+      if (remaining === 0) {
+        setRetryDeadline(null)
+        setError(null)
+      }
+    }
+
+    updateRemaining()
+    const interval = setInterval(updateRemaining, 250)
+    return () => clearInterval(interval)
+  }, [retryDeadline])
 
   // Register the SSR-created proof in this browser session. Native and the SSR
   // failure path resolve a fresh flow client-side instead.
@@ -217,18 +243,26 @@ export function LoginScreen({
       router.replace("/")
     } else if (session.status === "error") {
       setError(session.errorMessage)
+      if (session.retryAfterSeconds !== undefined) {
+        setRetryRemaining(session.retryAfterSeconds)
+        setRetryDeadline(Date.now() + session.retryAfterSeconds * 1000)
+      }
       setOauthLoading(null)
     } else {
       setOauthLoading(null)
     }
   }
 
-  const busy = oauthLoading !== null || actionState.login.isLoading
+  const rateLimited = retryRemaining > 0
+  const busy =
+    oauthLoading !== null || actionState.login.isLoading || rateLimited
   // Hide Twitch unless the backend handed us a non-empty redirect URL.
   const providers = PROVIDERS.filter(
     (provider) => provider.id !== "twitch" || Boolean(twitchUrl)
   )
-  const displayedError = error ?? actionState.selectSchema.errorMessage
+  const displayedError = rateLimited
+    ? `Too many sign-in attempts. Try again in ${retryRemaining}s.`
+    : (error ?? actionState.selectSchema.errorMessage)
 
   return (
     <View className="min-h-full flex-1 bg-background lg:flex-row">
@@ -365,6 +399,12 @@ export function LoginScreen({
                   }
                   if (result.status === "error") {
                     setError(result.errorMessage)
+                    if (result.retryAfterSeconds !== undefined) {
+                      setRetryRemaining(result.retryAfterSeconds)
+                      setRetryDeadline(
+                        Date.now() + result.retryAfterSeconds * 1000
+                      )
+                    }
                   }
                   return false
                 }}
@@ -390,7 +430,13 @@ export function LoginScreen({
                     Forgot password?
                   </Text>
                 </View>
-                <RncSubmitButton className="h-11 w-full" label="Sign in" />
+                <RncSubmitButton
+                  className="h-11 w-full"
+                  disabled={rateLimited}
+                  label={
+                    rateLimited ? `Try again in ${retryRemaining}s` : "Sign in"
+                  }
+                />
               </RncForm>
 
               {/* Divider */}

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals"
-import { render, waitFor } from "@testing-library/react-native"
+import { fireEvent, render, waitFor } from "@testing-library/react-native"
 import { LoginScreen } from "@workspace/app"
 
 const mockReplace = jest.fn()
@@ -102,5 +102,32 @@ describe("LoginScreen signed-session states", () => {
     expect(screen.getByText("Continue")).toBeTruthy()
     expect(screen.getByText("Back to sign in")).toBeTruthy()
     expect(screen.queryByLabelText("Username or email")).toBeNull()
+  })
+
+  it("blocks sign-in while the server retry window is active", async () => {
+    const login = jest.fn(async () => ({
+      status: "error" as const,
+      errorMessage: "Too many requests. Please try again later.",
+      retryAfterSeconds: 30,
+    }))
+    mockUseAuth.mockReturnValue({ ...createAuthValue(), login })
+    const screen = await render(<LoginScreen initialTwitchUrl={null} />)
+
+    fireEvent.changeText(screen.getByLabelText("Username or email"), "user")
+    fireEvent.changeText(screen.getByLabelText("Password"), "password123")
+    fireEvent.press(screen.getByText("Sign in"))
+
+    await waitFor(() => {
+      expect(login).toHaveBeenCalledTimes(1)
+      expect(screen.getByText(/^Try again in \d+s$/)).toBeTruthy()
+      expect(
+        screen.getByText(/Too many sign-in attempts\. Try again in \d+s\./)
+      ).toBeTruthy()
+      expect(
+        screen.getByLabelText("Continue with Google").props.accessibilityState
+          .disabled
+      ).toBe(true)
+    })
+    screen.unmount()
   })
 })
