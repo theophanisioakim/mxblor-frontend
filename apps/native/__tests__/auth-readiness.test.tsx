@@ -8,6 +8,15 @@ import { AuthProvider, useAuth } from "@workspace/providers"
 import { Text, View } from "@workspace/ui"
 import { AxiosError } from "axios"
 
+jest.mock("expo-crypto", () => ({
+  CryptoDigestAlgorithm: { SHA256: "SHA-256" },
+  CryptoEncoding: { BASE64: "base64" },
+  digestStringAsync: jest.fn(async () => "YWJjKy8="),
+  getRandomBytesAsync: jest.fn(
+    async () => new Uint8Array(Array.from({ length: 32 }, (_, index) => index))
+  ),
+}))
+
 jest.mock("@workspace/api-client", () => {
   let storedSession: Record<string, unknown> | null = null
   let pendingSelection: Record<string, unknown> | null = null
@@ -20,6 +29,8 @@ jest.mock("@workspace/api-client", () => {
   const logoutAllUsers = jest.fn()
   const selectSchema = jest.fn()
   const switchSchema = jest.fn()
+  const getTwitchAuthenticationRedirectUrl = jest.fn()
+  const twitchLogin = jest.fn()
 
   const applySessionResponse = (response: Record<string, unknown>) => {
     const session = {
@@ -50,6 +61,9 @@ jest.mock("@workspace/api-client", () => {
     __mockRefreshStoredSession: refreshStoredSession,
     __mockSelectSchema: selectSchema,
     __mockSwitchSchema: switchSchema,
+    __mockGetTwitchAuthenticationRedirectUrl:
+      getTwitchAuthenticationRedirectUrl,
+    __mockTwitchLogin: twitchLogin,
     applyAuthenticationOutcome: (outcome: Record<string, unknown>) => {
       if (outcome.status === "AUTHENTICATED") {
         return {
@@ -78,7 +92,7 @@ jest.mock("@workspace/api-client", () => {
       pendingSelection = null
       sessionChanged?.()
     },
-    getTwitchAuthenticationRedirectUrl: jest.fn(),
+    getTwitchAuthenticationRedirectUrl,
     isExpired: (value: string, skew = 0) =>
       Date.parse(value) <= Date.now() + skew,
     login,
@@ -95,7 +109,7 @@ jest.mock("@workspace/api-client", () => {
     },
     setOnUnauthorized: jest.fn(),
     switchSchema,
-    twitchLogin: jest.fn(),
+    twitchLogin,
   }
 })
 
@@ -109,8 +123,22 @@ jest.mock("@workspace/router", () => {
 
 jest.mock("@workspace/storage", () => {
   const storage = new Map<string, string>()
+  const sessionStorage = new Map<string, string>()
+  const createStorage = (values: Map<string, string>) => ({
+    clear: () => values.clear(),
+    getItem: (key: string) => values.get(key) ?? null,
+    getJSON: (key: string) => {
+      const value = values.get(key)
+      return value ? JSON.parse(value) : null
+    },
+    removeItem: (key: string) => values.delete(key),
+    setItem: (key: string, value: string) => values.set(key, value),
+    setJSON: (key: string, value: unknown) =>
+      values.set(key, JSON.stringify(value)),
+  })
   return {
     __mockStorage: storage,
+    __mockSessionStorage: sessionStorage,
     StorageKeys: {
       JWT_TOKEN: "JWT_TOKEN",
       REFRESH_TOKEN: "REFRESH_TOKEN",
@@ -118,13 +146,10 @@ jest.mock("@workspace/storage", () => {
       SCHEMA_SELECTION: "SCHEMA_SELECTION",
       SELECTED_SCHEMA: "SELECTED_SCHEMA",
       USER: "USER",
+      TWITCH_OAUTH_FLOW: "TWITCH_OAUTH_FLOW",
     },
-    myLocalStorage: {
-      clear: () => storage.clear(),
-      getItem: (key: string) => storage.get(key) ?? null,
-      removeItem: (key: string) => storage.delete(key),
-      setItem: (key: string, value: string) => storage.set(key, value),
-    },
+    myLocalStorage: createStorage(storage),
+    mySessionStorage: createStorage(sessionStorage),
   }
 })
 
@@ -140,6 +165,10 @@ type ApiClientMock = {
   >
   __mockSelectSchema: jest.Mock<(...args: unknown[]) => Promise<unknown>>
   __mockSwitchSchema: jest.Mock<(...args: unknown[]) => Promise<unknown>>
+  __mockGetTwitchAuthenticationRedirectUrl: jest.Mock<
+    (...args: unknown[]) => Promise<unknown>
+  >
+  __mockTwitchLogin: jest.Mock<(...args: unknown[]) => Promise<unknown>>
 }
 
 const apiClientMock = jest.requireMock("@workspace/api-client") as ApiClientMock
@@ -148,6 +177,11 @@ const mockStorage = (
     __mockStorage: Map<string, string>
   }
 ).__mockStorage
+const mockSessionStorage = (
+  jest.requireMock("@workspace/storage") as {
+    __mockSessionStorage: Map<string, string>
+  }
+).__mockSessionStorage
 const mockReplace = (
   jest.requireMock("@workspace/router") as { __mockReplace: jest.Mock }
 ).__mockReplace
@@ -198,6 +232,7 @@ describe("AuthProvider signed-session lifecycle", () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockStorage.clear()
+    mockSessionStorage.clear()
     apiClientMock.__setStoredSession(null)
     apiClientMock.__setPendingSelection(null)
     latestAuth = null
@@ -409,6 +444,165 @@ describe("AuthProvider signed-session lifecycle", () => {
 
     expect(latestAuth?.isAuthenticated).toBe(true)
     expect(latestAuth?.selectedSchema).toBe("tenant-a")
+  })
+
+  it("binds Twitch completion to the initiating native app session", async () => {
+    apiClientMock.__mockGetTwitchAuthenticationRedirectUrl.mockResolvedValue({
+      redirectUrl: "https://id.twitch.tv/oauth2/authorize?state=expected-state",
+      state: "expected-state",
+    })
+    apiClientMock.__mockTwitchLogin.mockResolvedValue({
+      status: "AUTHENTICATED",
+      session: loginResponse(),
+    })
+    await render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>
+    )
+    await waitFor(() => expect(latestAuth?.isAuthReady).toBe(true))
+
+    let redirectUrl: string | null | undefined
+    await act(async () => {
+      redirectUrl = await latestAuth?.getTwitchRedirectUrl()
+    })
+
+    expect(redirectUrl).toContain("state=expected-state")
+    expect(
+      apiClientMock.__mockGetTwitchAuthenticationRedirectUrl
+    ).toHaveBeenCalledWith({ codeChallenge: "YWJjKy8" })
+    expect(mockSessionStorage.has("TWITCH_OAUTH_FLOW")).toBe(true)
+
+    await act(async () => {
+      await latestAuth?.loginWithTwitch("authorization-code", "expected-state")
+    })
+
+    expect(apiClientMock.__mockTwitchLogin).toHaveBeenCalledWith({
+      code: "authorization-code",
+      codeVerifier:
+        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      state: "expected-state",
+    })
+    expect(mockSessionStorage.has("TWITCH_OAUTH_FLOW")).toBe(false)
+  })
+
+  it("registers an SSR-created Twitch flow without requesting another URL", async () => {
+    await render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>
+    )
+    await waitFor(() => expect(latestAuth?.isAuthReady).toBe(true))
+
+    let redirectUrl: string | null | undefined
+    await act(async () => {
+      redirectUrl = await latestAuth?.getTwitchRedirectUrl({
+        codeVerifier: "server-rendered-client-verifier",
+        redirectUrl: "https://id.twitch.tv/oauth2/authorize?state=ssr-state",
+        state: "ssr-state",
+      })
+    })
+
+    expect(redirectUrl).toContain("state=ssr-state")
+    expect(
+      apiClientMock.__mockGetTwitchAuthenticationRedirectUrl
+    ).not.toHaveBeenCalled()
+    expect(
+      JSON.parse(mockSessionStorage.get("TWITCH_OAUTH_FLOW") ?? "{}")
+    ).toEqual({
+      codeVerifier: "server-rendered-client-verifier",
+      state: "ssr-state",
+    })
+  })
+
+  it("keeps only the newest Twitch redirect flow when requests overlap", async () => {
+    let resolveFirst!: (value: unknown) => void
+    let resolveSecond!: (value: unknown) => void
+    apiClientMock.__mockGetTwitchAuthenticationRedirectUrl
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirst = resolve
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveSecond = resolve
+          })
+      )
+    await render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>
+    )
+    await waitFor(() => expect(latestAuth?.isAuthReady).toBe(true))
+
+    const auth = latestAuth as AuthContextValue
+    const firstRequest = auth.getTwitchRedirectUrl()
+    const secondRequest = auth.getTwitchRedirectUrl()
+    await waitFor(() =>
+      expect(
+        apiClientMock.__mockGetTwitchAuthenticationRedirectUrl
+      ).toHaveBeenCalledTimes(2)
+    )
+
+    let secondUrl: string | null = null
+    await act(async () => {
+      resolveSecond({
+        redirectUrl: "https://id.twitch.tv/oauth2/authorize?state=newest-state",
+        state: "newest-state",
+      })
+      secondUrl = await secondRequest
+    })
+    let firstUrl: string | null = null
+    await act(async () => {
+      resolveFirst({
+        redirectUrl: "https://id.twitch.tv/oauth2/authorize?state=stale-state",
+        state: "stale-state",
+      })
+      firstUrl = await firstRequest
+    })
+
+    expect(secondUrl).toContain("state=newest-state")
+    expect(firstUrl).toBeNull()
+    expect(
+      JSON.parse(mockSessionStorage.get("TWITCH_OAUTH_FLOW") ?? "{}")
+    ).toMatchObject({
+      state: "newest-state",
+    })
+  })
+
+  it("rejects a Twitch callback from another browser or device", async () => {
+    apiClientMock.__mockGetTwitchAuthenticationRedirectUrl.mockResolvedValue({
+      redirectUrl: "https://id.twitch.tv/oauth2/authorize?state=expected-state",
+      state: "expected-state",
+    })
+    await render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>
+    )
+    await waitFor(() => expect(latestAuth?.isAuthReady).toBe(true))
+    await act(async () => {
+      await latestAuth?.getTwitchRedirectUrl()
+    })
+
+    let result: AuthenticationResult | undefined
+    await act(async () => {
+      result = await latestAuth?.loginWithTwitch(
+        "attacker-code",
+        "attacker-state"
+      )
+    })
+
+    expect(result).toEqual({
+      status: "error",
+      errorMessage:
+        "This Twitch sign-in was not started in this browser or app.",
+    })
+    expect(apiClientMock.__mockTwitchLogin).not.toHaveBeenCalled()
+    expect(mockSessionStorage.has("TWITCH_OAUTH_FLOW")).toBe(true)
   })
 
   it("switches schema with the native refresh token and applies rotation", async () => {
