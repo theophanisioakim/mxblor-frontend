@@ -285,6 +285,45 @@ describe("AuthProvider signed-session lifecycle", () => {
     ])
   })
 
+  it("surfaces only the generic bad-credentials login error", async () => {
+    const badCredentials = new AxiosError("Request failed")
+    Object.assign(badCredentials, {
+      response: {
+        status: 422,
+        data: {
+          errorCode: "BAD_CREDENTIALS",
+          message: "Invalid username or password",
+        },
+      },
+    })
+    apiClientMock.__mockLogin.mockRejectedValue(badCredentials)
+
+    await render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>
+    )
+    await waitFor(() => expect(latestAuth?.isAuthReady).toBe(true))
+
+    let result: AuthenticationResult | undefined
+    await act(async () => {
+      result = await latestAuth?.login({
+        username: "unknown-user",
+        password: "password123",
+      })
+    })
+
+    expect(result).toEqual({
+      status: "error",
+      errorMessage: "Invalid username or password",
+    })
+    expect(latestAuth?.actionState.login.errorMessage).toBe(
+      "Invalid username or password"
+    )
+    expect(latestAuth?.isAuthenticated).toBe(false)
+    expect(latestAuth?.pendingSchemaSelection).toBeNull()
+  })
+
   it("preserves the current session when global logout is forbidden", async () => {
     apiClientMock.__setStoredSession(validStoredSession())
     mockStorage.set("JWT_TOKEN", "stored-token")
