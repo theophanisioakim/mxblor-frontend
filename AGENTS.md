@@ -404,8 +404,13 @@ canonical pattern. Rules when adding or changing a `ui` primitive:
 6. **Don't commit or push unless asked.** When you do, don't bypass the husky hooks with
    `--no-verify` (§11) — pre-commit formats staged files, pre-push runs the full gate, and CI runs it
    again regardless.
-7. **Keep changes scoped.** This is shared infrastructure feeding two apps — a small change in
-   `ui`/`app`/`api-client` ripples into both web and native.
+7. **Keep changes minimal, targeted, and scoped.** Whenever possible, make the smallest complete
+   change that satisfies the request. Avoid unrelated refactors, opportunistic cleanup, broad
+   rewrites, dependency upgrades, renames, or formatting untouched files unless they are required
+   for correctness or explicitly requested. Do not omit required tests, documentation, generated
+   artifacts, or cross-platform parity updates in the name of a small diff. This is shared
+   infrastructure feeding two apps — a small change in `ui`/`app`/`api-client` ripples into both web
+   and native.
 8. **Update the docs with the change.** Before declaring done, review whether your change made any of
    these stale and fix it in the same change set: this root **`AGENTS.md`**; the relevant per-package
    **`packages/<pkg>/AGENTS.md`** / **`apps/<app>/AGENTS.md`**; the relevant **screen SDD(s) under
