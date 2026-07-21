@@ -66,7 +66,7 @@ export type AuthActionState = Record<AuthAction, AuthActionStatus>
 export type AuthenticationResult =
   | { status: "authenticated" }
   | { status: "schema-selection-required" }
-  | { status: "error"; errorMessage: string }
+  | { status: "error"; errorMessage: string; retryAfterSeconds?: number }
 
 export type SessionControlResult =
   | { success: true }
@@ -313,9 +313,9 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
         updateAction(action, false, null)
         return result
       } catch (error: unknown) {
-        const errorMessage = getErrorMessage(error)
-        updateAction(action, false, errorMessage)
-        return { status: "error", errorMessage }
+        const result = authenticationError(error)
+        updateAction(action, false, result.errorMessage)
+        return result
       }
     },
     [applyOutcome, updateAction]
@@ -356,9 +356,9 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
         updateAction("login", false, null)
         return result
       } catch (error: unknown) {
-        const errorMessage = getErrorMessage(error)
-        updateAction("login", false, errorMessage)
-        return { status: "error" as const, errorMessage }
+        const result = authenticationError(error)
+        updateAction("login", false, result.errorMessage)
+        return result
       }
     },
     [applyOutcome, updateAction]
@@ -425,9 +425,9 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
         updateAction("selectSchema", false, null)
         return { status: "authenticated" }
       } catch (error: unknown) {
-        const errorMessage = getErrorMessage(error)
-        updateAction("selectSchema", false, errorMessage)
-        return { status: "error", errorMessage }
+        const result = authenticationError(error)
+        updateAction("selectSchema", false, result.errorMessage)
+        return result
       }
     },
     [updateAction]
@@ -583,6 +583,43 @@ function getErrorMessage(error: unknown): string {
   }
 
   return "An unexpected error occurred. Please try again."
+}
+
+function authenticationError(
+  error: unknown
+): Extract<AuthenticationResult, { status: "error" }> {
+  const errorMessage = getErrorMessage(error)
+  const retryAfterSeconds = getRetryAfterSeconds(error)
+  return {
+    status: "error",
+    errorMessage,
+    ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
+  }
+}
+
+function getRetryAfterSeconds(error: unknown): number | undefined {
+  if (!(error instanceof AxiosError) || error.response?.status !== 429) {
+    return undefined
+  }
+
+  const headerValue = error.response.headers?.["retry-after"]
+  if (headerValue === undefined || headerValue === null) {
+    return undefined
+  }
+  const value = Array.isArray(headerValue)
+    ? String(headerValue[0])
+    : String(headerValue)
+  const deltaSeconds = Number(value)
+  if (Number.isFinite(deltaSeconds) && deltaSeconds > 0) {
+    return Math.ceil(deltaSeconds)
+  }
+
+  const retryAt = Date.parse(value)
+  if (!Number.isFinite(retryAt)) {
+    return undefined
+  }
+  const remainingSeconds = Math.ceil((retryAt - Date.now()) / 1000)
+  return remainingSeconds > 0 ? remainingSeconds : undefined
 }
 
 function getHttpStatus(error: unknown): number | undefined {

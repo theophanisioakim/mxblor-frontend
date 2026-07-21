@@ -359,6 +359,39 @@ describe("AuthProvider signed-session lifecycle", () => {
     expect(latestAuth?.pendingSchemaSelection).toBeNull()
   })
 
+  it("exposes the retry window when login is rate limited", async () => {
+    const rateLimited = new AxiosError("Too many requests")
+    Object.assign(rateLimited, {
+      response: {
+        status: 429,
+        data: { message: "Too many requests. Please try again later." },
+        headers: { "retry-after": "12" },
+      },
+    })
+    apiClientMock.__mockLogin.mockRejectedValue(rateLimited)
+
+    await render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>
+    )
+    await waitFor(() => expect(latestAuth?.isAuthReady).toBe(true))
+
+    let result: AuthenticationResult | undefined
+    await act(async () => {
+      result = await latestAuth?.login({
+        username: "test-user",
+        password: "password123",
+      })
+    })
+
+    expect(result).toEqual({
+      status: "error",
+      errorMessage: "Too many requests. Please try again later.",
+      retryAfterSeconds: 12,
+    })
+  })
+
   it("preserves the current session when global logout is forbidden", async () => {
     apiClientMock.__setStoredSession(validStoredSession())
     mockStorage.set("JWT_TOKEN", "stored-token")
