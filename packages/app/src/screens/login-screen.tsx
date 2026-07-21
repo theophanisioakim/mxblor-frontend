@@ -30,13 +30,10 @@ type LoginForm = {
 type SchemaSelectionForm = { schema: string }
 
 export interface LoginScreenProps {
-  /**
-   * Twitch authorize URL resolved during SSR (web login page). When provided
-   * (`string` URL or `null` = unavailable) the client skips its own fetch and
-   * the OAuth button paints on first load. `undefined` means the server didn't
-   * resolve it (native, or an SSR failure), so the client fetches instead.
-   */
+  /** Twitch flow resolved during web SSR; omitted on native or SSR failure. */
   initialTwitchUrl?: string | null
+  initialTwitchState?: string | null
+  initialTwitchCodeVerifier?: string | null
 }
 
 type OAuthProvider = "twitch" | "google" | "apple" | "github"
@@ -90,16 +87,18 @@ const PROVIDERS = [
  * Google/Apple/GitHub are presented as providers but not yet backed by the API —
  * they surface a "coming soon" notice until their server flows exist.
  *
- * On web the authorize URL is resolved during SSR (the login `page.tsx`) and
- * passed in via `initialTwitchUrl` so the Twitch button paints on first load;
- * when it isn't supplied (native, or an SSR failure) the client resolves it.
+ * Web receives its client-bound Twitch flow from SSR. Native, or web after an
+ * SSR failure, resolves the flow client-side.
  */
 export function LoginScreen({
+  initialTwitchCodeVerifier,
+  initialTwitchState,
   initialTwitchUrl,
 }: Readonly<LoginScreenProps> = {}) {
   const {
     actionState,
     cancelSchemaSelection,
+    cancelTwitchLogin,
     getTwitchRedirectUrl,
     isAuthenticated,
     login,
@@ -111,10 +110,11 @@ export function LoginScreen({
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null)
-  // `null` = not available / not yet known; a non-empty string = ready to use.
-  // Seeded from the SSR-resolved URL on web so it's ready on first paint.
+  // `null` = unavailable or not yet known; a non-empty string = ready to use.
   const [twitchUrl, setTwitchUrl] = useState<string | null>(
-    initialTwitchUrl ?? null
+    initialTwitchUrl && initialTwitchState && initialTwitchCodeVerifier
+      ? initialTwitchUrl
+      : null
   )
 
   // Redirect away once authenticated.
@@ -131,17 +131,26 @@ export function LoginScreen({
     }
   }, [pendingSchemaSelection])
 
-  // Resolve the Twitch authorize URL up front so the Twitch option can be hidden
-  // entirely when the backend doesn't provide one (empty/unavailable). Skipped
-  // when the server already resolved it (`initialTwitchUrl` defined) — only the
-  // native/SSR-failure case falls back to this client fetch.
+  // Register the SSR-created proof in this browser session. Native and the SSR
+  // failure path resolve a fresh flow client-side instead.
   useEffect(() => {
-    if (initialTwitchUrl !== undefined) {
+    const hasInitialResult = initialTwitchUrl !== undefined
+    const initialFlow =
+      initialTwitchUrl && initialTwitchState && initialTwitchCodeVerifier
+        ? {
+            codeVerifier: initialTwitchCodeVerifier,
+            redirectUrl: initialTwitchUrl,
+            state: initialTwitchState,
+          }
+        : undefined
+
+    if (hasInitialResult && !initialFlow) {
+      setTwitchUrl(null)
       return
     }
 
     let active = true
-    getTwitchRedirectUrl()
+    getTwitchRedirectUrl(initialFlow)
       .then((url) => {
         if (active) {
           setTwitchUrl(url)
@@ -156,7 +165,12 @@ export function LoginScreen({
     return () => {
       active = false
     }
-  }, [getTwitchRedirectUrl, initialTwitchUrl])
+  }, [
+    getTwitchRedirectUrl,
+    initialTwitchCodeVerifier,
+    initialTwitchState,
+    initialTwitchUrl,
+  ])
 
   const handleOAuth = async (provider: OAuthProvider) => {
     setError(null)
@@ -168,8 +182,17 @@ export function LoginScreen({
       return
     }
 
-    // The Twitch button only renders when a URL is available, so this is a guard.
-    if (!twitchUrl) {
+    let authUrl = twitchUrl
+    if (initialTwitchUrl && initialTwitchState && initialTwitchCodeVerifier) {
+      authUrl = await getTwitchRedirectUrl({
+        codeVerifier: initialTwitchCodeVerifier,
+        redirectUrl: initialTwitchUrl,
+        state: initialTwitchState,
+      })
+    }
+
+    // The Twitch button only renders when the backend supplied a URL.
+    if (!authUrl) {
       setError("Twitch login is currently unavailable.")
       return
     }
@@ -179,11 +202,12 @@ export function LoginScreen({
     // Web full-page redirects (the `/` route's TwitchCallback finishes the
     // exchange); native opens an in-app auth session and returns code/state
     // inline, which we exchange here.
-    const result = await startTwitchAuth(twitchUrl)
+    const result = await startTwitchAuth(authUrl)
     if (result.type === "redirecting") {
       return
     }
     if (result.type === "cancelled") {
+      cancelTwitchLogin()
       setOauthLoading(null)
       return
     }

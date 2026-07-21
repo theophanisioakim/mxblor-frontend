@@ -1,24 +1,34 @@
 import { getTwitchAuthenticationRedirectUrl } from "@workspace/api-client"
 import { LoginScreen } from "@workspace/app"
+import { createTwitchOAuthProof } from "@workspace/providers/twitch-oauth-proof"
 import { Suspense } from "react"
 
 export default async function Page() {
-  // Server-side resolve the Twitch authorize URL so the OAuth button paints on
-  // first load instead of waiting for the client effect. The endpoint is
-  // anonymous (the visitor is logging in), so no auth headers are needed. On
-  // any failure we leave `initialTwitchUrl` undefined and LoginScreen falls
-  // back to client-side fetching.
+  // Resolve the client-bound Twitch authorize flow during SSR so backend-driven
+  // availability is reflected on first paint. The verifier is delivered only
+  // to this browser response and is persisted to sessionStorage on hydration.
   let initialTwitchUrl: string | null | undefined
+  let initialTwitchState: string | null | undefined
+  let initialTwitchCodeVerifier: string | null | undefined
   try {
-    const { redirectUrl } = await getTwitchAuthenticationRedirectUrl()
+    const proof = await createTwitchOAuthProof()
+    const { redirectUrl, state } = await getTwitchAuthenticationRedirectUrl({
+      codeChallenge: proof.codeChallenge,
+    })
     initialTwitchUrl = redirectUrl ?? null
+    initialTwitchState = state ?? null
+    initialTwitchCodeVerifier = redirectUrl && state ? proof.codeVerifier : null
   } catch {
     // SSR fetch failed (e.g. API unreachable) — the client resolves it instead.
   }
 
   return (
     <Suspense>
-      <LoginScreen initialTwitchUrl={initialTwitchUrl} />
+      <LoginScreen
+        initialTwitchCodeVerifier={initialTwitchCodeVerifier}
+        initialTwitchState={initialTwitchState}
+        initialTwitchUrl={initialTwitchUrl}
+      />
     </Suspense>
   )
 }

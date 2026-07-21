@@ -28,6 +28,7 @@
     "@workspace/ui": "workspace:*",
     "expo": "catalog:",
     "expo-constants": "catalog:",
+    "expo-crypto": "catalog:",
     "expo-device": "catalog:",
     "expo-font": "catalog:",
     "expo-file-system": "catalog:",

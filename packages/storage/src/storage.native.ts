@@ -5,16 +5,20 @@ import type { ITypedStorage } from "./types"
 
 const localInstance = createMMKV({ id: "app-local-storage" })
 const sessionInstance = createMMKV({ id: "app-session-storage" })
+const TWITCH_OAUTH_SECURE_KEY = "app.twitch_oauth_flow"
 
 const SECURE_KEY_NAMES: Partial<Record<StorageKey, string>> = {
   [StorageKeys.JWT_TOKEN]: "app.access_token",
   [StorageKeys.REFRESH_TOKEN]: "app.refresh_token",
   [StorageKeys.SCHEMA_SELECTION_TOKEN]: "app.schema_selection_token",
+  [StorageKeys.TWITCH_OAUTH_FLOW]: TWITCH_OAUTH_SECURE_KEY,
 }
 const AUTH_STORAGE_VERSION = "1"
 
-// Clear session storage on app cold start (simulates web sessionStorage behavior)
+// Clear session storage on app cold start (simulates web sessionStorage behavior).
+// The Twitch verifier is transient but remains SecureStore-backed while active.
 sessionInstance.clearAll()
+SecureStore.setItem(TWITCH_OAUTH_SECURE_KEY, "")
 
 function createMMKVStorage(mmkv: MMKV): ITypedStorage {
   const secureKeyName = (key: StorageKey) => SECURE_KEY_NAMES[key]

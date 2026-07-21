@@ -26,7 +26,11 @@ import {
   twitchLogin,
 } from "@workspace/api-client"
 import { useRouter } from "@workspace/router"
-import { myLocalStorage, StorageKeys } from "@workspace/storage"
+import {
+  myLocalStorage,
+  mySessionStorage,
+  StorageKeys,
+} from "@workspace/storage"
 import { AxiosError } from "axios"
 import type { ReactNode } from "react"
 import {
@@ -38,6 +42,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { createTwitchOAuthProof } from "./twitch-oauth-proof"
 
 const AUTH_ACTIONS = [
   "login",
@@ -81,8 +86,12 @@ export interface AuthContextValue {
     code: string,
     state: string
   ) => Promise<AuthenticationResult>
-  /** Fetch the Twitch OAuth authorize URL to send the user to, or `null`. */
-  getTwitchRedirectUrl: () => Promise<string | null>
+  /** Fetch or register the Twitch OAuth authorize URL to send the user to. */
+  getTwitchRedirectUrl: (
+    initialFlow?: TwitchOAuthRedirectFlow
+  ) => Promise<string | null>
+  /** Discard the client-held proof for an abandoned Twitch OAuth flow. */
+  cancelTwitchLogin: () => void
   selectSchema: (schema: string) => Promise<AuthenticationResult>
   switchSchema: (schema: string) => Promise<SessionControlResult>
   cancelSchemaSelection: () => void
@@ -90,6 +99,14 @@ export interface AuthContextValue {
   logoutAll: () => Promise<SessionControlResult>
   logoutAllUsers: () => Promise<SessionControlResult>
 }
+
+type TwitchOAuthRedirectFlow = {
+  codeVerifier: string
+  redirectUrl: string
+  state: string
+}
+
+type TwitchOAuthProof = Omit<TwitchOAuthRedirectFlow, "redirectUrl">
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
@@ -117,6 +134,7 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
   const [isAuthReady, setIsAuthReady] = useState(false)
   const [actionState, setActionState] = useState(createInitialActionState)
   const userRef = useRef<StoredSession | undefined>(undefined)
+  const twitchFlowRequestIdRef = useRef(0)
 
   const updateAction = useCallback(
     (action: AuthAction, isLoading: boolean, errorMessage: string | null) => {
@@ -317,8 +335,24 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
     async (code: string, state: string) => {
       updateAction("selectSchema", false, null)
       updateAction("login", true, null)
+      const flow = mySessionStorage.getJSON<TwitchOAuthProof>(
+        StorageKeys.TWITCH_OAUTH_FLOW
+      )
+      if (!flow || flow.state !== state) {
+        const errorMessage =
+          "This Twitch sign-in was not started in this browser or app."
+        updateAction("login", false, errorMessage)
+        return { status: "error" as const, errorMessage }
+      }
+
+      // Claim the proof before the network call. Completion is deliberately
+      // single-use; a failed exchange starts a fresh Twitch flow.
+      twitchFlowRequestIdRef.current += 1
+      mySessionStorage.removeItem(StorageKeys.TWITCH_OAUTH_FLOW)
       try {
-        const result = applyOutcome(await twitchLogin({ code, state }))
+        const result = applyOutcome(
+          await twitchLogin({ code, codeVerifier: flow.codeVerifier, state })
+        )
         updateAction("login", false, null)
         return result
       } catch (error: unknown) {
@@ -330,9 +364,44 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
     [applyOutcome, updateAction]
   )
 
-  const getTwitchRedirectUrl = useCallback(async () => {
-    const response = await getTwitchAuthenticationRedirectUrl()
-    return response.redirectUrl ?? null
+  const getTwitchRedirectUrl = useCallback(
+    async (initialFlow?: TwitchOAuthRedirectFlow) => {
+      const requestId = twitchFlowRequestIdRef.current + 1
+      twitchFlowRequestIdRef.current = requestId
+      mySessionStorage.removeItem(StorageKeys.TWITCH_OAUTH_FLOW)
+      let flow = initialFlow
+      if (!flow) {
+        const proof = await createTwitchOAuthProof()
+        const response = await getTwitchAuthenticationRedirectUrl({
+          codeChallenge: proof.codeChallenge,
+        })
+        if (!(response.redirectUrl && response.state)) {
+          return null
+        }
+        flow = {
+          codeVerifier: proof.codeVerifier,
+          redirectUrl: response.redirectUrl,
+          state: response.state,
+        }
+      }
+      if (twitchFlowRequestIdRef.current !== requestId) {
+        return null
+      }
+      mySessionStorage.setJSON<TwitchOAuthProof>(
+        StorageKeys.TWITCH_OAUTH_FLOW,
+        {
+          codeVerifier: flow.codeVerifier,
+          state: flow.state,
+        }
+      )
+      return flow.redirectUrl
+    },
+    []
+  )
+
+  const cancelTwitchLogin = useCallback(() => {
+    twitchFlowRequestIdRef.current += 1
+    mySessionStorage.removeItem(StorageKeys.TWITCH_OAUTH_FLOW)
   }, [])
 
   const selectSchema = useCallback(
@@ -460,6 +529,7 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
       login,
       loginWithTwitch,
       getTwitchRedirectUrl,
+      cancelTwitchLogin,
       selectSchema,
       switchSchema,
       cancelSchemaSelection,
@@ -476,6 +546,7 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
       login,
       loginWithTwitch,
       getTwitchRedirectUrl,
+      cancelTwitchLogin,
       selectSchema,
       switchSchema,
       cancelSchemaSelection,

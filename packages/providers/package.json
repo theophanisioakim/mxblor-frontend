@@ -21,9 +21,13 @@
     "react-native-safe-area-context": "catalog:"
   },
   "peerDependencies": {
+    "expo-crypto": "*",
     "react-native": "*"
   },
   "peerDependenciesMeta": {
+    "expo-crypto": {
+      "optional": true
+    },
     "react-native": {
       "optional": true
     }
@@ -32,10 +36,12 @@
     "@biomejs/biome": "catalog:",
     "@types/react": "catalog:",
     "@workspace/typescript-config": "workspace:*",
+    "expo-crypto": "catalog:",
     "react-native": "catalog:",
     "typescript": "catalog:"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./twitch-oauth-proof": "./src/twitch-oauth-proof.ts"
   }
 }

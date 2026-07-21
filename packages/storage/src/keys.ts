@@ -5,6 +5,7 @@ export const StorageKeys = {
   SCHEMA_SELECTION: "@app/schema-selection",
   AUTH_STORAGE_VERSION: "@app/auth-storage-version",
   AUTH_REFRESH_LEASE: "@app/auth-refresh-lease",
+  TWITCH_OAUTH_FLOW: "@app/twitch-oauth-flow",
   LANGUAGE: "@app/language",
   MENU_CACHE: "@app/menu-cache",
   USER: "@app/user",
