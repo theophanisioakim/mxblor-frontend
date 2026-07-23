@@ -105,8 +105,9 @@ packages — app and screen code never branches on platform.
   line-continuation). Repo tooling that must run on both (e.g. agent hooks) is written in Node, and
   the repo avoids committed symlinks (they break on Windows checkouts without developer mode).
 
-The root `README.md` is the upstream shadcn-monorepo template and is **not** authoritative — this
-file is.
+The root `README.md` is the human-facing repository entry point. This file remains authoritative
+for agent execution and architecture rules; `docs/README.md` indexes the functional and technical
+documentation.
 
 ---
 
@@ -456,21 +457,23 @@ canonical pattern. Rules when adding or changing a `ui` primitive:
    artifacts, or cross-platform parity updates in the name of a small diff. This is shared
    infrastructure feeding two apps — a small change in `ui`/`app`/`api-client` ripples into both web
    and native.
-8. **Update the docs with the change.** Before declaring done, review whether your change made any of
-   these stale and fix it in the same change set: this root **`AGENTS.md`**; the relevant per-package
-   **`packages/<pkg>/AGENTS.md`** / **`apps/<app>/AGENTS.md`**; the relevant **screen SDD(s) under
-   `docs/screens/`** (see item 9); relevant code comments. Edit the `AGENTS.md` files (not the
-   `CLAUDE.md` import shims) so Claude Code and Codex stay in sync. Note which docs you updated (or
-   that none applied) when reporting.
-   **`packages/<pkg>/AGENTS.md`** / **`apps/<app>/AGENTS.md`**; relevant code comments. Edit the
-   `AGENTS.md` files (not the `CLAUDE.md` import shims) so Claude Code and Codex stay in sync. Note
-   which docs you updated (or that none applied) when reporting.
-9. **Keep the screen SDDs in sync.** `docs/screens/` holds a Screen Design Document per screen
-   (what the user sees and does — layout, fields, validation, states, actions; **no** implementation
-   detail). Whenever a task adds, removes, or changes a screen's fields, validation, states, actions,
-   navigation, or layout, update the matching SDD (`docs/screens/<domain>/<screen>.md`)
-   **in the same change set**, and add a new SDD when you build a screen that doesn't have one yet.
-   Keep them behaviour-only — leave API/data/component specifics to code and the `AGENTS.md` files.
+8. **Documentation impact is mandatory for every task.** At the start of a task, read
+   **`docs/README.md`** and **`docs/DOCUMENTATION_STRATEGY.md`**, then use the
+   **`maintain-documentation`** skill (`.agents/skills/maintain-documentation/SKILL.md`) to identify
+   the affected client, screen, flow, mockup, technical, traceability, and agent documents. After
+   implementation, review the final diff and update every affected document **in the same change
+   set**. Also update the relevant root/nested `AGENTS.md` and code comments when their instructions
+   or claims changed; never edit `CLAUDE.md` import shims. In the final report, list the documents
+   updated, or state `Documentation impact: none` with the concrete reason. A task is incomplete
+   while its documentation contradicts the implementation.
+9. **Keep contract-grade SDDs and mockups in sync.** `docs/screens/README.md` indexes every route,
+   alias, and framework boundary; `docs/screens/contract-conventions.md` is normative. Each SDD must
+   enumerate the screen's fields/columns, validation/defaults, filters/operators, permissions,
+   actions/API effects, states, restrictions, background producers/consumers/retention, freshness,
+   and acceptance criteria. Whenever a task changes any of those, navigation, or major layout,
+   update and version the matching SDD, the screen catalog/traceability, and relevant source-derived
+   SVG in `docs/mockups/`. Do not infer a sender, retry worker, scheduler, or other capability from
+   a stored field alone; label incomplete/absent processing explicitly.
 
 ---
 
@@ -489,6 +492,7 @@ react-mono-core/
 ├── .cursor/mcp.json · .vscode/mcp.json · .mcp.json ← shadcn MCP server (per-tool mirrors)
 ├── .husky/                   ← git hooks (pre-commit: lint-staged; pre-push: the full gate) — §11
 ├── .github/workflows/ci.yml  ← CI: generate-drift + biome:ci + typecheck + test + build + web E2E
+├── docs/                     ← client specs, flows, screens, mockups, technical docs, traceability, documentation policy
 ├── package.json              ← root scripts (turbo build/typecheck/test/test:e2e + biome lint/format) + engines + catalog dev deps + lint-staged
 ├── pnpm-workspace.yaml       ← workspaces, catalog (single-sourced versions), nodeLinker, overrides
 ├── turbo.json                ← task graph (build/dev/typecheck/test/test:e2e/generate; lint/format run via Biome, not Turbo)
