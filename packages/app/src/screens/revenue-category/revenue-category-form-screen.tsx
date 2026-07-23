@@ -9,6 +9,7 @@ import {
   useUpdateRevenueCategory,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -21,6 +22,8 @@ import {
 import { useCallback, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 import { CategoryRevenuesGrid } from "./category-revenues-grid"
 import {
   RevenueCategoryFormFields,
@@ -54,6 +57,10 @@ export function RevenueCategoryFormScreen({ id }: Readonly<{ id: string }>) {
   const isCreateMode = id === "new"
   const entityId = isCreateMode ? undefined : id
 
+  const { canCreate, canUpdate } = useCrudPermissions(
+    crudPermissions.revenueCategory
+  )
+  const canSubmit = isCreateMode ? canCreate : canUpdate
   const createMutation = useCreateRevenueCategory()
   const updateMutation = useUpdateRevenueCategory()
   const [error, setError] = useState<string>()
@@ -145,67 +152,76 @@ export function RevenueCategoryFormScreen({ id }: Readonly<{ id: string }>) {
   const isLocked = !!data && data.editable === false
 
   return (
-    <View className="w-full gap-6 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode
-          ? t("revenueCategory.create.title")
-          : t("revenueCategory.edit.title")}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.revenueCategory.create
+          : formPermissions.revenueCategory.edit
+      }
+    >
+      <View className="w-full gap-6 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode
+            ? t("revenueCategory.create.title")
+            : t("revenueCategory.edit.title")}
+        </Text>
 
-      {isLocked && (
-        <View className="rounded-md bg-muted p-3">
-          <Text className="text-muted-foreground">
-            {t("revenueCategory.edit.locked")}
-          </Text>
-        </View>
-      )}
-
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
-        <RncForm<RevenueCategoryFormValues>
-          id="RevenueCategoryFormScreen"
-          onSubmit={handleSubmit}
-          defaultValues={data ? toFormValues(data) : undefined}
-        >
-          <View className="w-full gap-6">
-            <RevenueCategoryFormFields disabled={isLocked} />
-
-            <View className="flex-row gap-3">
-              {!isLocked && (
-                <RncSubmitButton
-                  label={
-                    isCreateMode
-                      ? t("revenueCategory.create.save")
-                      : t("revenueCategory.edit.save")
-                  }
-                />
-              )}
-              <Button
-                variant="outline"
-                onPress={() => router.replace(LIST_ROUTE)}
-              >
-                <Text>
-                  {isLocked
-                    ? t("revenueCategory.edit.back")
-                    : t("revenueCategory.edit.cancel")}
-                </Text>
-              </Button>
-            </View>
+        {isLocked && (
+          <View className="rounded-md bg-muted p-3">
+            <Text className="text-muted-foreground">
+              {t("revenueCategory.edit.locked")}
+            </Text>
           </View>
-        </RncForm>
-      </View>
+        )}
 
-      {!!entityId && !!data && (
-        <CategoryRevenuesGrid
-          categoryId={entityId}
-          categoryEditable={!isLocked}
-        />
-      )}
-    </View>
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
+          </View>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
+          <RncForm<RevenueCategoryFormValues>
+            id="RevenueCategoryFormScreen"
+            onSubmit={handleSubmit}
+            defaultValues={data ? toFormValues(data) : undefined}
+          >
+            <View className="w-full gap-6">
+              <RevenueCategoryFormFields disabled={isLocked} />
+
+              <View className="flex-row gap-3">
+                {!isLocked && (
+                  <RncSubmitButton
+                    disabled={!canSubmit}
+                    label={
+                      isCreateMode
+                        ? t("revenueCategory.create.save")
+                        : t("revenueCategory.edit.save")
+                    }
+                  />
+                )}
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(LIST_ROUTE)}
+                >
+                  <Text>
+                    {isLocked
+                      ? t("revenueCategory.edit.back")
+                      : t("revenueCategory.edit.cancel")}
+                  </Text>
+                </Button>
+              </View>
+            </View>
+          </RncForm>
+        </View>
+
+        {!!entityId && !!data && (
+          <CategoryRevenuesGrid
+            categoryId={entityId}
+            categoryEditable={!isLocked}
+          />
+        )}
+      </View>
+    </PermissionGuard>
   )
 }

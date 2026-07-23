@@ -9,7 +9,11 @@ import {
   useGetBuildingById,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -23,6 +27,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useEffect, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 type CommFilters = Omit<
   BuildingUnitCommSearchRequestDto,
@@ -36,6 +42,9 @@ export function BuildingUnitCommListScreen({
   const router = useRouter()
   const { user } = useAuth()
   const { setItems } = useBreadcrumbs()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.buildingUnitComm
+  )
   const deleteMutation = useDeleteBuildingUnitComm()
 
   const isUserRole = user?.roleDescriptions?.includes("user") ?? false
@@ -157,6 +166,7 @@ export function BuildingUnitCommListScreen({
   const actions: RncGridActions<BuildingUnitCommResponseDto> = useMemo(() => {
     const base: RncGridActions<BuildingUnitCommResponseDto> = {
       edit: {
+        disabled: () => !canUpdate,
         route: (row) => `/buildings/${buildingId}/communication/${row.id}`,
       },
     }
@@ -165,6 +175,7 @@ export function BuildingUnitCommListScreen({
     return {
       ...base,
       delete: {
+        disabled: () => !canDelete,
         onPress: async (row) => {
           if (!row.id) return
           await deleteMutation.mutateAsync({ id: row.id })
@@ -175,53 +186,58 @@ export function BuildingUnitCommListScreen({
         },
       },
     }
-  }, [buildingId, deleteMutation, isUserRole, t])
+  }, [buildingId, deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <View className="flex-row items-center justify-between gap-3">
-        <Text className="font-bold text-2xl text-foreground md:text-3xl">
-          {t("communication.list.title")}
-        </Text>
-        <Button
-          variant="ghost"
-          onPress={() => router.push(`/buildings/${buildingId}`)}
-        >
-          <Text>{t("communication.list.back")}</Text>
-        </Button>
-      </View>
+    <PermissionGuard permission={viewPermissions.buildingUnitComm}>
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <View className="flex-row items-center justify-between gap-3">
+          <Text className="font-bold text-2xl text-foreground md:text-3xl">
+            {t("communication.list.title")}
+          </Text>
+          <Button
+            variant="ghost"
+            onPress={() => router.push(`/buildings/${buildingId}`)}
+          >
+            <Text>{t("communication.list.back")}</Text>
+          </Button>
+        </View>
 
-      <RncGrid<
-        BuildingUnitCommResponseDto,
-        BuildingUnitCommSortOrderField,
-        CommFilters
-      >
-        id={`building-unit-comm-list-${buildingId}`}
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          {
-            field: BuildingUnitCommSortOrderField.CONTACTEDAT,
-            direction: "DESC",
-          },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: { route: `/buildings/${buildingId}/communication/new` },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<
+          BuildingUnitCommResponseDto,
+          BuildingUnitCommSortOrderField,
+          CommFilters
+        >
+          id={`building-unit-comm-list-${buildingId}`}
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            {
+              field: BuildingUnitCommSortOrderField.CONTACTEDAT,
+              direction: "DESC",
+            },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: `/buildings/${buildingId}/communication/new`,
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

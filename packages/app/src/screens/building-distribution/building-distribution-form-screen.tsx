@@ -13,7 +13,7 @@ import {
   useUpdateBuildingDistribution,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useBreadcrumbs } from "@workspace/providers"
+import { useBreadcrumbs, useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -26,6 +26,8 @@ import {
 import { useCallback, useEffect, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 import {
   BuildingDistributionFormFields,
   type BuildingDistributionFormValues,
@@ -53,6 +55,10 @@ export function BuildingDistributionFormScreen({
   const entityId = isCreateMode ? undefined : distributionId
   const listRoute = `/buildings/${buildingId}/distributions`
 
+  const { canCreate, canUpdate } = useCrudPermissions(
+    crudPermissions.buildingDistribution
+  )
+  const canSubmit = isCreateMode ? canCreate : canUpdate
   const createMutation = useCreateBuildingDistribution()
   const updateMutation = useUpdateBuildingDistribution()
   const [error, setError] = useState<string>()
@@ -272,51 +278,60 @@ export function BuildingDistributionFormScreen({
   }
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode
-          ? t("buildingDistribution.create.title")
-          : t("buildingDistribution.edit.title")}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.buildingDistribution.create
+          : formPermissions.buildingDistribution.edit
+      }
+    >
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode
+            ? t("buildingDistribution.create.title")
+            : t("buildingDistribution.edit.title")}
+        </Text>
 
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
-        <RncForm<BuildingDistributionFormValues>
-          id="BuildingDistributionFormScreen"
-          onSubmit={handleSubmit}
-          defaultValues={toFormValues(data, units)}
-        >
-          <View className="w-full gap-6">
-            <BuildingDistributionFormFields
-              units={units}
-              otherTables={otherTables}
-              sharesByTableId={sharesByTableId}
-            />
-
-            <View className="flex-row gap-3">
-              <RncSubmitButton
-                label={
-                  isCreateMode
-                    ? t("buildingDistribution.create.save")
-                    : t("buildingDistribution.edit.save")
-                }
-              />
-              <Button
-                variant="outline"
-                onPress={() => router.replace(listRoute)}
-              >
-                <Text>{t("buildingDistribution.edit.cancel")}</Text>
-              </Button>
-            </View>
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
           </View>
-        </RncForm>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
+          <RncForm<BuildingDistributionFormValues>
+            id="BuildingDistributionFormScreen"
+            onSubmit={handleSubmit}
+            defaultValues={toFormValues(data, units)}
+          >
+            <View className="w-full gap-6">
+              <BuildingDistributionFormFields
+                units={units}
+                otherTables={otherTables}
+                sharesByTableId={sharesByTableId}
+              />
+
+              <View className="flex-row gap-3">
+                <RncSubmitButton
+                  disabled={!canSubmit}
+                  label={
+                    isCreateMode
+                      ? t("buildingDistribution.create.save")
+                      : t("buildingDistribution.edit.save")
+                  }
+                />
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(listRoute)}
+                >
+                  <Text>{t("buildingDistribution.edit.cancel")}</Text>
+                </Button>
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }
 

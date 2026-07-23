@@ -8,6 +8,7 @@ import {
   useBulkSbfSchemaPropertiess,
   useUpdateSbfSchemaProperties,
 } from "@workspace/api-client"
+import { usePermission } from "@workspace/providers"
 import {
   RncGrid,
   type RncGridColumn,
@@ -19,6 +20,7 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { inlineEditPermissions } from "../../screen-permissions"
 
 type SchemaPropertiesFilters = Omit<
   SbfSchemaPropertiesSearchRequestDto,
@@ -28,6 +30,12 @@ type SchemaPropertiesFilters = Omit<
 export function SchemaPropertiesTab() {
   const updateMutation = useUpdateSbfSchemaProperties()
   const bulkMutation = useBulkSbfSchemaPropertiess()
+  const { hasPermission } = usePermission()
+  // Inline editing saves per-row (PUT) and save-all (bulk POST); without both
+  // grants the grid renders read-only.
+  const canEdit =
+    hasPermission(inlineEditPermissions.schemaProperties.update) &&
+    hasPermission(inlineEditPermissions.schemaProperties.bulk)
 
   const fetchData = useCallback(
     async (
@@ -236,8 +244,8 @@ export function SchemaPropertiesTab() {
       columns={columns}
       fetchData={fetchData}
       keyExtractor={(row) => row.id ?? ""}
-      addEditMode="inline"
-      inlineEdit={inlineEdit}
+      addEditMode={canEdit ? "inline" : "default"}
+      inlineEdit={canEdit ? inlineEdit : undefined}
       initialSort={[
         { field: SbfSchemaPropertiesSortOrderField.KEY, direction: "ASC" },
       ]}

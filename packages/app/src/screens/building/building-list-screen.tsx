@@ -10,7 +10,7 @@ import {
   useDeleteBuilding,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth } from "@workspace/providers"
+import { useAuth, useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   RncCheckbox,
@@ -26,6 +26,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 const COUNTRY_OPTIONS = [
   { id: "CY", label: "Cyprus" },
@@ -65,6 +67,9 @@ export function BuildingListScreen() {
   const { t } = useTranslation(["screens"])
   const router = useRouter()
   const { user } = useAuth()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.building
+  )
   const deleteMutation = useDeleteBuilding()
 
   const isUserRole = user?.roleDescriptions?.includes("user") ?? false
@@ -316,6 +321,7 @@ export function BuildingListScreen() {
   const actions: RncGridActions<BuildingResponseDto> = useMemo(() => {
     const baseActions: RncGridActions<BuildingResponseDto> = {
       edit: {
+        disabled: () => !canUpdate,
         route: (row) => `/buildings/${row.id}`,
       },
     }
@@ -327,6 +333,7 @@ export function BuildingListScreen() {
     return {
       ...baseActions,
       delete: {
+        disabled: () => !canDelete,
         onPress: async (row) => {
           if (!row.id) return
           await deleteMutation.mutateAsync({ id: row.id })
@@ -340,39 +347,48 @@ export function BuildingListScreen() {
         },
       },
     }
-  }, [deleteMutation, isUserRole, t])
+  }, [deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("building.list.title")}
-      </Text>
+    <PermissionGuard permission={viewPermissions.building}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("building.list.title")}
+        </Text>
 
-      <RncGrid<BuildingResponseDto, BuildingSortOrderField, BuildingListFilters>
-        id="building-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[{ field: BuildingSortOrderField.CODE, direction: "ASC" }]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: {
-            route: "/buildings/new",
-            label: t("building.list.add"),
-          },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<
+          BuildingResponseDto,
+          BuildingSortOrderField,
+          BuildingListFilters
+        >
+          id="building-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: BuildingSortOrderField.CODE, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: "/buildings/new",
+              label: t("building.list.add"),
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

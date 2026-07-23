@@ -9,7 +9,11 @@ import {
   useGetBuildingById,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -24,6 +28,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useEffect, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 export interface BuildingUnitListScreenProps {
   buildingId: string
@@ -42,6 +48,9 @@ export function BuildingUnitListScreen({
   const { user } = useAuth()
   const { setItems } = useBreadcrumbs()
   const { data: building } = useGetBuildingById(buildingId)
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.buildingUnit
+  )
   const deleteMutation = useDeleteBuildingUnit()
 
   const isUserRole = user?.roleDescriptions?.includes("user") ?? false
@@ -253,6 +262,7 @@ export function BuildingUnitListScreen({
   const actions: RncGridActions<BuildingUnitResponseDto> = useMemo(() => {
     const baseActions: RncGridActions<BuildingUnitResponseDto> = {
       edit: {
+        disabled: () => !canUpdate,
         route: (row) => `/buildings/${buildingId}/units/${row.id}`,
       },
     }
@@ -264,6 +274,7 @@ export function BuildingUnitListScreen({
     return {
       ...baseActions,
       delete: {
+        disabled: () => !canDelete,
         onPress: async (row) => {
           if (!row.id) return
           await deleteMutation.mutateAsync({ id: row.id })
@@ -277,63 +288,66 @@ export function BuildingUnitListScreen({
         },
       },
     }
-  }, [buildingId, deleteMutation, isUserRole, t])
+  }, [buildingId, deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <View className="flex-row items-center gap-3">
-        <Button
-          variant="ghost"
-          onPress={() => router.push(`/buildings/${buildingId}`)}
+    <PermissionGuard permission={viewPermissions.buildingUnit}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <View className="flex-row items-center gap-3">
+          <Button
+            variant="ghost"
+            onPress={() => router.push(`/buildings/${buildingId}`)}
+          >
+            {t("buildingUnit.list.back")}
+          </Button>
+        </View>
+
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("buildingUnit.list.title")}
+        </Text>
+
+        <RncGrid<
+          BuildingUnitResponseDto,
+          BuildingUnitSortOrderField,
+          BuildingUnitListFilters
         >
-          {t("buildingUnit.list.back")}
-        </Button>
-      </View>
-
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("buildingUnit.list.title")}
-      </Text>
-
-      <RncGrid<
-        BuildingUnitResponseDto,
-        BuildingUnitSortOrderField,
-        BuildingUnitListFilters
-      >
-        id="building-unit-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: BuildingUnitSortOrderField.FLOOR, direction: "ASC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          custom: [
-            {
-              key: "unit-balances",
-              icon: iconFor("Scale", 15),
-              label: t("buildingUnit.list.balances"),
-              onPress: () =>
-                router.push(`/buildings/${buildingId}/unit-balances`),
+          id="building-unit-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: BuildingUnitSortOrderField.FLOOR, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            custom: [
+              {
+                key: "unit-balances",
+                icon: iconFor("Scale", 15),
+                label: t("buildingUnit.list.balances"),
+                onPress: () =>
+                  router.push(`/buildings/${buildingId}/unit-balances`),
+              },
+            ],
+            add: {
+              disabled: !canCreate,
+              route: `/buildings/${buildingId}/units/new`,
+              label: t("buildingUnit.list.add"),
             },
-          ],
-          add: {
-            route: `/buildings/${buildingId}/units/new`,
-            label: t("buildingUnit.list.add"),
-          },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

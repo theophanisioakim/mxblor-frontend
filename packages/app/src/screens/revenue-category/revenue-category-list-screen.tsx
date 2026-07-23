@@ -8,6 +8,7 @@ import {
   useDeleteRevenueCategory,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   RncCheckbox,
@@ -21,6 +22,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 type RevenueCategoryListFilters = Omit<
   RevenueCategorySearchRequestDto,
@@ -30,6 +33,9 @@ type RevenueCategoryListFilters = Omit<
 export function RevenueCategoryListScreen() {
   const { t } = useTranslation(["screens"])
   const router = useRouter()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.revenueCategory
+  )
   const deleteMutation = useDeleteRevenueCategory()
 
   const fetchData = useCallback(
@@ -148,10 +154,12 @@ export function RevenueCategoryListScreen() {
         route: (row) => `/revenues/categories/${row.id}`,
       },
       edit: {
+        disabled: () => !canUpdate,
         hidden: (row) => !row.editable,
         route: (row) => `/revenues/categories/${row.id}`,
       },
       delete: {
+        disabled: () => !canDelete,
         hidden: (row) => !row.editable,
         onPress: async (row) => {
           if (!row.id) return
@@ -166,45 +174,48 @@ export function RevenueCategoryListScreen() {
         },
       },
     }),
-    [deleteMutation, t]
+    [deleteMutation, t, canUpdate, canDelete]
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("revenueCategory.list.title")}
-      </Text>
+    <PermissionGuard permission={viewPermissions.revenueCategory}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("revenueCategory.list.title")}
+        </Text>
 
-      <RncGrid<
-        RevenueCategoryResponseDto,
-        RevenueCategorySortOrderField,
-        RevenueCategoryListFilters
-      >
-        id="revenue-category-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: RevenueCategorySortOrderField.CODE, direction: "ASC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: {
-            route: "/revenues/categories/new",
-          },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<
+          RevenueCategoryResponseDto,
+          RevenueCategorySortOrderField,
+          RevenueCategoryListFilters
+        >
+          id="revenue-category-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: RevenueCategorySortOrderField.CODE, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: "/revenues/categories/new",
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

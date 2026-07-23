@@ -10,7 +10,11 @@ import {
   useUpdateTBankAccount,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -23,6 +27,8 @@ import {
 import { useCallback, useEffect, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 import {
   TBankAccountFormFields,
   type TBankAccountFormValues,
@@ -51,6 +57,10 @@ export function TBankAccountFormScreen({
 
   const isUserRole = user?.roleDescriptions?.includes("user") ?? false
 
+  const { canCreate, canUpdate } = useCrudPermissions(
+    crudPermissions.tBankAccount
+  )
+  const canSubmit = isCreateMode ? canCreate : canUpdate
   const createMutation = useCreateTBankAccount()
   const updateMutation = useUpdateTBankAccount()
   const [error, setError] = useState<string>()
@@ -191,50 +201,59 @@ export function TBankAccountFormScreen({
   }
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode
-          ? t("bankAccount.create.title")
-          : t("bankAccount.edit.title")}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.tBankAccount.create
+          : formPermissions.tBankAccount.edit
+      }
+    >
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode
+            ? t("bankAccount.create.title")
+            : t("bankAccount.edit.title")}
+        </Text>
 
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
-        <RncForm<TBankAccountFormValues>
-          id="TBankAccountFormScreen"
-          onSubmit={handleSubmit}
-          defaultValues={toFormValues(data)}
-        >
-          <View className="w-full gap-6">
-            <TBankAccountFormFields
-              isCreateMode={isCreateMode}
-              canManageTransactions={!isUserRole}
-            />
-
-            <View className="flex-row gap-3">
-              <RncSubmitButton
-                label={
-                  isCreateMode
-                    ? t("bankAccount.create.save")
-                    : t("bankAccount.edit.save")
-                }
-              />
-              <Button
-                variant="outline"
-                onPress={() => router.replace(listRoute)}
-              >
-                <Text>{t("bankAccount.edit.cancel")}</Text>
-              </Button>
-            </View>
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
           </View>
-        </RncForm>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
+          <RncForm<TBankAccountFormValues>
+            id="TBankAccountFormScreen"
+            onSubmit={handleSubmit}
+            defaultValues={toFormValues(data)}
+          >
+            <View className="w-full gap-6">
+              <TBankAccountFormFields
+                isCreateMode={isCreateMode}
+                canManageTransactions={!isUserRole}
+              />
+
+              <View className="flex-row gap-3">
+                <RncSubmitButton
+                  disabled={!canSubmit}
+                  label={
+                    isCreateMode
+                      ? t("bankAccount.create.save")
+                      : t("bankAccount.edit.save")
+                  }
+                />
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(listRoute)}
+                >
+                  <Text>{t("bankAccount.edit.cancel")}</Text>
+                </Button>
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }
 

@@ -8,6 +8,7 @@ import {
   useDeleteRevenue,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   RncGrid,
@@ -19,6 +20,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 type CategoryRevenueFilters = Omit<
   RevenueSearchRequestDto,
@@ -43,6 +46,9 @@ export function CategoryRevenuesGrid({
 }: Readonly<{ categoryId: string; categoryEditable: boolean }>) {
   const { t } = useTranslation(["screens"])
   const router = useRouter()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.revenue
+  )
   const deleteMutation = useDeleteRevenue()
 
   const fetchData = useCallback(
@@ -131,10 +137,12 @@ export function CategoryRevenuesGrid({
         route: (row) => `/revenues/${row.id}`,
       },
       edit: {
+        disabled: () => !canUpdate,
         hidden: (row) => !row.editable,
         route: (row) => `/revenues/${row.id}`,
       },
       delete: {
+        disabled: () => !canDelete,
         hidden: (row) => !row.editable,
         onPress: async (row) => {
           if (!row.id) return
@@ -149,47 +157,52 @@ export function CategoryRevenuesGrid({
         },
       },
     }),
-    [deleteMutation, t]
+    [deleteMutation, t, canUpdate, canDelete]
   )
 
   return (
-    <View className="w-full gap-3">
-      <Text className="font-semibold text-foreground text-xl">
-        {t("revenueCategory.revenues.title")}
-      </Text>
+    <PermissionGuard permission={viewPermissions.revenue}>
+      <View className="w-full gap-3">
+        <Text className="font-semibold text-foreground text-xl">
+          {t("revenueCategory.revenues.title")}
+        </Text>
 
-      <RncGrid<
-        RevenueResponseDto,
-        RevenueSortOrderField,
-        CategoryRevenueFilters
-      >
-        id={`revenue-category-revenues-${categoryId}`}
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[{ field: RevenueSortOrderField.CODE, direction: "ASC" }]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        toolbar={{
-          // Adding is only possible in a user-created category.
-          ...(categoryEditable
-            ? {
-                add: {
-                  route: `/revenues/new?categoryId=${categoryId}`,
-                  label: t("revenueCategory.revenues.add"),
-                },
-              }
-            : {}),
-          refresh: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<
+          RevenueResponseDto,
+          RevenueSortOrderField,
+          CategoryRevenueFilters
+        >
+          id={`revenue-category-revenues-${categoryId}`}
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: RevenueSortOrderField.CODE, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          toolbar={{
+            // Adding is only possible in a user-created category.
+            ...(categoryEditable
+              ? {
+                  add: {
+                    disabled: !canCreate,
+                    route: `/revenues/new?categoryId=${categoryId}`,
+                    label: t("revenueCategory.revenues.add"),
+                  },
+                }
+              : {}),
+            refresh: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

@@ -9,7 +9,11 @@ import {
   useGetBuildingById,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -24,6 +28,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useEffect, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 import { useBankAccountTypeOptions } from "../shared/use-reference-options"
 
 export interface TBankAccountListScreenProps {
@@ -50,6 +56,9 @@ export function TBankAccountListScreen({
   const { user } = useAuth()
   const { setItems } = useBreadcrumbs()
   const { data: building } = useGetBuildingById(buildingId)
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.tBankAccount
+  )
   const deleteMutation = useDeleteTBankAccount()
   const accountTypes = useBankAccountTypeOptions()
 
@@ -203,6 +212,7 @@ export function TBankAccountListScreen({
   const actions: RncGridActions<TBankAccountResponseDto> = useMemo(() => {
     const baseActions: RncGridActions<TBankAccountResponseDto> = {
       edit: {
+        disabled: () => !canUpdate,
         route: (row) => `/buildings/${buildingId}/bank-accounts/${row.id}`,
       },
     }
@@ -214,6 +224,7 @@ export function TBankAccountListScreen({
     return {
       ...baseActions,
       delete: {
+        disabled: () => !canDelete,
         onPress: async (row) => {
           if (!row.id) return
           await deleteMutation.mutateAsync({ id: row.id })
@@ -227,54 +238,57 @@ export function TBankAccountListScreen({
         },
       },
     }
-  }, [buildingId, deleteMutation, isUserRole, t])
+  }, [buildingId, deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <View className="flex-row items-center gap-3">
-        <Button
-          variant="ghost"
-          onPress={() => router.push(`/buildings/${buildingId}`)}
+    <PermissionGuard permission={viewPermissions.tBankAccount}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <View className="flex-row items-center gap-3">
+          <Button
+            variant="ghost"
+            onPress={() => router.push(`/buildings/${buildingId}`)}
+          >
+            {t("bankAccount.list.back")}
+          </Button>
+        </View>
+
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("bankAccount.list.title")}
+        </Text>
+
+        <RncGrid<
+          TBankAccountResponseDto,
+          TBankAccountSortOrderField,
+          TBankAccountListFilters
         >
-          {t("bankAccount.list.back")}
-        </Button>
+          id="t-bank-account-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: TBankAccountSortOrderField.ACCOUNTNO, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: `/buildings/${buildingId}/bank-accounts/new`,
+              label: t("bankAccount.list.add"),
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
       </View>
-
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("bankAccount.list.title")}
-      </Text>
-
-      <RncGrid<
-        TBankAccountResponseDto,
-        TBankAccountSortOrderField,
-        TBankAccountListFilters
-      >
-        id="t-bank-account-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: TBankAccountSortOrderField.ACCOUNTNO, direction: "ASC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: {
-            route: `/buildings/${buildingId}/bank-accounts/new`,
-            label: t("bankAccount.list.add"),
-          },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+    </PermissionGuard>
   )
 }

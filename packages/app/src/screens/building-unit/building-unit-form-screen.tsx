@@ -10,7 +10,7 @@ import {
   useUpdateBuildingUnit,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useBreadcrumbs } from "@workspace/providers"
+import { useBreadcrumbs, useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -23,6 +23,8 @@ import {
 import { useCallback, useEffect, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 import {
   BuildingUnitFormFields,
   type BuildingUnitFormValues,
@@ -74,6 +76,10 @@ export function BuildingUnitFormScreen({
   const entityId = isCreateMode ? undefined : unitId
   const listRoute = `/buildings/${buildingId}/units`
 
+  const { canCreate, canUpdate } = useCrudPermissions(
+    crudPermissions.buildingUnit
+  )
+  const canSubmit = isCreateMode ? canCreate : canUpdate
   const createMutation = useCreateBuildingUnit()
   const updateMutation = useUpdateBuildingUnit()
   const [error, setError] = useState<string>()
@@ -198,46 +204,55 @@ export function BuildingUnitFormScreen({
   }
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode
-          ? t("buildingUnit.create.title")
-          : t("buildingUnit.edit.title")}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.buildingUnit.create
+          : formPermissions.buildingUnit.edit
+      }
+    >
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode
+            ? t("buildingUnit.create.title")
+            : t("buildingUnit.edit.title")}
+        </Text>
 
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
-        <RncForm<BuildingUnitFormValues>
-          id="BuildingUnitFormScreen"
-          onSubmit={handleSubmit}
-          defaultValues={data ? toFormValues(data) : EMPTY_VALUES}
-        >
-          <View className="w-full gap-6">
-            <BuildingUnitFormFields />
-
-            <View className="flex-row gap-3">
-              <RncSubmitButton
-                label={
-                  isCreateMode
-                    ? t("buildingUnit.create.save")
-                    : t("buildingUnit.edit.save")
-                }
-              />
-              <Button
-                variant="outline"
-                onPress={() => router.replace(listRoute)}
-              >
-                <Text>{t("buildingUnit.edit.cancel")}</Text>
-              </Button>
-            </View>
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
           </View>
-        </RncForm>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
+          <RncForm<BuildingUnitFormValues>
+            id="BuildingUnitFormScreen"
+            onSubmit={handleSubmit}
+            defaultValues={data ? toFormValues(data) : EMPTY_VALUES}
+          >
+            <View className="w-full gap-6">
+              <BuildingUnitFormFields />
+
+              <View className="flex-row gap-3">
+                <RncSubmitButton
+                  disabled={!canSubmit}
+                  label={
+                    isCreateMode
+                      ? t("buildingUnit.create.save")
+                      : t("buildingUnit.edit.save")
+                  }
+                />
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(listRoute)}
+                >
+                  <Text>{t("buildingUnit.edit.cancel")}</Text>
+                </Button>
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }

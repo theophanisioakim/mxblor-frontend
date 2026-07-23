@@ -8,6 +8,7 @@ import {
   useDeleteExpense,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   RncGrid,
@@ -19,6 +20,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 type CategoryExpenseFilters = Omit<
   ExpenseSearchRequestDto,
@@ -43,6 +46,9 @@ export function CategoryExpensesGrid({
 }: Readonly<{ categoryId: string; categoryEditable: boolean }>) {
   const { t } = useTranslation(["screens"])
   const router = useRouter()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.expense
+  )
   const deleteMutation = useDeleteExpense()
 
   const fetchData = useCallback(
@@ -131,10 +137,12 @@ export function CategoryExpensesGrid({
         route: (row) => `/expenses/${row.id}`,
       },
       edit: {
+        disabled: () => !canUpdate,
         hidden: (row) => !row.editable,
         route: (row) => `/expenses/${row.id}`,
       },
       delete: {
+        disabled: () => !canDelete,
         hidden: (row) => !row.editable,
         onPress: async (row) => {
           if (!row.id) return
@@ -149,47 +157,52 @@ export function CategoryExpensesGrid({
         },
       },
     }),
-    [deleteMutation, t]
+    [deleteMutation, t, canUpdate, canDelete]
   )
 
   return (
-    <View className="w-full gap-3">
-      <Text className="font-semibold text-foreground text-xl">
-        {t("expenseCategory.expenses.title")}
-      </Text>
+    <PermissionGuard permission={viewPermissions.expense}>
+      <View className="w-full gap-3">
+        <Text className="font-semibold text-foreground text-xl">
+          {t("expenseCategory.expenses.title")}
+        </Text>
 
-      <RncGrid<
-        ExpenseResponseDto,
-        ExpenseSortOrderField,
-        CategoryExpenseFilters
-      >
-        id={`expense-category-expenses-${categoryId}`}
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[{ field: ExpenseSortOrderField.CODE, direction: "ASC" }]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        toolbar={{
-          // Adding is only possible in a user-created category.
-          ...(categoryEditable
-            ? {
-                add: {
-                  route: `/expenses/new?categoryId=${categoryId}`,
-                  label: t("expenseCategory.expenses.add"),
-                },
-              }
-            : {}),
-          refresh: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<
+          ExpenseResponseDto,
+          ExpenseSortOrderField,
+          CategoryExpenseFilters
+        >
+          id={`expense-category-expenses-${categoryId}`}
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: ExpenseSortOrderField.CODE, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          toolbar={{
+            // Adding is only possible in a user-created category.
+            ...(categoryEditable
+              ? {
+                  add: {
+                    disabled: !canCreate,
+                    route: `/expenses/new?categoryId=${categoryId}`,
+                    label: t("expenseCategory.expenses.add"),
+                  },
+                }
+              : {}),
+            refresh: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

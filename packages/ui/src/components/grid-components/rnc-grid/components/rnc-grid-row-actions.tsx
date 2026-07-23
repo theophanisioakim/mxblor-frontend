@@ -121,8 +121,14 @@ export function RncGridRowActions<T>({
       )}
       {actions?.edit && !isDraftRow(row) && !actions.edit.hidden?.(row) && (
         <Pressable
-          className={cn(ICON_BTN, "cursor-pointer hover:bg-accent")}
+          className={cn(
+            ICON_BTN,
+            actions.edit.disabled?.(row)
+              ? "opacity-50"
+              : "cursor-pointer hover:bg-accent"
+          )}
           onPress={() => handleEditPress(row)}
+          disabled={actions.edit.disabled?.(row)}
           aria-label="Edit"
         >
           <Icon as={Pencil} size={16} className="text-muted-foreground" />
@@ -130,8 +136,14 @@ export function RncGridRowActions<T>({
       )}
       {actions?.delete && !isDraftRow(row) && !actions.delete.hidden?.(row) && (
         <Pressable
-          className={cn(ICON_BTN, "cursor-pointer hover:bg-red-100")}
+          className={cn(
+            ICON_BTN,
+            actions.delete.disabled?.(row)
+              ? "opacity-50"
+              : "cursor-pointer hover:bg-red-100"
+          )}
           onPress={() => handleDeletePress(row)}
+          disabled={actions.delete.disabled?.(row)}
           aria-label="Delete"
         >
           <Icon as={Trash2} size={16} className="text-red-600" />

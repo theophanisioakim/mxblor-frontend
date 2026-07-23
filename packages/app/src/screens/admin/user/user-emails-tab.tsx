@@ -9,6 +9,7 @@ import {
   useDeleteSbfUserEmail,
   useUpdateSbfUserEmail,
 } from "@workspace/api-client"
+import { useCrudPermissions } from "@workspace/providers"
 import {
   Icon,
   RncCheckbox,
@@ -25,6 +26,7 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo, useState } from "react"
+import { crudPermissions } from "../../screen-permissions"
 
 type EmailRow = SbfUserEmailResponseDto
 type EmailFilters = Omit<
@@ -36,6 +38,9 @@ export function UserEmailsTab({ userId }: Readonly<{ userId: string }>) {
   const createMutation = useCreateSbfUserEmail()
   const updateMutation = useUpdateSbfUserEmail()
   const deleteMutation = useDeleteSbfUserEmail()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.userEmail
+  )
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const fetchData = useCallback(
@@ -207,6 +212,7 @@ export function UserEmailsTab({ userId }: Readonly<{ userId: string }>) {
           key: "delete-selected",
           icon: <Icon as={Trash2} size={16} />,
           label: "Delete selected",
+          disabled: !canDelete,
           onPress: async (rows) => {
             await Promise.all(
               rows
@@ -220,12 +226,12 @@ export function UserEmailsTab({ userId }: Readonly<{ userId: string }>) {
         },
       ],
     }),
-    [deleteMutation]
+    [deleteMutation, canDelete]
   )
 
   const actions: RncGridActions<EmailRow> = useMemo(
     () => ({
-      edit: {},
+      edit: { disabled: () => !canUpdate },
       delete: {
         onPress: async (row) => {
           if (!row.id) return
@@ -236,9 +242,10 @@ export function UserEmailsTab({ userId }: Readonly<{ userId: string }>) {
           description: (row) =>
             `Remove email "${row.email}"? This action cannot be undone.`,
         },
+        disabled: () => !canDelete,
       },
     }),
-    [deleteMutation]
+    [deleteMutation, canUpdate, canDelete]
   )
 
   const filters: RncGridFiltersConfig<EmailRow, EmailFilters> = useMemo(
@@ -273,7 +280,11 @@ export function UserEmailsTab({ userId }: Readonly<{ userId: string }>) {
         pageNumber: 0,
         pageSizeOptions: [20, 50, 100],
       }}
-      toolbar={{ add: { label: "Add Email" }, refresh: {}, reset: {} }}
+      toolbar={{
+        add: { label: "Add Email", disabled: !canCreate },
+        refresh: {},
+        reset: {},
+      }}
       refreshTrigger={refreshTrigger}
       filters={filters}
     />

@@ -23,13 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      # No backend runs in CI, and api-client's BASE_URL falls back to a LAN dev
-      # host (192.168.68.68:21001) that a runner cannot route to. Traffic to it is
-      # blackholed rather than refused, so the SSR fetches in apps/web/app/layout.tsx
-      # (getLanguageConfig / getMyMenus) would block for axios's full 30s timeout on
-      # every request and blow Playwright's 30s navigation budget. Point at a closed
-      # local port instead: the connection is refused instantly, the layout's
-      # try/catch takes the documented graceful-degradation path, and the page paints.
+      # No backend runs in CI. Use a known closed local port so SSR requests fail
+      # immediately and deterministically instead of accidentally reaching a service
+      # on the web client's same-host development fallback (port 21001). The layout's
+      # try/catch then takes the documented graceful-degradation path and the page paints.
       # NEXT_PUBLIC_* is inlined at build time, so this must be set for `build` too —
       # not just the E2E step (hence job-level, not step-level).
       NEXT_PUBLIC_API_URL: http://127.0.0.1:9999

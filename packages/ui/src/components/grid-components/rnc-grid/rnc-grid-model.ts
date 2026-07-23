@@ -69,6 +69,9 @@ export interface RncGridEditAction<T> {
   /** When it returns true for a row, the edit action is not rendered for that
    * row (e.g. read-only / system-default rows). */
   hidden?: (row: T) => boolean
+  /** When it returns true for a row, the edit action renders greyed out and
+   * inert (e.g. the user lacks the backing API permission). */
+  disabled?: (row: T) => boolean
 }
 
 export interface RncGridDeleteConfirm<T> {
@@ -82,6 +85,9 @@ export interface RncGridDeleteAction<T> {
   /** When it returns true for a row, the delete action is not rendered for that
    * row (e.g. read-only / system-default rows). */
   hidden?: (row: T) => boolean
+  /** When it returns true for a row, the delete action renders greyed out and
+   * inert (e.g. the user lacks the backing API permission). */
+  disabled?: (row: T) => boolean
 }
 
 export interface RncGridCustomAction<T> {
@@ -102,6 +108,9 @@ export interface RncGridToolbarAddAction {
   route?: string
   onPress?: () => void
   label?: string
+  /** Renders the add button greyed out and inert (e.g. the user lacks the
+   * backing API permission). */
+  disabled?: boolean
 }
 
 export interface RncGridToolbarRefreshAction {
@@ -137,6 +146,9 @@ export interface RncGridBulkAction<T> {
   icon?: ReactNode
   label: string
   onPress: (selectedRows: T[]) => void | Promise<void>
+  /** Renders the bulk action greyed out and inert (e.g. the user lacks the
+   * backing API permission). */
+  disabled?: boolean
 }
 
 export interface RncGridSelectionConfig<T> {

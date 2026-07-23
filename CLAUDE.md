@@ -47,6 +47,7 @@ Path-gated guidance that loads when you open a matching file:
 - `vendored-ui-components.md` → `packages/web-ui/**`, `packages/native-ui/**`
 - `ui-abstraction.md` → `packages/ui/src/components/**`
 - `generated-api.md` → `packages/api-client/src/generated/**`
+- `api-permissions.md` → `packages/app/src/screens/**`, `packages/providers/src/permission-provider.tsx`
 - `cross-platform.md` → `**/*.native.{ts,tsx}`
 - `page-layout.md` → `packages/app/src/screens/**`, `apps/web/app/**`, `apps/native/src/app/**`
 - `typescript-style.md` → `**/*.{ts,tsx}`

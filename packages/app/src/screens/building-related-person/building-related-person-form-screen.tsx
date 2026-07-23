@@ -10,7 +10,7 @@ import {
   useUpdateBuildingRelatedPerson,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useBreadcrumbs } from "@workspace/providers"
+import { useBreadcrumbs, useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -25,6 +25,8 @@ import {
 import { useCallback, useEffect, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 import { useBuildingRelatedPersonTypeOptions } from "../shared/use-reference-options"
 
 type RelatedPersonFormValues = {
@@ -54,6 +56,10 @@ export function BuildingRelatedPersonFormScreen({
   const entityId = isCreateMode ? undefined : personId
   const listRoute = `/buildings/${buildingId}/related-people`
 
+  const { canCreate, canUpdate } = useCrudPermissions(
+    crudPermissions.buildingRelatedPerson
+  )
+  const canSubmit = isCreateMode ? canCreate : canUpdate
   const createMutation = useCreateBuildingRelatedPerson()
   const updateMutation = useUpdateBuildingRelatedPerson()
   const [error, setError] = useState<string>()
@@ -172,91 +178,100 @@ export function BuildingRelatedPersonFormScreen({
   }
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode
-          ? t("relatedPerson.create.title")
-          : t("relatedPerson.edit.title")}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.buildingRelatedPerson.create
+          : formPermissions.buildingRelatedPerson.edit
+      }
+    >
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode
+            ? t("relatedPerson.create.title")
+            : t("relatedPerson.edit.title")}
+        </Text>
 
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
-        <RncForm<RelatedPersonFormValues>
-          id="BuildingRelatedPersonFormScreen"
-          onSubmit={handleSubmit}
-          defaultValues={{
-            contactId: data?.contactId ?? "",
-            relatedPersonTypeId: data?.relatedPersonTypeId ?? "",
-            relation: data?.relation ?? "",
-          }}
-        >
-          <View className="w-full gap-6">
-            <View className="gap-3 md:flex-row md:flex-wrap">
-              <View className="md:min-w-[220px] md:flex-[2]">
-                <RncSelect
-                  id="contactId"
-                  label={t("relatedPerson.form.fields.contact")}
-                  placeholder={t(
-                    "relatedPerson.form.fields.contactPlaceholder"
-                  )}
-                  required
-                  searchable
-                  optionsLoader={async () => {
-                    const response = await searchContacts({
-                      page: 0,
-                      size: 100,
-                    })
-                    return (response.content ?? [])
-                      .filter((entry) => entry.id != null)
-                      .map((entry) => ({
-                        id: entry.id as string,
-                        label: entry.fullName ?? String(entry.id),
-                      }))
-                  }}
-                />
-              </View>
-              <View className="md:min-w-[200px] md:flex-1">
-                <RncSelect
-                  id="relatedPersonTypeId"
-                  label={t("relatedPerson.form.fields.type")}
-                  placeholder={t("relatedPerson.form.fields.typePlaceholder")}
-                  required
-                  options={types.options}
-                />
-              </View>
-            </View>
-
-            <RncInput
-              id="relation"
-              label={t("relatedPerson.form.fields.relation")}
-              placeholder={t("relatedPerson.form.fields.relationPlaceholder")}
-              required
-              textValidationRules={{ maxLength: 255 }}
-            />
-
-            <View className="flex-row gap-3">
-              <RncSubmitButton
-                label={
-                  isCreateMode
-                    ? t("relatedPerson.create.save")
-                    : t("relatedPerson.edit.save")
-                }
-              />
-              <Button
-                variant="outline"
-                onPress={() => router.replace(listRoute)}
-              >
-                <Text>{t("relatedPerson.edit.cancel")}</Text>
-              </Button>
-            </View>
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
           </View>
-        </RncForm>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
+          <RncForm<RelatedPersonFormValues>
+            id="BuildingRelatedPersonFormScreen"
+            onSubmit={handleSubmit}
+            defaultValues={{
+              contactId: data?.contactId ?? "",
+              relatedPersonTypeId: data?.relatedPersonTypeId ?? "",
+              relation: data?.relation ?? "",
+            }}
+          >
+            <View className="w-full gap-6">
+              <View className="gap-3 md:flex-row md:flex-wrap">
+                <View className="md:min-w-[220px] md:flex-[2]">
+                  <RncSelect
+                    id="contactId"
+                    label={t("relatedPerson.form.fields.contact")}
+                    placeholder={t(
+                      "relatedPerson.form.fields.contactPlaceholder"
+                    )}
+                    required
+                    searchable
+                    optionsLoader={async () => {
+                      const response = await searchContacts({
+                        page: 0,
+                        size: 100,
+                      })
+                      return (response.content ?? [])
+                        .filter((entry) => entry.id != null)
+                        .map((entry) => ({
+                          id: entry.id as string,
+                          label: entry.fullName ?? String(entry.id),
+                        }))
+                    }}
+                  />
+                </View>
+                <View className="md:min-w-[200px] md:flex-1">
+                  <RncSelect
+                    id="relatedPersonTypeId"
+                    label={t("relatedPerson.form.fields.type")}
+                    placeholder={t("relatedPerson.form.fields.typePlaceholder")}
+                    required
+                    options={types.options}
+                  />
+                </View>
+              </View>
+
+              <RncInput
+                id="relation"
+                label={t("relatedPerson.form.fields.relation")}
+                placeholder={t("relatedPerson.form.fields.relationPlaceholder")}
+                required
+                textValidationRules={{ maxLength: 255 }}
+              />
+
+              <View className="flex-row gap-3">
+                <RncSubmitButton
+                  disabled={!canSubmit}
+                  label={
+                    isCreateMode
+                      ? t("relatedPerson.create.save")
+                      : t("relatedPerson.edit.save")
+                  }
+                />
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(listRoute)}
+                >
+                  <Text>{t("relatedPerson.edit.cancel")}</Text>
+                </Button>
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }

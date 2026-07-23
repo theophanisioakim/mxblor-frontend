@@ -8,6 +8,7 @@ import {
   useBulkSbfSchemaPropertiess,
   useUpdateSbfSchemaProperties,
 } from "@workspace/api-client"
+import { usePermission } from "@workspace/providers"
 import {
   RncGrid,
   type RncGridColumn,
@@ -20,6 +21,11 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import {
+  inlineEditPermissions,
+  viewPermissions,
+} from "../../screen-permissions"
 
 type SchemaPropertiesListFilters = Omit<
   SbfSchemaPropertiesSearchRequestDto,
@@ -29,6 +35,12 @@ type SchemaPropertiesListFilters = Omit<
 export function SchemaPropertiesListScreen() {
   const updateMutation = useUpdateSbfSchemaProperties()
   const bulkMutation = useBulkSbfSchemaPropertiess()
+  const { hasPermission } = usePermission()
+  // Inline editing saves per-row (PUT) and save-all (bulk POST); without both
+  // grants the grid renders read-only.
+  const canEdit =
+    hasPermission(inlineEditPermissions.schemaProperties.update) &&
+    hasPermission(inlineEditPermissions.schemaProperties.bulk)
 
   const fetchData = useCallback(
     async (
@@ -224,34 +236,36 @@ export function SchemaPropertiesListScreen() {
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        Schema Properties
-      </Text>
+    <PermissionGuard permission={viewPermissions.schemaProperties}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          Schema Properties
+        </Text>
 
-      <RncGrid<
-        SbfSchemaPropertiesResponseDto,
-        SbfSchemaPropertiesSortOrderField,
-        SchemaPropertiesListFilters
-      >
-        id="schema-properties-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="inline"
-        inlineEdit={inlineEdit}
-        initialSort={[
-          { field: SbfSchemaPropertiesSortOrderField.KEY, direction: "ASC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        toolbar={{ refresh: {}, reset: {} }}
-        filters={filters}
-      />
-    </View>
+        <RncGrid<
+          SbfSchemaPropertiesResponseDto,
+          SbfSchemaPropertiesSortOrderField,
+          SchemaPropertiesListFilters
+        >
+          id="schema-properties-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode={canEdit ? "inline" : "default"}
+          inlineEdit={canEdit ? inlineEdit : undefined}
+          initialSort={[
+            { field: SbfSchemaPropertiesSortOrderField.KEY, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          toolbar={{ refresh: {}, reset: {} }}
+          filters={filters}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

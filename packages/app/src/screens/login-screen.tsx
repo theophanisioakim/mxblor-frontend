@@ -9,9 +9,9 @@ import {
   Github,
   Google,
   Icon,
-  RncCheckbox,
   RncForm,
   RncInput,
+  RncSelect,
   RncSubmitButton,
   Separator,
   Spinner,
@@ -25,17 +25,15 @@ import { startTwitchAuth } from "./twitch-auth"
 type LoginForm = {
   username: string
   password: string
-  rememberMe?: boolean
 }
 
+type SchemaSelectionForm = { schema: string }
+
 export interface LoginScreenProps {
-  /**
-   * Twitch authorize URL resolved during SSR (web login page). When provided
-   * (`string` URL or `null` = unavailable) the client skips its own fetch and
-   * the OAuth button paints on first load. `undefined` means the server didn't
-   * resolve it (native, or an SSR failure), so the client fetches instead.
-   */
+  /** Twitch flow resolved during web SSR; omitted on native or SSR failure. */
   initialTwitchUrl?: string | null
+  initialTwitchState?: string | null
+  initialTwitchCodeVerifier?: string | null
 }
 
 type OAuthProvider = "twitch" | "google" | "apple" | "github"
@@ -81,7 +79,7 @@ const PROVIDERS = [
  * panel collapses and only the form shows — driven by `lg:` breakpoints, with no
  * platform branching.
  *
- * Username/email + password (with "remember me") is the primary path. Twitch
+ * Username/email + password is the primary path. Twitch
  * OAuth is initiated here via `startTwitchAuth`, which diverges by platform: on
  * web it full-page redirects to Twitch and the `/` route's `TwitchCallback`
  * finishes the exchange; on native it opens an in-app auth session that returns
@@ -89,23 +87,36 @@ const PROVIDERS = [
  * Google/Apple/GitHub are presented as providers but not yet backed by the API —
  * they surface a "coming soon" notice until their server flows exist.
  *
- * On web the authorize URL is resolved during SSR (the login `page.tsx`) and
- * passed in via `initialTwitchUrl` so the Twitch button paints on first load;
- * when it isn't supplied (native, or an SSR failure) the client resolves it.
+ * Web receives its client-bound Twitch flow from SSR. Native, or web after an
+ * SSR failure, resolves the flow client-side.
  */
 export function LoginScreen({
+  initialTwitchCodeVerifier,
+  initialTwitchState,
   initialTwitchUrl,
 }: Readonly<LoginScreenProps> = {}) {
-  const { login, loginWithTwitch, getTwitchRedirectUrl, isAuthenticated } =
-    useAuth()
+  const {
+    actionState,
+    cancelSchemaSelection,
+    cancelTwitchLogin,
+    getTwitchRedirectUrl,
+    isAuthenticated,
+    login,
+    loginWithTwitch,
+    pendingSchemaSelection,
+    selectSchema,
+  } = useAuth()
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null)
-  // `null` = not available / not yet known; a non-empty string = ready to use.
-  // Seeded from the SSR-resolved URL on web so it's ready on first paint.
+  const [retryDeadline, setRetryDeadline] = useState<number | null>(null)
+  const [retryRemaining, setRetryRemaining] = useState(0)
+  // `null` = unavailable or not yet known; a non-empty string = ready to use.
   const [twitchUrl, setTwitchUrl] = useState<string | null>(
-    initialTwitchUrl ?? null
+    initialTwitchUrl && initialTwitchState && initialTwitchCodeVerifier
+      ? initialTwitchUrl
+      : null
   )
 
   // Redirect away once authenticated.
@@ -115,17 +126,57 @@ export function LoginScreen({
     }
   }, [isAuthenticated, router])
 
-  // Resolve the Twitch authorize URL up front so the Twitch option can be hidden
-  // entirely when the backend doesn't provide one (empty/unavailable). Skipped
-  // when the server already resolved it (`initialTwitchUrl` defined) — only the
-  // native/SSR-failure case falls back to this client fetch.
   useEffect(() => {
-    if (initialTwitchUrl !== undefined) {
+    if (pendingSchemaSelection) {
+      setError(null)
+      setOauthLoading(null)
+      setRetryDeadline(null)
+      setRetryRemaining(0)
+    }
+  }, [pendingSchemaSelection])
+
+  useEffect(() => {
+    if (retryDeadline === null) {
+      return
+    }
+
+    const updateRemaining = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((retryDeadline - Date.now()) / 1000)
+      )
+      setRetryRemaining(remaining)
+      if (remaining === 0) {
+        setRetryDeadline(null)
+        setError(null)
+      }
+    }
+
+    updateRemaining()
+    const interval = setInterval(updateRemaining, 250)
+    return () => clearInterval(interval)
+  }, [retryDeadline])
+
+  // Register the SSR-created proof in this browser session. Native and the SSR
+  // failure path resolve a fresh flow client-side instead.
+  useEffect(() => {
+    const hasInitialResult = initialTwitchUrl !== undefined
+    const initialFlow =
+      initialTwitchUrl && initialTwitchState && initialTwitchCodeVerifier
+        ? {
+            codeVerifier: initialTwitchCodeVerifier,
+            redirectUrl: initialTwitchUrl,
+            state: initialTwitchState,
+          }
+        : undefined
+
+    if (hasInitialResult && !initialFlow) {
+      setTwitchUrl(null)
       return
     }
 
     let active = true
-    getTwitchRedirectUrl()
+    getTwitchRedirectUrl(initialFlow)
       .then((url) => {
         if (active) {
           setTwitchUrl(url)
@@ -140,7 +191,12 @@ export function LoginScreen({
     return () => {
       active = false
     }
-  }, [getTwitchRedirectUrl, initialTwitchUrl])
+  }, [
+    getTwitchRedirectUrl,
+    initialTwitchCodeVerifier,
+    initialTwitchState,
+    initialTwitchUrl,
+  ])
 
   const handleOAuth = async (provider: OAuthProvider) => {
     setError(null)
@@ -152,8 +208,17 @@ export function LoginScreen({
       return
     }
 
-    // The Twitch button only renders when a URL is available, so this is a guard.
-    if (!twitchUrl) {
+    let authUrl = twitchUrl
+    if (initialTwitchUrl && initialTwitchState && initialTwitchCodeVerifier) {
+      authUrl = await getTwitchRedirectUrl({
+        codeVerifier: initialTwitchCodeVerifier,
+        redirectUrl: initialTwitchUrl,
+        state: initialTwitchState,
+      })
+    }
+
+    // The Twitch button only renders when the backend supplied a URL.
+    if (!authUrl) {
       setError("Twitch login is currently unavailable.")
       return
     }
@@ -163,29 +228,41 @@ export function LoginScreen({
     // Web full-page redirects (the `/` route's TwitchCallback finishes the
     // exchange); native opens an in-app auth session and returns code/state
     // inline, which we exchange here.
-    const result = await startTwitchAuth(twitchUrl)
+    const result = await startTwitchAuth(authUrl)
     if (result.type === "redirecting") {
       return
     }
     if (result.type === "cancelled") {
+      cancelTwitchLogin()
       setOauthLoading(null)
       return
     }
 
     const session = await loginWithTwitch(result.code, result.state)
-    if (session.success) {
+    if (session.status === "authenticated") {
       router.replace("/dashboard")
-    } else {
+    } else if (session.status === "error") {
       setError(session.errorMessage)
+      if (session.retryAfterSeconds !== undefined) {
+        setRetryRemaining(session.retryAfterSeconds)
+        setRetryDeadline(Date.now() + session.retryAfterSeconds * 1000)
+      }
+      setOauthLoading(null)
+    } else {
       setOauthLoading(null)
     }
   }
 
-  const busy = oauthLoading !== null
+  const rateLimited = retryRemaining > 0
+  const busy =
+    oauthLoading !== null || actionState.login.isLoading || rateLimited
   // Hide Twitch unless the backend handed us a non-empty redirect URL.
   const providers = PROVIDERS.filter(
     (provider) => provider.id !== "twitch" || Boolean(twitchUrl)
   )
+  const displayedError = rateLimited
+    ? `Too many sign-in attempts. Try again in ${retryRemaining}s.`
+    : (error ?? actionState.selectSchema.errorMessage)
 
   return (
     <View className="min-h-full flex-1 bg-background lg:flex-row">
@@ -201,7 +278,7 @@ export function LoginScreen({
             <Text className="font-bold text-lg text-primary">M</Text>
           </View>
           <Text className="font-semibold text-lg text-primary-foreground tracking-tight">
-            MXBLOR
+            Monocore
           </Text>
         </View>
 
@@ -235,21 +312,25 @@ export function LoginScreen({
             </View>
             <View className="gap-2">
               <Text className="font-medium text-muted-foreground text-xs uppercase tracking-widest">
-                Welcome back
+                {pendingSchemaSelection ? "Choose workspace" : "Welcome back"}
               </Text>
               <Text className="font-semibold text-3xl text-foreground tracking-tight">
-                Good to see you again
+                {pendingSchemaSelection
+                  ? "Select a schema"
+                  : "Good to see you again"}
               </Text>
               <Text className="text-muted-foreground text-sm">
-                Sign in to pick up right where you left off.
+                {pendingSchemaSelection
+                  ? "Choose the tenant context for this signed session."
+                  : "Sign in to pick up right where you left off."}
               </Text>
             </View>
           </View>
 
-          {error ? (
+          {displayedError ? (
             <View className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3">
               <Text className="text-center text-destructive text-sm">
-                {error}
+                {displayedError}
               </Text>
             </View>
           ) : null}
@@ -262,80 +343,145 @@ export function LoginScreen({
             </View>
           ) : null}
 
-          <RncForm<LoginForm>
-            id="login-form"
-            onSubmit={async (data) => {
-              setError(null)
-              setNotice(null)
-              const result = await login(data)
-              if (result.success) {
-                router.replace("/dashboard")
-                return true
-              }
-              setError(result.errorMessage)
-              return false
-            }}
-          >
-            <RncInput
-              autoCapitalize="none"
-              autoComplete="username"
-              id="username"
-              label="Username or email"
-              placeholder="you@example.com"
-              required
-            />
-            <RncInput
-              autoComplete="current-password"
-              id="password"
-              label="Password"
-              placeholder="••••••••"
-              required
-              type="password"
-            />
-            <View className="flex-row items-center justify-between">
-              <RncCheckbox id="rememberMe" label="Remember me" />
-              <Text className="font-medium text-primary text-sm">
-                Forgot password?
-              </Text>
-            </View>
-            <RncSubmitButton className="h-11 w-full" label="Sign in" />
-          </RncForm>
-
-          {/* Divider */}
-          <View className="flex-row items-center gap-3">
-            <Separator className="flex-1" />
-            <Text className="text-muted-foreground text-xs uppercase tracking-wider">
-              or continue with
-            </Text>
-            <Separator className="flex-1" />
-          </View>
-
-          {/* OAuth providers — each in its brand color */}
-          <View className="flex-row gap-3">
-            {providers.map((provider) => (
-              <Button
-                aria-label={`Continue with ${PROVIDER_LABELS[provider.id]}`}
-                className={cn("h-11 flex-1", provider.className)}
-                disabled={busy}
-                key={provider.id}
-                onPress={() => void handleOAuth(provider.id)}
+          {pendingSchemaSelection ? (
+            <View className="gap-4">
+              <RncForm<SchemaSelectionForm>
+                defaultValues={{
+                  schema: pendingSchemaSelection.availableSchemas[0],
+                }}
+                id="schema-selection-form"
+                onSubmit={async ({ schema }) => {
+                  setError(null)
+                  const result = await selectSchema(schema)
+                  if (result.status === "authenticated") {
+                    router.replace("/dashboard")
+                    return true
+                  }
+                  if (result.status === "error") {
+                    setError(result.errorMessage)
+                  }
+                  return false
+                }}
               >
-                {oauthLoading === provider.id ? (
-                  <Spinner />
-                ) : (
-                  <Icon as={provider.icon} className="text-white" size={20} />
-                )}
+                <RncSelect
+                  defaultValue={pendingSchemaSelection.availableSchemas[0]}
+                  id="schema"
+                  label="Schema"
+                  options={pendingSchemaSelection.availableSchemas.map(
+                    (schema) => ({ id: schema, label: schema })
+                  )}
+                  required
+                />
+                <RncSubmitButton className="h-11 w-full" label="Continue" />
+              </RncForm>
+              <Button
+                disabled={actionState.selectSchema.isLoading}
+                onPress={() => {
+                  setError(null)
+                  cancelSchemaSelection()
+                }}
+                variant="ghost"
+              >
+                <Text>Back to sign in</Text>
               </Button>
-            ))}
-          </View>
+            </View>
+          ) : (
+            <>
+              <RncForm<LoginForm>
+                id="login-form"
+                onSubmit={async (data) => {
+                  setError(null)
+                  setNotice(null)
+                  const result = await login(data)
+                  if (result.status === "authenticated") {
+                    router.replace("/dashboard")
+                    return true
+                  }
+                  if (result.status === "error") {
+                    setError(result.errorMessage)
+                    if (result.retryAfterSeconds !== undefined) {
+                      setRetryRemaining(result.retryAfterSeconds)
+                      setRetryDeadline(
+                        Date.now() + result.retryAfterSeconds * 1000
+                      )
+                    }
+                  }
+                  return false
+                }}
+              >
+                <RncInput
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  id="username"
+                  label="Username or email"
+                  placeholder="you@example.com"
+                  required
+                />
+                <RncInput
+                  autoComplete="current-password"
+                  id="password"
+                  label="Password"
+                  placeholder="••••••••"
+                  required
+                  type="password"
+                />
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-medium text-primary text-sm">
+                    Forgot password?
+                  </Text>
+                </View>
+                <RncSubmitButton
+                  className="h-11 w-full"
+                  disabled={rateLimited}
+                  label={
+                    rateLimited ? `Try again in ${retryRemaining}s` : "Sign in"
+                  }
+                />
+              </RncForm>
+
+              {/* Divider */}
+              <View className="flex-row items-center gap-3">
+                <Separator className="flex-1" />
+                <Text className="text-muted-foreground text-xs uppercase tracking-wider">
+                  or continue with
+                </Text>
+                <Separator className="flex-1" />
+              </View>
+
+              {/* OAuth providers — each in its brand color */}
+              <View className="flex-row gap-3">
+                {providers.map((provider) => (
+                  <Button
+                    aria-label={`Continue with ${PROVIDER_LABELS[provider.id]}`}
+                    className={cn("h-11 flex-1", provider.className)}
+                    disabled={busy}
+                    key={provider.id}
+                    onPress={() => void handleOAuth(provider.id)}
+                  >
+                    {oauthLoading === provider.id ? (
+                      <Spinner />
+                    ) : (
+                      <Icon
+                        as={provider.icon}
+                        className="text-white"
+                        size={20}
+                      />
+                    )}
+                  </Button>
+                ))}
+              </View>
+            </>
+          )}
 
           {/* Footer */}
-          <View className="flex-row items-center justify-center gap-1">
-            <Text className="text-muted-foreground text-sm">New here?</Text>
-            <Text className="font-medium text-primary text-sm">
-              Create an account
-            </Text>
-          </View>
+          {!pendingSchemaSelection ? (
+            <View className="flex-row items-center justify-center gap-1">
+              <Text className="text-muted-foreground text-sm">New here?</Text>
+              <Text className="font-medium text-primary text-sm">
+                Create an account
+              </Text>
+            </View>
+          ) : null}
         </View>
       </View>
     </View>

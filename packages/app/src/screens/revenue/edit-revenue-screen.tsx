@@ -7,6 +7,7 @@ import {
   useUpdateRevenue,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -19,6 +20,8 @@ import {
 import { useCallback, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 import {
   RevenueFormFields,
   type RevenueFormValues,
@@ -36,6 +39,7 @@ function toFormValues(revenue: RevenueResponseDto): RevenueFormValues {
 export function EditRevenueScreen({ id }: Readonly<{ id: string }>) {
   const { t } = useTranslation(["screens"])
   const router = useRouter()
+  const { canUpdate } = useCrudPermissions(crudPermissions.revenue)
   const updateMutation = useUpdateRevenue()
   const [error, setError] = useState<string>()
 
@@ -111,48 +115,57 @@ export function EditRevenueScreen({ id }: Readonly<{ id: string }>) {
   const isLocked = data.editable === false
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("revenue.edit.title")}
-      </Text>
+    <PermissionGuard permission={formPermissions.revenue.edit}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("revenue.edit.title")}
+        </Text>
 
-      {isLocked && (
-        <View className="rounded-md bg-muted p-3">
-          <Text className="text-muted-foreground">
-            {t("revenue.edit.locked")}
-          </Text>
-        </View>
-      )}
-
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
-        <RncForm<RevenueFormValues>
-          id="EditRevenueScreen"
-          onSubmit={handleSubmit}
-          defaultValues={toFormValues(data)}
-        >
-          <View className="w-full gap-6">
-            <RevenueFormFields disabled={isLocked} />
-
-            <View className="flex-row gap-3">
-              {!isLocked && <RncSubmitButton label={t("revenue.edit.save")} />}
-              <Button
-                variant="outline"
-                onPress={() => router.replace("/revenues")}
-              >
-                <Text>
-                  {isLocked ? t("revenue.edit.back") : t("revenue.edit.cancel")}
-                </Text>
-              </Button>
-            </View>
+        {isLocked && (
+          <View className="rounded-md bg-muted p-3">
+            <Text className="text-muted-foreground">
+              {t("revenue.edit.locked")}
+            </Text>
           </View>
-        </RncForm>
+        )}
+
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
+          </View>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
+          <RncForm<RevenueFormValues>
+            id="EditRevenueScreen"
+            onSubmit={handleSubmit}
+            defaultValues={toFormValues(data)}
+          >
+            <View className="w-full gap-6">
+              <RevenueFormFields disabled={isLocked} />
+
+              <View className="flex-row gap-3">
+                {!isLocked && (
+                  <RncSubmitButton
+                    disabled={!canUpdate}
+                    label={t("revenue.edit.save")}
+                  />
+                )}
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace("/revenues")}
+                >
+                  <Text>
+                    {isLocked
+                      ? t("revenue.edit.back")
+                      : t("revenue.edit.cancel")}
+                  </Text>
+                </Button>
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }

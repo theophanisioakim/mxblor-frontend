@@ -65,6 +65,15 @@ jest.mock("@workspace/api-client", () => ({
 
 jest.mock("@workspace/providers", () => ({
   useAuth: () => ({ user: { roleDescriptions: ["admin"] } }),
+  useCrudPermissions: () => ({
+    canCreate: true,
+    canDelete: true,
+    canUpdate: true,
+  }),
+  usePermission: () => ({
+    hasPermission: () => true,
+    isResolved: true,
+  }),
 }))
 
 jest.mock("@workspace/router", () => ({

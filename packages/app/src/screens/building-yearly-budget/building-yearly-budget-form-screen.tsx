@@ -11,7 +11,7 @@ import {
   useUpdateBuildingYearlyBudget,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useBreadcrumbs } from "@workspace/providers"
+import { useBreadcrumbs, useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -24,6 +24,8 @@ import {
 import { useCallback, useEffect, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 import {
   BuildingYearlyBudgetFormFields,
   type BuildingYearlyBudgetFormValues,
@@ -50,6 +52,10 @@ export function BuildingYearlyBudgetFormScreen({
   const entityId = isCreateMode ? undefined : budgetId
   const listRoute = `/buildings/${buildingId}/budgets`
 
+  const { canCreate, canUpdate } = useCrudPermissions(
+    crudPermissions.buildingYearlyBudget
+  )
+  const _canSubmit = isCreateMode ? canCreate : canUpdate
   const createMutation = useCreateBuildingYearlyBudget()
   const updateMutation = useUpdateBuildingYearlyBudget()
   const [error, setError] = useState<string>()
@@ -229,50 +235,58 @@ export function BuildingYearlyBudgetFormScreen({
   }
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode
-          ? t("yearlyBudget.create.title")
-          : t("yearlyBudget.edit.title")}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.buildingYearlyBudget.create
+          : formPermissions.buildingYearlyBudget.edit
+      }
+    >
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode
+            ? t("yearlyBudget.create.title")
+            : t("yearlyBudget.edit.title")}
+        </Text>
 
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
-        <RncForm<BuildingYearlyBudgetFormValues>
-          id="BuildingYearlyBudgetFormScreen"
-          onSubmit={handleSubmit}
-          defaultValues={toFormValues(data, distributionTables)}
-        >
-          <View className="w-full gap-6">
-            <BuildingYearlyBudgetFormFields
-              distributionTables={distributionTables}
-            />
-
-            <View className="flex-row gap-3">
-              <RncSubmitButton
-                label={
-                  isCreateMode
-                    ? t("yearlyBudget.create.save")
-                    : t("yearlyBudget.edit.save")
-                }
-                disabled={distributionTables.length === 0}
-              />
-              <Button
-                variant="outline"
-                onPress={() => router.replace(listRoute)}
-              >
-                <Text>{t("yearlyBudget.edit.cancel")}</Text>
-              </Button>
-            </View>
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
           </View>
-        </RncForm>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
+          <RncForm<BuildingYearlyBudgetFormValues>
+            id="BuildingYearlyBudgetFormScreen"
+            onSubmit={handleSubmit}
+            defaultValues={toFormValues(data, distributionTables)}
+          >
+            <View className="w-full gap-6">
+              <BuildingYearlyBudgetFormFields
+                distributionTables={distributionTables}
+              />
+
+              <View className="flex-row gap-3">
+                <RncSubmitButton
+                  label={
+                    isCreateMode
+                      ? t("yearlyBudget.create.save")
+                      : t("yearlyBudget.edit.save")
+                  }
+                  disabled={distributionTables.length === 0}
+                />
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(listRoute)}
+                >
+                  <Text>{t("yearlyBudget.edit.cancel")}</Text>
+                </Button>
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }
 

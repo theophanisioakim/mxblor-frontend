@@ -6,6 +6,7 @@ import {
   type SbfUserBlockPermissionWithPermissionDescriptionResponseDto,
   useBulkSbfUserBlockPermissions,
 } from "@workspace/api-client"
+import { usePermission } from "@workspace/providers"
 import {
   Icon,
   RncGrid,
@@ -20,6 +21,7 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo, useRef, useState } from "react"
+import { bulkSavePermissions } from "../../screen-permissions"
 
 type BlockPermissionRow =
   SbfUserBlockPermissionWithPermissionDescriptionResponseDto
@@ -36,6 +38,8 @@ export function UserBlockPermissionsTab({
   onDirtyChange?: (dirty: boolean) => void
 }>) {
   const bulkMutation = useBulkSbfUserBlockPermissions()
+  const { hasPermission } = usePermission()
+  const canSave = hasPermission(bulkSavePermissions.userBlockPermission)
   const initSelectedRows = useRef<BlockPermissionRow[]>([])
   const [selectedRows, setSelectedRows] = useState<BlockPermissionRow[]>([])
   const [isDirty, setIsDirty] = useState(false)
@@ -212,12 +216,12 @@ export function UserBlockPermissionsTab({
           label: bulkMutation.isPending ? "Saving..." : "Save",
           icon: <Icon as={Save} size={16} />,
           onPress: handleSave,
-          disabled: !isDirty || bulkMutation.isPending,
+          disabled: !canSave || !isDirty || bulkMutation.isPending,
           variant: "default",
         },
       ],
     }),
-    [handleSave, isDirty, bulkMutation.isPending]
+    [handleSave, isDirty, bulkMutation.isPending, canSave]
   )
 
   const filters: RncGridFiltersConfig<

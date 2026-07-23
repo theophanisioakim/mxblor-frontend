@@ -4,8 +4,10 @@ import "@workspace/ui/globals.css"
 import {
   getLanguageConfig,
   getMyMenus,
+  getMyPermissions,
   type LanguageConfigResponseDto,
   type SbfMenuTreeResponseDto,
+  type SbfMyPermissionsResponseDto,
 } from "@workspace/api-client"
 import { AppShell } from "@workspace/app"
 import {
@@ -18,11 +20,16 @@ import { cn } from "@workspace/ui/lib/utils"
 import { cookies } from "next/headers"
 import type { ReactNode } from "react"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  preload: false,
+})
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+  preload: false,
 })
 
 export default async function RootLayout({
@@ -47,32 +54,40 @@ export default async function RootLayout({
     : "en"
   ensureI18nInitialized(lang)
 
-  // Server-side render the user's menu tree on first load so the sidebar/top
+  // Server-side render the current menu tree on first load so the sidebar/top
   // nav paint immediately instead of waiting for the client `useGetMyMenus`
-  // query. `setServerCookies` above bridged the JWT + selected schema into
-  // `@workspace/storage`, so `getMyMenus` -> `customInstance` attaches the
-  // Authorization / x-schema-id headers during SSR. Only fetch when those
-  // cookies exist (matching MenuProvider's `enabled` gating); on any failure
-  // we leave `initialMenus` undefined and fall back to client-side fetching.
+  // query. Authenticated requests attach the signed bearer session; anonymous
+  // requests use the endpoint's public-menu behavior. On any failure we leave
+  // `initialMenus` undefined and fall back to client-side fetching.
   let initialMenus: SbfMenuTreeResponseDto | undefined
-  if (cookieMap.app_jwt_token && cookieMap.app_selected_schema) {
-    try {
-      initialMenus = await getMyMenus()
-    } catch {
-      // SSR fetch failed (e.g. not authenticated, API unreachable) — the
-      // client MenuProvider will retry via React Query.
-    }
+  try {
+    initialMenus = await getMyMenus()
+  } catch {
+    // SSR fetch failed (e.g. API unreachable) — the client MenuProvider will
+    // retry via React Query.
   }
 
   // The tenant's languages, so a form with an `RncTranslationLabel` paints with
   // its inputs on first load. Unlike the menus this needs no cookie gating: the
-  // endpoint is public, and the schema comes from the x-schema-id header when
-  // one is selected (falling back to the main schema's defaults otherwise).
+  // endpoint is public; authenticated requests resolve the schema from the
+  // signed session while anonymous requests use the main schema defaults.
   let initialLanguageConfig: LanguageConfigResponseDto | undefined
   try {
     initialLanguageConfig = await getLanguageConfig()
   } catch {
     // SSR fetch failed (e.g. API unreachable) — the client LanguageProvider
+    // will retry via React Query.
+  }
+
+  // The current context's permission grants, so permission-gated controls
+  // (disabled edit/delete/add buttons) render correctly on first paint.
+  // Authenticated requests attach the signed bearer session; anonymous
+  // requests receive the public permissions only.
+  let initialPermissions: SbfMyPermissionsResponseDto | undefined
+  try {
+    initialPermissions = await getMyPermissions()
+  } catch {
+    // SSR fetch failed (e.g. API unreachable) — the client PermissionProvider
     // will retry via React Query.
   }
 
@@ -92,6 +107,7 @@ export default async function RootLayout({
           initialLanguage={lang}
           initialMenus={initialMenus}
           initialLanguageConfig={initialLanguageConfig}
+          initialPermissions={initialPermissions}
         >
           <AppShell>{children}</AppShell>
         </AppProviders>

@@ -9,7 +9,11 @@ import {
   useGetBuildingById,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -23,6 +27,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useEffect, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 export interface BuildingDistributionListScreenProps {
   buildingId: string
@@ -49,6 +55,9 @@ export function BuildingDistributionListScreen({
   const { user } = useAuth()
   const { setItems } = useBreadcrumbs()
   const { data: building } = useGetBuildingById(buildingId)
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.buildingDistribution
+  )
   const deleteMutation = useDeleteBuildingDistribution()
 
   const isUserRole = user?.roleDescriptions?.includes("user") ?? false
@@ -159,6 +168,7 @@ export function BuildingDistributionListScreen({
     useMemo(() => {
       const baseActions: RncGridActions<BuildingDistributionResponseDto> = {
         edit: {
+          disabled: () => !canUpdate,
           route: (row) => `/buildings/${buildingId}/distributions/${row.id}`,
         },
       }
@@ -170,6 +180,7 @@ export function BuildingDistributionListScreen({
       return {
         ...baseActions,
         delete: {
+          disabled: () => !canDelete,
           onPress: async (row) => {
             if (!row.id) return
             await deleteMutation.mutateAsync({ id: row.id })
@@ -183,54 +194,60 @@ export function BuildingDistributionListScreen({
           },
         },
       }
-    }, [buildingId, deleteMutation, isUserRole, t])
+    }, [buildingId, deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <View className="flex-row items-center gap-3">
-        <Button
-          variant="ghost"
-          onPress={() => router.push(`/buildings/${buildingId}`)}
+    <PermissionGuard permission={viewPermissions.buildingDistribution}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <View className="flex-row items-center gap-3">
+          <Button
+            variant="ghost"
+            onPress={() => router.push(`/buildings/${buildingId}`)}
+          >
+            {t("buildingDistribution.list.back")}
+          </Button>
+        </View>
+
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("buildingDistribution.list.title")}
+        </Text>
+
+        <RncGrid<
+          BuildingDistributionResponseDto,
+          BuildingDistributionSortOrderField,
+          BuildingDistributionListFilters
         >
-          {t("buildingDistribution.list.back")}
-        </Button>
+          id="building-distribution-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            {
+              field: BuildingDistributionSortOrderField.NAME,
+              direction: "ASC",
+            },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: `/buildings/${buildingId}/distributions/new`,
+              label: t("buildingDistribution.list.add"),
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
       </View>
-
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("buildingDistribution.list.title")}
-      </Text>
-
-      <RncGrid<
-        BuildingDistributionResponseDto,
-        BuildingDistributionSortOrderField,
-        BuildingDistributionListFilters
-      >
-        id="building-distribution-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: BuildingDistributionSortOrderField.NAME, direction: "ASC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: {
-            route: `/buildings/${buildingId}/distributions/new`,
-            label: t("buildingDistribution.list.add"),
-          },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+    </PermissionGuard>
   )
 }

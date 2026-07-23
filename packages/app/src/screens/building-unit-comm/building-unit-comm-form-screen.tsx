@@ -11,7 +11,7 @@ import {
   useUpdateBuildingUnitComm,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useBreadcrumbs } from "@workspace/providers"
+import { useBreadcrumbs, useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -27,6 +27,8 @@ import {
 import { useCallback, useEffect, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 
 type CommFormValues = {
   buildingUnitId: string
@@ -55,6 +57,10 @@ export function BuildingUnitCommFormScreen({
   const entityId = isCreateMode ? undefined : commId
   const listRoute = `/buildings/${buildingId}/communication`
 
+  const { canCreate, canUpdate } = useCrudPermissions(
+    crudPermissions.buildingUnitComm
+  )
+  const canSubmit = isCreateMode ? canCreate : canUpdate
   const createMutation = useCreateBuildingUnitComm()
   const updateMutation = useUpdateBuildingUnitComm()
   const [error, setError] = useState<string>()
@@ -176,116 +182,125 @@ export function BuildingUnitCommFormScreen({
   }
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode
-          ? t("communication.create.title")
-          : t("communication.edit.title")}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.buildingUnitComm.create
+          : formPermissions.buildingUnitComm.edit
+      }
+    >
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode
+            ? t("communication.create.title")
+            : t("communication.edit.title")}
+        </Text>
 
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
-        <RncForm<CommFormValues>
-          id="BuildingUnitCommFormScreen"
-          onSubmit={handleSubmit}
-          defaultValues={{
-            buildingUnitId: data?.buildingUnitId ?? "",
-            contactId: data?.contactId,
-            contactedAt: data?.contactedAt
-              ? new Date(data.contactedAt)
-              : undefined,
-            description: data?.description,
-          }}
-        >
-          <View className="w-full gap-6">
-            <View className="gap-3 md:flex-row md:flex-wrap">
-              <View className="md:min-w-[200px] md:flex-1">
-                <RncSelect
-                  id="buildingUnitId"
-                  label={t("communication.form.fields.unit")}
-                  placeholder={t("communication.form.fields.unitPlaceholder")}
-                  required
-                  searchable
-                  // Only this building's units — the log is building-scoped.
-                  optionsLoader={async () => {
-                    const response = await searchBuildingUnits({
-                      page: 0,
-                      size: 100,
-                      buildingId,
-                    })
-                    return (response.content ?? [])
-                      .filter((entry) => entry.id != null)
-                      .map((entry) => ({
-                        id: entry.id as string,
-                        label: entry.code ?? String(entry.id),
-                      }))
-                  }}
-                />
-              </View>
-              <View className="md:min-w-[200px] md:flex-1">
-                <RncSelect
-                  id="contactId"
-                  label={t("communication.form.fields.contact")}
-                  placeholder={t(
-                    "communication.form.fields.contactPlaceholder"
-                  )}
-                  searchable
-                  optionsLoader={async () => {
-                    const response = await searchContacts({
-                      page: 0,
-                      size: 100,
-                    })
-                    return (response.content ?? [])
-                      .filter((entry) => entry.id != null)
-                      .map((entry) => ({
-                        id: entry.id as string,
-                        label: entry.fullName ?? String(entry.id),
-                      }))
-                  }}
-                />
-              </View>
-              <View className="md:min-w-[200px] md:flex-1">
-                <RncDateTimeField
-                  id="contactedAt"
-                  type="date"
-                  label={t("communication.form.fields.contactedAt")}
-                />
-              </View>
-            </View>
-
-            <RncInput
-              id="description"
-              label={t("communication.form.fields.description")}
-              placeholder={t(
-                "communication.form.fields.descriptionPlaceholder"
-              )}
-              multiline
-              numberOfLines={5}
-            />
-
-            <View className="flex-row gap-3">
-              <RncSubmitButton
-                label={
-                  isCreateMode
-                    ? t("communication.create.save")
-                    : t("communication.edit.save")
-                }
-              />
-              <Button
-                variant="outline"
-                onPress={() => router.replace(listRoute)}
-              >
-                <Text>{t("communication.edit.cancel")}</Text>
-              </Button>
-            </View>
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
           </View>
-        </RncForm>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
+          <RncForm<CommFormValues>
+            id="BuildingUnitCommFormScreen"
+            onSubmit={handleSubmit}
+            defaultValues={{
+              buildingUnitId: data?.buildingUnitId ?? "",
+              contactId: data?.contactId,
+              contactedAt: data?.contactedAt
+                ? new Date(data.contactedAt)
+                : undefined,
+              description: data?.description,
+            }}
+          >
+            <View className="w-full gap-6">
+              <View className="gap-3 md:flex-row md:flex-wrap">
+                <View className="md:min-w-[200px] md:flex-1">
+                  <RncSelect
+                    id="buildingUnitId"
+                    label={t("communication.form.fields.unit")}
+                    placeholder={t("communication.form.fields.unitPlaceholder")}
+                    required
+                    searchable
+                    // Only this building's units — the log is building-scoped.
+                    optionsLoader={async () => {
+                      const response = await searchBuildingUnits({
+                        page: 0,
+                        size: 100,
+                        buildingId,
+                      })
+                      return (response.content ?? [])
+                        .filter((entry) => entry.id != null)
+                        .map((entry) => ({
+                          id: entry.id as string,
+                          label: entry.code ?? String(entry.id),
+                        }))
+                    }}
+                  />
+                </View>
+                <View className="md:min-w-[200px] md:flex-1">
+                  <RncSelect
+                    id="contactId"
+                    label={t("communication.form.fields.contact")}
+                    placeholder={t(
+                      "communication.form.fields.contactPlaceholder"
+                    )}
+                    searchable
+                    optionsLoader={async () => {
+                      const response = await searchContacts({
+                        page: 0,
+                        size: 100,
+                      })
+                      return (response.content ?? [])
+                        .filter((entry) => entry.id != null)
+                        .map((entry) => ({
+                          id: entry.id as string,
+                          label: entry.fullName ?? String(entry.id),
+                        }))
+                    }}
+                  />
+                </View>
+                <View className="md:min-w-[200px] md:flex-1">
+                  <RncDateTimeField
+                    id="contactedAt"
+                    type="date"
+                    label={t("communication.form.fields.contactedAt")}
+                  />
+                </View>
+              </View>
+
+              <RncInput
+                id="description"
+                label={t("communication.form.fields.description")}
+                placeholder={t(
+                  "communication.form.fields.descriptionPlaceholder"
+                )}
+                multiline
+                numberOfLines={5}
+              />
+
+              <View className="flex-row gap-3">
+                <RncSubmitButton
+                  disabled={!canSubmit}
+                  label={
+                    isCreateMode
+                      ? t("communication.create.save")
+                      : t("communication.edit.save")
+                  }
+                />
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(listRoute)}
+                >
+                  <Text>{t("communication.edit.cancel")}</Text>
+                </Button>
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }

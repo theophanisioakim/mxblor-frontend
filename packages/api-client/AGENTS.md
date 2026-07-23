@@ -10,6 +10,8 @@ TanStack Query hooks + Axios client for the **`springboot-core` (`sbf`)** backen
 | Path                                                                                        | Source of truth               | Hand-edit?                                          |
 | ------------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------- |
 | `src/generated/**` (per-tag hooks, `springBootFrameworkAPI.schemas.ts`)                     | **Orval** from `openapi.json` | ❌ Never — `pnpm generate` wipes it (`clean: true`) |
+| `src/generated/api-permissions.ts` (`API_PERMISSIONS`, `ApiPermissionKey`, `CrudBasePath`)  | `scripts/generate-api-permissions.mjs` from `openapi.json` (runs after Orval in `pnpm generate`) | ❌ Never — regenerated every run |
+| `scripts/generate-api-permissions.mjs`                                                      | hand-written                  | ✅                                                  |
 | `src/axios-instance.ts` (`customInstance`, `setOnOtpRequired`, `setOnUnauthorized`)         | hand-written                  | ✅                                                  |
 | `src/query-client-provider.tsx`, `src/language-config-provider.tsx`, `src/channel.ts` / `src/channel.native.ts`, `src/index.ts` | hand-written                  | ✅                                                  |
 | `orval.config.ts`, `openapi.json`                                                           | config / input                | ✅ (regenerate after)                               |
@@ -55,3 +57,12 @@ Two consequences worth keeping straight:
   `staleTime: 0` defaults are irrelevant. **Context is the distribution mechanism; the query cache is
   not being used as a cache.** The session is in the query key, so login/logout/tenant-switch refetch
   — that is the intended (and only) refresh path.
+
+## Signed session transport
+
+`axios-instance.ts` sends credentials and the bearer access token. The backend derives schema and
+channel from the signed session/request, so do not add `x-schema-id` or `x-channel-id`. A protected
+`401` is refreshed once through the shared coordinator; browser refresh rotation is serialized across
+tabs and native sends its SecureStore-backed refresh token in the request body. OTP retry remains
+independent and must run before authentication refresh handling. Generated lifecycle calls come only
+from `openapi.json`/Orval; keep token persistence in `session-state.ts` rather than generated files.

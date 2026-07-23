@@ -9,7 +9,11 @@ import {
   useGetBuildingById,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -23,6 +27,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useEffect, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 type BuildingNoteFilters = Omit<
   BuildingNoteSearchRequestDto,
@@ -36,6 +42,9 @@ export function BuildingNoteListScreen({
   const router = useRouter()
   const { user } = useAuth()
   const { setItems } = useBreadcrumbs()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.buildingNote
+  )
   const deleteMutation = useDeleteBuildingNote()
 
   const isUserRole = user?.roleDescriptions?.includes("user") ?? false
@@ -147,13 +156,17 @@ export function BuildingNoteListScreen({
 
   const actions: RncGridActions<BuildingNoteResponseDto> = useMemo(() => {
     const base: RncGridActions<BuildingNoteResponseDto> = {
-      edit: { route: (row) => `/buildings/${buildingId}/notes/${row.id}` },
+      edit: {
+        disabled: () => !canUpdate,
+        route: (row) => `/buildings/${buildingId}/notes/${row.id}`,
+      },
     }
     if (isUserRole) return base
 
     return {
       ...base,
       delete: {
+        disabled: () => !canDelete,
         onPress: async (row) => {
           if (!row.id) return
           await deleteMutation.mutateAsync({ id: row.id })
@@ -164,50 +177,55 @@ export function BuildingNoteListScreen({
         },
       },
     }
-  }, [buildingId, deleteMutation, isUserRole, t])
+  }, [buildingId, deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <View className="flex-row items-center justify-between gap-3">
-        <Text className="font-bold text-2xl text-foreground md:text-3xl">
-          {t("buildingNote.list.title")}
-        </Text>
-        <Button
-          variant="ghost"
-          onPress={() => router.push(`/buildings/${buildingId}`)}
-        >
-          <Text>{t("buildingNote.list.back")}</Text>
-        </Button>
-      </View>
+    <PermissionGuard permission={viewPermissions.buildingNote}>
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <View className="flex-row items-center justify-between gap-3">
+          <Text className="font-bold text-2xl text-foreground md:text-3xl">
+            {t("buildingNote.list.title")}
+          </Text>
+          <Button
+            variant="ghost"
+            onPress={() => router.push(`/buildings/${buildingId}`)}
+          >
+            <Text>{t("buildingNote.list.back")}</Text>
+          </Button>
+        </View>
 
-      <RncGrid<
-        BuildingNoteResponseDto,
-        BuildingNoteSortOrderField,
-        BuildingNoteFilters
-      >
-        id={`building-note-list-${buildingId}`}
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: BuildingNoteSortOrderField.CREATED_AT, direction: "DESC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: { route: `/buildings/${buildingId}/notes/new` },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<
+          BuildingNoteResponseDto,
+          BuildingNoteSortOrderField,
+          BuildingNoteFilters
+        >
+          id={`building-note-list-${buildingId}`}
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: BuildingNoteSortOrderField.CREATED_AT, direction: "DESC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: `/buildings/${buildingId}/notes/new`,
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

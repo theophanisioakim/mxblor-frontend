@@ -9,7 +9,11 @@ import {
   useGetBuildingById,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -23,6 +27,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useEffect, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 export interface BuildingYearlyBudgetListScreenProps {
   buildingId: string
@@ -48,6 +54,9 @@ export function BuildingYearlyBudgetListScreen({
   const { user } = useAuth()
   const { setItems } = useBreadcrumbs()
   const { data: building } = useGetBuildingById(buildingId)
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.buildingYearlyBudget
+  )
   const deleteMutation = useDeleteBuildingYearlyBudget()
 
   const isUserRole = user?.roleDescriptions?.includes("user") ?? false
@@ -157,6 +166,7 @@ export function BuildingYearlyBudgetListScreen({
     useMemo(() => {
       const baseActions: RncGridActions<BuildingYearlyBudgetResponseDto> = {
         edit: {
+          disabled: () => !canUpdate,
           route: (row) => `/buildings/${buildingId}/budgets/${row.id}`,
         },
       }
@@ -168,6 +178,7 @@ export function BuildingYearlyBudgetListScreen({
       return {
         ...baseActions,
         delete: {
+          disabled: () => !canDelete,
           onPress: async (row) => {
             if (!row.id) return
             await deleteMutation.mutateAsync({ id: row.id })
@@ -181,57 +192,60 @@ export function BuildingYearlyBudgetListScreen({
           },
         },
       }
-    }, [buildingId, deleteMutation, isUserRole, t])
+    }, [buildingId, deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <View className="flex-row items-center gap-3">
-        <Button
-          variant="ghost"
-          onPress={() => router.push(`/buildings/${buildingId}`)}
+    <PermissionGuard permission={viewPermissions.buildingYearlyBudget}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <View className="flex-row items-center gap-3">
+          <Button
+            variant="ghost"
+            onPress={() => router.push(`/buildings/${buildingId}`)}
+          >
+            {t("yearlyBudget.list.back")}
+          </Button>
+        </View>
+
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("yearlyBudget.list.title")}
+        </Text>
+
+        <RncGrid<
+          BuildingYearlyBudgetResponseDto,
+          BuildingYearlyBudgetSortOrderField,
+          BuildingYearlyBudgetListFilters
         >
-          {t("yearlyBudget.list.back")}
-        </Button>
+          id="building-yearly-budget-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            {
+              field: BuildingYearlyBudgetSortOrderField.REFYEAR,
+              direction: "DESC",
+            },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: `/buildings/${buildingId}/budgets/new`,
+              label: t("yearlyBudget.list.add"),
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
       </View>
-
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("yearlyBudget.list.title")}
-      </Text>
-
-      <RncGrid<
-        BuildingYearlyBudgetResponseDto,
-        BuildingYearlyBudgetSortOrderField,
-        BuildingYearlyBudgetListFilters
-      >
-        id="building-yearly-budget-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          {
-            field: BuildingYearlyBudgetSortOrderField.REFYEAR,
-            direction: "DESC",
-          },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: {
-            route: `/buildings/${buildingId}/budgets/new`,
-            label: t("yearlyBudget.list.add"),
-          },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+    </PermissionGuard>
   )
 }

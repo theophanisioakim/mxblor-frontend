@@ -17,6 +17,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import { viewPermissions } from "../../screen-permissions"
 
 type AuditListFilters = Omit<SbfAuditSearchRequestDto, "page" | "size" | "sort">
 
@@ -166,29 +168,31 @@ export function AuditLogListScreen() {
     )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        Audit Log
-      </Text>
+    <PermissionGuard permission={viewPermissions.auditLog}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          Audit Log
+        </Text>
 
-      <RncGrid<SbfAuditResponseDto, SbfAuditSortOrderField, AuditListFilters>
-        id="audit-log-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: SbfAuditSortOrderField.CREATED_AT, direction: "DESC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        toolbar={{ refresh: {}, reset: {} }}
-        filters={filters}
-      />
-    </View>
+        <RncGrid<SbfAuditResponseDto, SbfAuditSortOrderField, AuditListFilters>
+          id="audit-log-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: SbfAuditSortOrderField.CREATED_AT, direction: "DESC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          toolbar={{ refresh: {}, reset: {} }}
+          filters={filters}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

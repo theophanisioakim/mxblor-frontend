@@ -10,6 +10,7 @@ import type {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios"
+import Axios from "axios"
 import type { ReactNode } from "react"
 import {
   createContext,
@@ -43,10 +44,9 @@ export interface OtpContextValue {
   submitting: boolean
 }
 
-type OtpResolution = {
-  error: AxiosError | null
-  response: AxiosResponse | null
-}
+type OtpResolution =
+  | { error: AxiosError; response: null }
+  | { error: null; response: AxiosResponse }
 
 export const OtpContext = createContext<OtpContextValue | null>(null)
 
@@ -191,7 +191,10 @@ export function OtpProvider({ children }: Readonly<OtpProviderProps>) {
   }, [otpValue, otpState, dismiss, startTimer])
 
   const handleCancel = useCallback(() => {
-    dismiss({ error: null, response: null })
+    dismiss({
+      error: new Axios.CanceledError("OTP request was cancelled"),
+      response: null,
+    })
   }, [dismiss])
 
   const value = useMemo<OtpContextValue>(

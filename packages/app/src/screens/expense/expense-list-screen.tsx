@@ -8,6 +8,7 @@ import {
   useDeleteExpense,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   RncCheckbox,
@@ -22,6 +23,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 import { useExpenseCategoryOptions } from "./use-expense-category-options"
 
 type ExpenseListFilters = Omit<
@@ -32,6 +35,9 @@ type ExpenseListFilters = Omit<
 export function ExpenseListScreen() {
   const { t } = useTranslation(["screens"])
   const router = useRouter()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.expense
+  )
   const deleteMutation = useDeleteExpense()
   const { options: categoryOptions, byId: categoriesById } =
     useExpenseCategoryOptions()
@@ -173,10 +179,12 @@ export function ExpenseListScreen() {
         route: (row) => `/expenses/${row.id}`,
       },
       edit: {
+        disabled: () => !canUpdate,
         hidden: (row) => !row.editable,
         route: (row) => `/expenses/${row.id}`,
       },
       delete: {
+        disabled: () => !canDelete,
         hidden: (row) => !row.editable,
         onPress: async (row) => {
           if (!row.id) return
@@ -191,39 +199,44 @@ export function ExpenseListScreen() {
         },
       },
     }),
-    [deleteMutation, t]
+    [deleteMutation, t, canUpdate, canDelete]
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("expense.list.title")}
-      </Text>
+    <PermissionGuard permission={viewPermissions.expense}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("expense.list.title")}
+        </Text>
 
-      <RncGrid<ExpenseResponseDto, ExpenseSortOrderField, ExpenseListFilters>
-        id="expense-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[{ field: ExpenseSortOrderField.CODE, direction: "ASC" }]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: {
-            route: "/expenses/new",
-          },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<ExpenseResponseDto, ExpenseSortOrderField, ExpenseListFilters>
+          id="expense-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: ExpenseSortOrderField.CODE, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: "/expenses/new",
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

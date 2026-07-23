@@ -18,6 +18,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import { viewPermissions } from "../../screen-permissions"
 
 type ServerLogListFilters = Omit<
   SbfLogServerSearchRequestDto,
@@ -194,33 +196,35 @@ export function ServerLogListScreen() {
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        Server Logs
-      </Text>
+    <PermissionGuard permission={viewPermissions.serverLog}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          Server Logs
+        </Text>
 
-      <RncGrid<
-        SbfLogServerResponseDto,
-        SbfLogServerSortOrderField,
-        ServerLogListFilters
-      >
-        id="server-log-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: SbfLogServerSortOrderField.TIMESTAMP, direction: "DESC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        toolbar={{ refresh: {}, reset: {} }}
-        filters={filters}
-      />
-    </View>
+        <RncGrid<
+          SbfLogServerResponseDto,
+          SbfLogServerSortOrderField,
+          ServerLogListFilters
+        >
+          id="server-log-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: SbfLogServerSortOrderField.TIMESTAMP, direction: "DESC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          toolbar={{ refresh: {}, reset: {} }}
+          filters={filters}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

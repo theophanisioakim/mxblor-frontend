@@ -8,6 +8,7 @@ import {
   useBulkSbfPermissions,
   useUpdateSbfPermission,
 } from "@workspace/api-client"
+import { usePermission } from "@workspace/providers"
 import {
   RncCheckbox,
   RncGrid,
@@ -21,6 +22,11 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import {
+  inlineEditPermissions,
+  viewPermissions,
+} from "../../screen-permissions"
 
 type PermissionListFilters = Omit<
   SbfPermissionSearchRequestDto,
@@ -30,6 +36,12 @@ type PermissionListFilters = Omit<
 export function PermissionListScreen() {
   const updateMutation = useUpdateSbfPermission()
   const bulkMutation = useBulkSbfPermissions()
+  const { hasPermission } = usePermission()
+  // Inline editing saves per-row (PUT) and save-all (bulk POST); without both
+  // grants the grid renders read-only.
+  const canEdit =
+    hasPermission(inlineEditPermissions.permission.update) &&
+    hasPermission(inlineEditPermissions.permission.bulk)
 
   const fetchData = useCallback(
     async (
@@ -258,34 +270,39 @@ export function PermissionListScreen() {
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        Permissions
-      </Text>
+    <PermissionGuard permission={viewPermissions.permission}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          Permissions
+        </Text>
 
-      <RncGrid<
-        SbfPermissionResponseDto,
-        SbfPermissionSortOrderField,
-        PermissionListFilters
-      >
-        id="permission-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="inline"
-        inlineEdit={inlineEdit}
-        initialSort={[
-          { field: SbfPermissionSortOrderField.CREATED_AT, direction: "DESC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        toolbar={{ refresh: {}, reset: {} }}
-        filters={filters}
-      />
-    </View>
+        <RncGrid<
+          SbfPermissionResponseDto,
+          SbfPermissionSortOrderField,
+          PermissionListFilters
+        >
+          id="permission-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode={canEdit ? "inline" : "default"}
+          inlineEdit={canEdit ? inlineEdit : undefined}
+          initialSort={[
+            {
+              field: SbfPermissionSortOrderField.CREATED_AT,
+              direction: "DESC",
+            },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          toolbar={{ refresh: {}, reset: {} }}
+          filters={filters}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

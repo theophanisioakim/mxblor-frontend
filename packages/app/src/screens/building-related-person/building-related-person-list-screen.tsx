@@ -9,7 +9,11 @@ import {
   useGetBuildingById,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -23,6 +27,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useEffect, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 type RelatedPersonFilters = Omit<
   BuildingRelatedPersonSearchRequestDto,
@@ -36,6 +42,9 @@ export function BuildingRelatedPersonListScreen({
   const router = useRouter()
   const { user } = useAuth()
   const { setItems } = useBreadcrumbs()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.buildingRelatedPerson
+  )
   const deleteMutation = useDeleteBuildingRelatedPerson()
 
   const isUserRole = user?.roleDescriptions?.includes("user") ?? false
@@ -150,6 +159,7 @@ export function BuildingRelatedPersonListScreen({
     useMemo(() => {
       const base: RncGridActions<BuildingRelatedPersonResponseDto> = {
         edit: {
+          disabled: () => !canUpdate,
           route: (row) => `/buildings/${buildingId}/related-people/${row.id}`,
         },
       }
@@ -158,6 +168,7 @@ export function BuildingRelatedPersonListScreen({
       return {
         ...base,
         delete: {
+          disabled: () => !canDelete,
           onPress: async (row) => {
             if (!row.id) return
             await deleteMutation.mutateAsync({ id: row.id })
@@ -171,53 +182,58 @@ export function BuildingRelatedPersonListScreen({
           },
         },
       }
-    }, [buildingId, deleteMutation, isUserRole, t])
+    }, [buildingId, deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <View className="flex-row items-center justify-between gap-3">
-        <Text className="font-bold text-2xl text-foreground md:text-3xl">
-          {t("relatedPerson.list.title")}
-        </Text>
-        <Button
-          variant="ghost"
-          onPress={() => router.push(`/buildings/${buildingId}`)}
-        >
-          <Text>{t("relatedPerson.list.back")}</Text>
-        </Button>
-      </View>
+    <PermissionGuard permission={viewPermissions.buildingRelatedPerson}>
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <View className="flex-row items-center justify-between gap-3">
+          <Text className="font-bold text-2xl text-foreground md:text-3xl">
+            {t("relatedPerson.list.title")}
+          </Text>
+          <Button
+            variant="ghost"
+            onPress={() => router.push(`/buildings/${buildingId}`)}
+          >
+            <Text>{t("relatedPerson.list.back")}</Text>
+          </Button>
+        </View>
 
-      <RncGrid<
-        BuildingRelatedPersonResponseDto,
-        BuildingRelatedPersonSortOrderField,
-        RelatedPersonFilters
-      >
-        id={`building-related-person-list-${buildingId}`}
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          {
-            field: BuildingRelatedPersonSortOrderField.RELATION,
-            direction: "ASC",
-          },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: { route: `/buildings/${buildingId}/related-people/new` },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<
+          BuildingRelatedPersonResponseDto,
+          BuildingRelatedPersonSortOrderField,
+          RelatedPersonFilters
+        >
+          id={`building-related-person-list-${buildingId}`}
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            {
+              field: BuildingRelatedPersonSortOrderField.RELATION,
+              direction: "ASC",
+            },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: `/buildings/${buildingId}/related-people/new`,
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

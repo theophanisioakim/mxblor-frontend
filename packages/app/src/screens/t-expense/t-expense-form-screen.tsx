@@ -11,7 +11,12 @@ import {
   useUpdateTExpense,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+  usePermission,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -24,6 +29,8 @@ import {
 import { useCallback, useEffect, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 import {
   TExpenseFormFields,
   type TExpenseFormValues,
@@ -53,6 +60,10 @@ export function TExpenseFormScreen({
   const isUserRole = user?.roleDescriptions?.includes("user") ?? false
 
   const spreadMutation = useSpreadTExpense()
+  const { hasPermission } = usePermission()
+  const canCreate = hasPermission(formPermissions.tExpense.create)
+  const { canUpdate, canDelete } = useCrudPermissions(crudPermissions.tExpense)
+  const canSubmit = isCreateMode ? canCreate : canUpdate
   const updateMutation = useUpdateTExpense()
   const deleteMutation = useDeleteTExpense()
   const [error, setError] = useState<string>()
@@ -212,75 +223,88 @@ export function TExpenseFormScreen({
   }
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode ? t("tExpense.create.title") : t("tExpense.edit.title")}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.tExpense.create
+          : formPermissions.tExpense.edit
+      }
+    >
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode ? t("tExpense.create.title") : t("tExpense.edit.title")}
+        </Text>
 
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
-        <RncForm<TExpenseFormValues>
-          id="TExpenseFormScreen"
-          onSubmit={handleSubmit}
-          defaultValues={toFormValues(data)}
-        >
-          <View className="w-full gap-6">
-            <TExpenseFormFields
-              buildingId={buildingId}
-              isCreateMode={isCreateMode}
-              lockedCollectionTypeKey={data?.collectionTypeKey}
-              lockedReferenceDate={data?.referenceDate}
-            />
-
-            {!isCreateMode && data && (
-              <View className="gap-2 rounded-md border border-border p-4">
-                <Text className="font-medium text-foreground">
-                  {t("tExpense.edit.audit.title")}
-                </Text>
-                <Text className="text-muted-foreground text-sm">
-                  {t("tExpense.edit.audit.created", {
-                    at: data.createdAt ?? "—",
-                    by: data.createdBy ?? "—",
-                  })}
-                </Text>
-                <Text className="text-muted-foreground text-sm">
-                  {t("tExpense.edit.audit.updated", {
-                    at: data.updatedAt ?? "—",
-                    by: data.updatedBy ?? "—",
-                  })}
-                </Text>
-              </View>
-            )}
-
-            <View className="flex-row flex-wrap gap-3">
-              <RncSubmitButton
-                label={
-                  isCreateMode
-                    ? t("tExpense.create.save")
-                    : t("tExpense.edit.save")
-                }
-              />
-              <Button
-                variant="outline"
-                onPress={() => router.replace(listRoute)}
-              >
-                <Text>{t("tExpense.edit.cancel")}</Text>
-              </Button>
-              {!isCreateMode && !isUserRole && (
-                <Button variant="destructive" onPress={handleDelete}>
-                  <Text>{t("tExpense.edit.delete")}</Text>
-                </Button>
-              )}
-            </View>
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
           </View>
-        </RncForm>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
+          <RncForm<TExpenseFormValues>
+            id="TExpenseFormScreen"
+            onSubmit={handleSubmit}
+            defaultValues={toFormValues(data)}
+          >
+            <View className="w-full gap-6">
+              <TExpenseFormFields
+                buildingId={buildingId}
+                isCreateMode={isCreateMode}
+                lockedCollectionTypeKey={data?.collectionTypeKey}
+                lockedReferenceDate={data?.referenceDate}
+              />
+
+              {!isCreateMode && data && (
+                <View className="gap-2 rounded-md border border-border p-4">
+                  <Text className="font-medium text-foreground">
+                    {t("tExpense.edit.audit.title")}
+                  </Text>
+                  <Text className="text-muted-foreground text-sm">
+                    {t("tExpense.edit.audit.created", {
+                      at: data.createdAt ?? "—",
+                      by: data.createdBy ?? "—",
+                    })}
+                  </Text>
+                  <Text className="text-muted-foreground text-sm">
+                    {t("tExpense.edit.audit.updated", {
+                      at: data.updatedAt ?? "—",
+                      by: data.updatedBy ?? "—",
+                    })}
+                  </Text>
+                </View>
+              )}
+
+              <View className="flex-row flex-wrap gap-3">
+                <RncSubmitButton
+                  disabled={!canSubmit}
+                  label={
+                    isCreateMode
+                      ? t("tExpense.create.save")
+                      : t("tExpense.edit.save")
+                  }
+                />
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(listRoute)}
+                >
+                  <Text>{t("tExpense.edit.cancel")}</Text>
+                </Button>
+                {!isCreateMode && !isUserRole && (
+                  <Button
+                    variant="destructive"
+                    disabled={!canDelete}
+                    onPress={handleDelete}
+                  >
+                    <Text>{t("tExpense.edit.delete")}</Text>
+                  </Button>
+                )}
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }
 

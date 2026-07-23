@@ -8,10 +8,13 @@ import {
   useCreateSbfIntegration,
   useUpdateSbfIntegration,
 } from "@workspace/api-client"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import { Button, cn, RncForm, RncSubmitButton, Text, View } from "@workspace/ui"
 import { useCallback, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
+import { PermissionGuard } from "../../permission-guard"
+import { crudPermissions, formPermissions } from "../../screen-permissions"
 import { getApiErrorMessage } from "../api-error-message"
 import { IntegrationFormFields } from "./integration-form-fields"
 import { IntegrationLogTab } from "./integration-log-tab"
@@ -36,6 +39,10 @@ export function IntegrationFormScreen({
 
   const createMutation = useCreateSbfIntegration()
   const updateMutation = useUpdateSbfIntegration()
+  const { canCreate, canUpdate } = useCrudPermissions(
+    crudPermissions.integration
+  )
+  const canSubmit = isCreateMode ? canCreate : canUpdate
 
   const loadFormValues = useCallback(async () => {
     if (initialData) {
@@ -93,77 +100,88 @@ export function IntegrationFormScreen({
   if (!id) return null
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode ? "Create Integration" : `Edit Integration #${id}`}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.integration.create
+          : formPermissions.integration.edit
+      }
+    >
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode ? "Create Integration" : `Edit Integration #${id}`}
+        </Text>
 
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
+          </View>
+        )}
 
-      {success && (
-        <View className="rounded-md bg-green-500/10 p-3">
-          <Text className="text-green-600">{success}</Text>
-        </View>
-      )}
+        {success && (
+          <View className="rounded-md bg-green-500/10 p-3">
+            <Text className="text-green-600">{success}</Text>
+          </View>
+        )}
 
-      {!isCreateMode && !!entityId && (
-        <View className="flex-row flex-wrap gap-1 border-border border-b pb-2">
-          {TABS.map((tab) => (
-            <Button
-              key={tab}
-              variant="ghost"
-              size="sm"
-              onPress={() => setActiveTab(tab)}
-              className={cn(
-                "rounded-none border-b-2 px-3",
-                activeTab === tab ? "border-primary" : "border-transparent"
-              )}
-            >
-              <Text
+        {!isCreateMode && !!entityId && (
+          <View className="flex-row flex-wrap gap-1 border-border border-b pb-2">
+            {TABS.map((tab) => (
+              <Button
+                key={tab}
+                variant="ghost"
+                size="sm"
+                onPress={() => setActiveTab(tab)}
                 className={cn(
-                  activeTab === tab
-                    ? "font-semibold text-primary"
-                    : "text-foreground"
+                  "rounded-none border-b-2 px-3",
+                  activeTab === tab ? "border-primary" : "border-transparent"
                 )}
               >
-                {tab}
-              </Text>
-            </Button>
-          ))}
-        </View>
-      )}
-
-      {(isCreateMode || activeTab === "Details") && (
-        <View className="max-w-[600px] md:max-w-[700px] lg:max-w-[900px]">
-          <RncForm<
-            SbfIntegrationCreateRequestDto | SbfIntegrationUpdateRequestDto
-          >
-            id="IntegrationFormScreen"
-            onSubmit={handleSubmit}
-            loadFormValues={loadFormValues}
-          >
-            <IntegrationFormFields />
-            <RncSubmitButton
-              label={isCreateMode ? "Create Integration" : "Update Integration"}
-              className="mt-2"
-            />
-          </RncForm>
-        </View>
-      )}
-
-      {!isCreateMode &&
-        !!entityId &&
-        activeTab === "Integration Logs" &&
-        integrationData && (
-          <IntegrationLogTab
-            className={integrationData.className ?? ""}
-            methodName={integrationData.methodName ?? ""}
-          />
+                <Text
+                  className={cn(
+                    activeTab === tab
+                      ? "font-semibold text-primary"
+                      : "text-foreground"
+                  )}
+                >
+                  {tab}
+                </Text>
+              </Button>
+            ))}
+          </View>
         )}
-    </View>
+
+        {(isCreateMode || activeTab === "Details") && (
+          <View className="max-w-[600px] md:max-w-[700px] lg:max-w-[900px]">
+            <RncForm<
+              SbfIntegrationCreateRequestDto | SbfIntegrationUpdateRequestDto
+            >
+              id="IntegrationFormScreen"
+              onSubmit={handleSubmit}
+              loadFormValues={loadFormValues}
+            >
+              <IntegrationFormFields />
+              <RncSubmitButton
+                label={
+                  isCreateMode ? "Create Integration" : "Update Integration"
+                }
+                className="mt-2"
+                disabled={!canSubmit}
+              />
+            </RncForm>
+          </View>
+        )}
+
+        {!isCreateMode &&
+          !!entityId &&
+          activeTab === "Integration Logs" &&
+          integrationData && (
+            <IntegrationLogTab
+              className={integrationData.className ?? ""}
+              methodName={integrationData.methodName ?? ""}
+            />
+          )}
+      </View>
+    </PermissionGuard>
   )
 }

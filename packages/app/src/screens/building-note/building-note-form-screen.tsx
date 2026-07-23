@@ -9,7 +9,7 @@ import {
   useUpdateBuildingNote,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useBreadcrumbs } from "@workspace/providers"
+import { useBreadcrumbs, useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -23,6 +23,8 @@ import {
 import { useCallback, useEffect, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 
 type BuildingNoteFormValues = { detail: string }
 
@@ -38,6 +40,10 @@ export function BuildingNoteFormScreen({
   const entityId = isCreateMode ? undefined : noteId
   const listRoute = `/buildings/${buildingId}/notes`
 
+  const { canCreate, canUpdate } = useCrudPermissions(
+    crudPermissions.buildingNote
+  )
+  const canSubmit = isCreateMode ? canCreate : canUpdate
   const createMutation = useCreateBuildingNote()
   const updateMutation = useUpdateBuildingNote()
   const [error, setError] = useState<string>()
@@ -155,53 +161,62 @@ export function BuildingNoteFormScreen({
   }
 
   return (
-    <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode
-          ? t("buildingNote.create.title")
-          : t("buildingNote.edit.title")}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.buildingNote.create
+          : formPermissions.buildingNote.edit
+      }
+    >
+      <View className="w-full gap-4 p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode
+            ? t("buildingNote.create.title")
+            : t("buildingNote.edit.title")}
+        </Text>
 
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
-        <RncForm<BuildingNoteFormValues>
-          id="BuildingNoteFormScreen"
-          onSubmit={handleSubmit}
-          defaultValues={{ detail: data?.detail ?? "" }}
-        >
-          <View className="w-full gap-6">
-            <RncInput
-              id="detail"
-              label={t("buildingNote.form.fields.detail")}
-              placeholder={t("buildingNote.form.fields.detailPlaceholder")}
-              required
-              multiline
-              numberOfLines={5}
-            />
-
-            <View className="flex-row gap-3">
-              <RncSubmitButton
-                label={
-                  isCreateMode
-                    ? t("buildingNote.create.save")
-                    : t("buildingNote.edit.save")
-                }
-              />
-              <Button
-                variant="outline"
-                onPress={() => router.replace(listRoute)}
-              >
-                <Text>{t("buildingNote.edit.cancel")}</Text>
-              </Button>
-            </View>
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
           </View>
-        </RncForm>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
+          <RncForm<BuildingNoteFormValues>
+            id="BuildingNoteFormScreen"
+            onSubmit={handleSubmit}
+            defaultValues={{ detail: data?.detail ?? "" }}
+          >
+            <View className="w-full gap-6">
+              <RncInput
+                id="detail"
+                label={t("buildingNote.form.fields.detail")}
+                placeholder={t("buildingNote.form.fields.detailPlaceholder")}
+                required
+                multiline
+                numberOfLines={5}
+              />
+
+              <View className="flex-row gap-3">
+                <RncSubmitButton
+                  disabled={!canSubmit}
+                  label={
+                    isCreateMode
+                      ? t("buildingNote.create.save")
+                      : t("buildingNote.edit.save")
+                  }
+                />
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(listRoute)}
+                >
+                  <Text>{t("buildingNote.edit.cancel")}</Text>
+                </Button>
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }

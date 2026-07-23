@@ -8,7 +8,7 @@ import {
   useDeleteContact,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth } from "@workspace/providers"
+import { useAuth, useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   RncGrid,
@@ -21,6 +21,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 type ContactListFilters = Omit<
   ContactSearchRequestDto,
@@ -31,6 +33,9 @@ export function ContactListScreen() {
   const { t } = useTranslation(["screens"])
   const router = useRouter()
   const { user } = useAuth()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.contact
+  )
   const deleteMutation = useDeleteContact()
 
   const isUserRole = user?.roleDescriptions?.includes("user") ?? false
@@ -128,7 +133,10 @@ export function ContactListScreen() {
 
   const actions: RncGridActions<ContactResponseDto> = useMemo(() => {
     const base: RncGridActions<ContactResponseDto> = {
-      edit: { route: (row) => `/contacts/${row.id}` },
+      edit: {
+        disabled: () => !canUpdate,
+        route: (row) => `/contacts/${row.id}`,
+      },
     }
     // Same role rule as buildings: the `user` role does not delete.
     if (isUserRole) return base
@@ -136,6 +144,7 @@ export function ContactListScreen() {
     return {
       ...base,
       delete: {
+        disabled: () => !canDelete,
         onPress: async (row) => {
           if (!row.id) return
           await deleteMutation.mutateAsync({ id: row.id })
@@ -149,38 +158,40 @@ export function ContactListScreen() {
         },
       },
     }
-  }, [deleteMutation, isUserRole, t])
+  }, [deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("contact.list.title")}
-      </Text>
+    <PermissionGuard permission={viewPermissions.contact}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("contact.list.title")}
+        </Text>
 
-      <RncGrid<ContactResponseDto, ContactSortOrderField, ContactListFilters>
-        id="contact-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: ContactSortOrderField.LASTNAME, direction: "ASC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: { route: "/contacts/new" },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<ContactResponseDto, ContactSortOrderField, ContactListFilters>
+          id="contact-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: ContactSortOrderField.LASTNAME, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: { disabled: !canCreate, route: "/contacts/new" },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

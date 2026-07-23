@@ -1,7 +1,15 @@
 export { AppProviders, type AppProvidersProps } from "./app-providers"
 export type { AppThemeProviderProps, ThemeValue } from "./app-theme-provider"
 export { AppThemeProvider, useAppTheme } from "./app-theme-provider"
-export type { AuthContextValue, AuthProviderProps } from "./auth-provider"
+export type {
+  AuthAction,
+  AuthActionState,
+  AuthActionStatus,
+  AuthContextValue,
+  AuthenticationResult,
+  AuthProviderProps,
+  SessionControlResult,
+} from "./auth-provider"
 export { AuthProvider, useAuth } from "./auth-provider"
 export type {
   BreadcrumbItem,
@@ -19,6 +27,16 @@ export type {
   PathnameProviderProps,
 } from "./pathname-provider"
 export { PathnameProvider, useMyPathname } from "./pathname-provider"
+export type {
+  CrudPermissions,
+  PermissionContextValue,
+  PermissionProviderProps,
+} from "./permission-provider"
+export {
+  PermissionProvider,
+  useCrudPermissions,
+  usePermission,
+} from "./permission-provider"
 export type {
   SidebarContextValue,
   SidebarProviderProps,

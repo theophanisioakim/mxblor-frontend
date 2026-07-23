@@ -8,6 +8,7 @@ import {
   useDeleteExpenseCategory,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   RncCheckbox,
@@ -21,6 +22,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 
 type ExpenseCategoryListFilters = Omit<
   ExpenseCategorySearchRequestDto,
@@ -30,6 +33,9 @@ type ExpenseCategoryListFilters = Omit<
 export function ExpenseCategoryListScreen() {
   const { t } = useTranslation(["screens"])
   const router = useRouter()
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.expenseCategory
+  )
   const deleteMutation = useDeleteExpenseCategory()
 
   const fetchData = useCallback(
@@ -148,10 +154,12 @@ export function ExpenseCategoryListScreen() {
         route: (row) => `/expenses/categories/${row.id}`,
       },
       edit: {
+        disabled: () => !canUpdate,
         hidden: (row) => !row.editable,
         route: (row) => `/expenses/categories/${row.id}`,
       },
       delete: {
+        disabled: () => !canDelete,
         hidden: (row) => !row.editable,
         onPress: async (row) => {
           if (!row.id) return
@@ -166,45 +174,48 @@ export function ExpenseCategoryListScreen() {
         },
       },
     }),
-    [deleteMutation, t]
+    [deleteMutation, t, canUpdate, canDelete]
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("expenseCategory.list.title")}
-      </Text>
+    <PermissionGuard permission={viewPermissions.expenseCategory}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("expenseCategory.list.title")}
+        </Text>
 
-      <RncGrid<
-        ExpenseCategoryResponseDto,
-        ExpenseCategorySortOrderField,
-        ExpenseCategoryListFilters
-      >
-        id="expense-category-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          { field: ExpenseCategorySortOrderField.CODE, direction: "ASC" },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: {
-            route: "/expenses/categories/new",
-          },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<
+          ExpenseCategoryResponseDto,
+          ExpenseCategorySortOrderField,
+          ExpenseCategoryListFilters
+        >
+          id="expense-category-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: ExpenseCategorySortOrderField.CODE, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: "/expenses/categories/new",
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }

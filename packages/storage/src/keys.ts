@@ -1,5 +1,11 @@
 export const StorageKeys = {
   JWT_TOKEN: "@app/jwt-token",
+  REFRESH_TOKEN: "@app/refresh-token",
+  SCHEMA_SELECTION_TOKEN: "@app/schema-selection-token",
+  SCHEMA_SELECTION: "@app/schema-selection",
+  AUTH_STORAGE_VERSION: "@app/auth-storage-version",
+  AUTH_REFRESH_LEASE: "@app/auth-refresh-lease",
+  TWITCH_OAUTH_FLOW: "@app/twitch-oauth-flow",
   LANGUAGE: "@app/language",
   MENU_CACHE: "@app/menu-cache",
   USER: "@app/user",

@@ -9,7 +9,11 @@ import {
   useGetBuildingById,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -24,6 +28,8 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useEffect, useMemo } from "react"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, viewPermissions } from "../screen-permissions"
 import { useCollectionTypeOptions } from "../t-expense/use-collection-type-options"
 import { useExpenseCatalogOptions } from "../t-expense/use-expense-catalog-options"
 import { useBuildingUnitOptions } from "./use-building-unit-options"
@@ -74,6 +80,9 @@ export function TCollectionListScreen({
   const { user } = useAuth()
   const { setItems } = useBreadcrumbs()
   const { data: building } = useGetBuildingById(buildingId)
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    crudPermissions.tCollection
+  )
   const deleteMutation = useDeleteTCollection()
   const expenseCatalog = useExpenseCatalogOptions()
   const collectionTypes = useCollectionTypeOptions()
@@ -295,6 +304,7 @@ export function TCollectionListScreen({
   const actions: RncGridActions<TCollectionResponseDto> = useMemo(() => {
     const baseActions: RncGridActions<TCollectionResponseDto> = {
       edit: {
+        disabled: () => !canUpdate,
         route: (row) => `/buildings/${buildingId}/collections/${row.id}`,
       },
     }
@@ -306,6 +316,7 @@ export function TCollectionListScreen({
     return {
       ...baseActions,
       delete: {
+        disabled: () => !canDelete,
         onPress: async (row) => {
           if (!row.id) {
             return
@@ -321,57 +332,60 @@ export function TCollectionListScreen({
         },
       },
     }
-  }, [buildingId, deleteMutation, isUserRole, t])
+  }, [buildingId, deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <View className="flex-row items-center gap-3">
-        <Button
-          variant="ghost"
-          onPress={() => router.push(`/buildings/${buildingId}`)}
+    <PermissionGuard permission={viewPermissions.tCollection}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <View className="flex-row items-center gap-3">
+          <Button
+            variant="ghost"
+            onPress={() => router.push(`/buildings/${buildingId}`)}
+          >
+            {t("tCollection.list.back")}
+          </Button>
+        </View>
+
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("tCollection.list.title")}
+        </Text>
+
+        <RncGrid<
+          TCollectionResponseDto,
+          TCollectionSortOrderField,
+          TCollectionListFilters
         >
-          {t("tCollection.list.back")}
-        </Button>
+          id="t-collection-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            {
+              field: TCollectionSortOrderField.REFERENCEDATE,
+              direction: "DESC",
+            },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: `/buildings/${buildingId}/collections/new`,
+              label: t("tCollection.list.add"),
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
       </View>
-
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("tCollection.list.title")}
-      </Text>
-
-      <RncGrid<
-        TCollectionResponseDto,
-        TCollectionSortOrderField,
-        TCollectionListFilters
-      >
-        id="t-collection-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          {
-            field: TCollectionSortOrderField.REFERENCEDATE,
-            direction: "DESC",
-          },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: {
-            route: `/buildings/${buildingId}/collections/new`,
-            label: t("tCollection.list.add"),
-          },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+    </PermissionGuard>
   )
 }

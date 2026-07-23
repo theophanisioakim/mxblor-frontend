@@ -10,7 +10,7 @@ import {
   useUpdateBuilding,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth } from "@workspace/providers"
+import { useAuth, useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -25,6 +25,8 @@ import {
 import { useCallback, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 import {
   BUILDING_FORM_DEFAULTS,
   BuildingFormFields,
@@ -131,6 +133,7 @@ export function EditBuildingScreen({ id }: Readonly<{ id: string }>) {
   const { i18n, t } = useTranslation(["screens"])
   const router = useRouter()
   const { user } = useAuth()
+  const { canUpdate, canDelete } = useCrudPermissions(crudPermissions.building)
   const updateMutation = useUpdateBuilding()
   const deleteMutation = useDeleteBuilding()
   const [error, setError] = useState<string>()
@@ -228,183 +231,196 @@ export function EditBuildingScreen({ id }: Readonly<{ id: string }>) {
   }
 
   return (
-    <View className="w-full gap-6 p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {data.name ?? t("building.edit.title")}
-      </Text>
-
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      {/* The management hub stays outside the form so navigation never submits
-          edits. It is above the fields, matching the v1/v2 building overview. */}
-      <View className="gap-3">
-        <Text className="font-semibold text-foreground text-xl">
-          {t("building.edit.manage")}
+    <PermissionGuard permission={formPermissions.building.edit}>
+      <View className="w-full gap-6 p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {data.name ?? t("building.edit.title")}
         </Text>
-        {isHubSummaryLoading && (
-          <Text className="text-muted-foreground">
-            {t("building.edit.summaryLoading")}
-          </Text>
-        )}
-        {isHubSummaryError && (
-          <View className="flex-row flex-wrap items-center gap-3 rounded-md bg-destructive/10 p-3">
-            <Text className="flex-1 text-destructive">
-              {t("building.edit.summaryLoadError")}
-            </Text>
-            <Button
-              variant="outline"
-              disabled={isHubSummaryFetching}
-              onPress={() => void refetchHubSummary()}
-            >
-              <Text>{t("building.edit.summaryRetry")}</Text>
-            </Button>
+
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
           </View>
         )}
-        <View className="flex-row flex-wrap gap-3">
-          <HubTile
-            count={summaryCount(
-              hubSummary,
-              summaryUnavailable,
-              "buildingUnitCount"
-            )}
-            icon="Home"
-            label={t("building.edit.tiles.units")}
-            onPress={() => router.push(`/buildings/${id}/units`)}
-          />
-          <HubTile
-            count={summaryCount(
-              hubSummary,
-              summaryUnavailable,
-              "unitBalanceCount"
-            )}
-            icon="Scale"
-            label={t("building.edit.tiles.unitBalances")}
-            onPress={() => router.push(`/buildings/${id}/unit-balances`)}
-          />
-          <HubTile
-            count={summaryCount(
-              hubSummary,
-              summaryUnavailable,
-              "relatedPersonCount"
-            )}
-            icon="Users"
-            label={t("building.edit.tiles.relatedPeople")}
-            onPress={() => router.push(`/buildings/${id}/related-people`)}
-          />
-          <HubTile
-            count={summaryCount(
-              hubSummary,
-              summaryUnavailable,
-              "communicationCount"
-            )}
-            icon="Mail"
-            label={t("building.edit.tiles.communication")}
-            onPress={() => router.push(`/buildings/${id}/communication`)}
-          />
-          <HubTile
-            count={summaryCount(hubSummary, summaryUnavailable, "noteCount")}
-            icon="StickyNote"
-            label={t("building.edit.tiles.notes")}
-            onPress={() => router.push(`/buildings/${id}/notes`)}
-          />
-          <HubTile
-            count={summaryCount(
-              hubSummary,
-              summaryUnavailable,
-              "distributionCount"
-            )}
-            icon="Percent"
-            label={t("building.edit.tiles.distributions")}
-            onPress={() => router.push(`/buildings/${id}/distributions`)}
-          />
-          <HubTile
-            count={summaryCount(
-              hubSummary,
-              summaryUnavailable,
-              "yearlyBudgetCount"
-            )}
-            icon="CalendarRange"
-            label={t("building.edit.tiles.budgets")}
-            onPress={() => router.push(`/buildings/${id}/budgets`)}
-          />
-          <HubTile
-            count={summaryCount(
-              hubSummary,
-              summaryUnavailable,
-              "bankAccountCount"
-            )}
-            icon="Landmark"
-            label={t("building.edit.tiles.bankAccounts")}
-            onPress={() => router.push(`/buildings/${id}/bank-accounts`)}
-            totalLabel={t("building.edit.metrics.balance")}
-            totalValue={financialValue("bankAccountBalance")}
-          />
-          <HubTile
-            count={summaryCount(
-              hubSummary,
-              summaryUnavailable,
-              "currentExpenseCount"
-            )}
-            icon="Receipt"
-            label={t("building.edit.tiles.currentExpenses")}
-            onPress={() => router.push(`/buildings/${id}/current-expenses`)}
-            totalLabel={t("building.edit.metrics.total")}
-            totalValue={financialValue("currentExpenseTotal")}
-          />
-          <HubTile
-            count={summaryCount(hubSummary, summaryUnavailable, "paymentCount")}
-            icon="CreditCard"
-            label={t("building.edit.tiles.payments")}
-            onPress={() => router.push(`/buildings/${id}/payments`)}
-            totalLabel={t("building.edit.metrics.outstanding")}
-            totalValue={financialValue("paymentOutstanding")}
-          />
-          <HubTile
-            count={summaryCount(
-              hubSummary,
-              summaryUnavailable,
-              "collectionCount"
-            )}
-            icon="HandCoins"
-            label={t("building.edit.tiles.collections")}
-            onPress={() => router.push(`/buildings/${id}/collections`)}
-            totalLabel={t("building.edit.metrics.outstanding")}
-            totalValue={financialValue("collectionOutstanding")}
-          />
-        </View>
-      </View>
 
-      <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
-        <RncForm<BuildingFormValues>
-          id="EditBuildingScreen"
-          onSubmit={handleSubmit}
-          defaultValues={toFormValues(data)}
-        >
-          <View className="w-full gap-6">
-            <BuildingFormFields />
-
-            <View className="flex-row flex-wrap gap-3">
-              <RncSubmitButton label={t("building.edit.save")} />
+        {/* The management hub stays outside the form so navigation never submits
+          edits. It is above the fields, matching the v1/v2 building overview. */}
+        <View className="gap-3">
+          <Text className="font-semibold text-foreground text-xl">
+            {t("building.edit.manage")}
+          </Text>
+          {isHubSummaryLoading && (
+            <Text className="text-muted-foreground">
+              {t("building.edit.summaryLoading")}
+            </Text>
+          )}
+          {isHubSummaryError && (
+            <View className="flex-row flex-wrap items-center gap-3 rounded-md bg-destructive/10 p-3">
+              <Text className="flex-1 text-destructive">
+                {t("building.edit.summaryLoadError")}
+              </Text>
               <Button
                 variant="outline"
-                onPress={() => router.replace(LIST_ROUTE)}
+                disabled={isHubSummaryFetching}
+                onPress={() => void refetchHubSummary()}
               >
-                <Text>{t("building.edit.back")}</Text>
+                <Text>{t("building.edit.summaryRetry")}</Text>
               </Button>
-              {/* Same role rule as the buildings list: `user` does not delete. */}
-              {!isUserRole && (
-                <Button variant="destructive" onPress={handleDelete}>
-                  <Text>{t("building.edit.delete")}</Text>
-                </Button>
-              )}
             </View>
+          )}
+          <View className="flex-row flex-wrap gap-3">
+            <HubTile
+              count={summaryCount(
+                hubSummary,
+                summaryUnavailable,
+                "buildingUnitCount"
+              )}
+              icon="Home"
+              label={t("building.edit.tiles.units")}
+              onPress={() => router.push(`/buildings/${id}/units`)}
+            />
+            <HubTile
+              count={summaryCount(
+                hubSummary,
+                summaryUnavailable,
+                "unitBalanceCount"
+              )}
+              icon="Scale"
+              label={t("building.edit.tiles.unitBalances")}
+              onPress={() => router.push(`/buildings/${id}/unit-balances`)}
+            />
+            <HubTile
+              count={summaryCount(
+                hubSummary,
+                summaryUnavailable,
+                "relatedPersonCount"
+              )}
+              icon="Users"
+              label={t("building.edit.tiles.relatedPeople")}
+              onPress={() => router.push(`/buildings/${id}/related-people`)}
+            />
+            <HubTile
+              count={summaryCount(
+                hubSummary,
+                summaryUnavailable,
+                "communicationCount"
+              )}
+              icon="Mail"
+              label={t("building.edit.tiles.communication")}
+              onPress={() => router.push(`/buildings/${id}/communication`)}
+            />
+            <HubTile
+              count={summaryCount(hubSummary, summaryUnavailable, "noteCount")}
+              icon="StickyNote"
+              label={t("building.edit.tiles.notes")}
+              onPress={() => router.push(`/buildings/${id}/notes`)}
+            />
+            <HubTile
+              count={summaryCount(
+                hubSummary,
+                summaryUnavailable,
+                "distributionCount"
+              )}
+              icon="Percent"
+              label={t("building.edit.tiles.distributions")}
+              onPress={() => router.push(`/buildings/${id}/distributions`)}
+            />
+            <HubTile
+              count={summaryCount(
+                hubSummary,
+                summaryUnavailable,
+                "yearlyBudgetCount"
+              )}
+              icon="CalendarRange"
+              label={t("building.edit.tiles.budgets")}
+              onPress={() => router.push(`/buildings/${id}/budgets`)}
+            />
+            <HubTile
+              count={summaryCount(
+                hubSummary,
+                summaryUnavailable,
+                "bankAccountCount"
+              )}
+              icon="Landmark"
+              label={t("building.edit.tiles.bankAccounts")}
+              onPress={() => router.push(`/buildings/${id}/bank-accounts`)}
+              totalLabel={t("building.edit.metrics.balance")}
+              totalValue={financialValue("bankAccountBalance")}
+            />
+            <HubTile
+              count={summaryCount(
+                hubSummary,
+                summaryUnavailable,
+                "currentExpenseCount"
+              )}
+              icon="Receipt"
+              label={t("building.edit.tiles.currentExpenses")}
+              onPress={() => router.push(`/buildings/${id}/current-expenses`)}
+              totalLabel={t("building.edit.metrics.total")}
+              totalValue={financialValue("currentExpenseTotal")}
+            />
+            <HubTile
+              count={summaryCount(
+                hubSummary,
+                summaryUnavailable,
+                "paymentCount"
+              )}
+              icon="CreditCard"
+              label={t("building.edit.tiles.payments")}
+              onPress={() => router.push(`/buildings/${id}/payments`)}
+              totalLabel={t("building.edit.metrics.outstanding")}
+              totalValue={financialValue("paymentOutstanding")}
+            />
+            <HubTile
+              count={summaryCount(
+                hubSummary,
+                summaryUnavailable,
+                "collectionCount"
+              )}
+              icon="HandCoins"
+              label={t("building.edit.tiles.collections")}
+              onPress={() => router.push(`/buildings/${id}/collections`)}
+              totalLabel={t("building.edit.metrics.outstanding")}
+              totalValue={financialValue("collectionOutstanding")}
+            />
           </View>
-        </RncForm>
+        </View>
+
+        <View className="max-w-[600px] md:max-w-[760px] lg:max-w-[960px]">
+          <RncForm<BuildingFormValues>
+            id="EditBuildingScreen"
+            onSubmit={handleSubmit}
+            defaultValues={toFormValues(data)}
+          >
+            <View className="w-full gap-6">
+              <BuildingFormFields />
+
+              <View className="flex-row flex-wrap gap-3">
+                <RncSubmitButton
+                  disabled={!canUpdate}
+                  label={t("building.edit.save")}
+                />
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(LIST_ROUTE)}
+                >
+                  <Text>{t("building.edit.back")}</Text>
+                </Button>
+                {/* Same role rule as the buildings list: `user` does not delete. */}
+                {!isUserRole && (
+                  <Button
+                    variant="destructive"
+                    disabled={!canDelete}
+                    onPress={handleDelete}
+                  >
+                    <Text>{t("building.edit.delete")}</Text>
+                  </Button>
+                )}
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }

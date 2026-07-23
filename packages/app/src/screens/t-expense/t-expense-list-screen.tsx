@@ -10,7 +10,12 @@ import {
   useGetBuildingById,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
-import { useAuth, useBreadcrumbs } from "@workspace/providers"
+import {
+  useAuth,
+  useBreadcrumbs,
+  useCrudPermissions,
+  usePermission,
+} from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -25,6 +30,12 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { PermissionGuard } from "../permission-guard"
+import {
+  crudPermissions,
+  formPermissions,
+  viewPermissions,
+} from "../screen-permissions"
 import { useCollectionTypeOptions } from "./use-collection-type-options"
 import { useExpenseCatalogOptions } from "./use-expense-catalog-options"
 
@@ -94,6 +105,9 @@ export function TExpenseListScreen({
   const { user } = useAuth()
   const { setItems } = useBreadcrumbs()
   const { data: building } = useGetBuildingById(buildingId)
+  const { canUpdate, canDelete } = useCrudPermissions(crudPermissions.tExpense)
+  const { hasPermission } = usePermission()
+  const canCreate = hasPermission(formPermissions.tExpense.create)
   const deleteMutation = useDeleteTExpense()
   const collectionTypes = useCollectionTypeOptions()
   const expenseCatalog = useExpenseCatalogOptions()
@@ -324,6 +338,7 @@ export function TExpenseListScreen({
   const actions: RncGridActions<TExpenseResponseDto> = useMemo(() => {
     const baseActions: RncGridActions<TExpenseResponseDto> = {
       edit: {
+        disabled: () => !canUpdate,
         route: (row) => `/buildings/${buildingId}/current-expenses/${row.id}`,
       },
     }
@@ -335,6 +350,7 @@ export function TExpenseListScreen({
     return {
       ...baseActions,
       delete: {
+        disabled: () => !canDelete,
         onPress: async (row) => {
           if (!row.id) {
             return
@@ -350,80 +366,87 @@ export function TExpenseListScreen({
         },
       },
     }
-  }, [buildingId, deleteMutation, isUserRole, t])
+  }, [buildingId, deleteMutation, isUserRole, t, canUpdate, canDelete])
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <View className="flex-row items-center gap-3">
-        <Button
-          variant="ghost"
-          onPress={() => router.push(`/buildings/${buildingId}`)}
-        >
-          {t("tExpense.list.back")}
-        </Button>
-      </View>
+    <PermissionGuard permission={viewPermissions.tExpense}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <View className="flex-row items-center gap-3">
+          <Button
+            variant="ghost"
+            onPress={() => router.push(`/buildings/${buildingId}`)}
+          >
+            {t("tExpense.list.back")}
+          </Button>
+        </View>
 
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {t("tExpense.list.title")}
-      </Text>
-
-      <View className="gap-3 rounded-md border border-border p-4 md:flex-row md:flex-wrap">
-        <SummaryTile
-          label={t("tExpense.list.summary.capital")}
-          value={summary.capital}
-        />
-        <SummaryTile
-          label={t("tExpense.list.summary.monthly")}
-          value={summary.monthly}
-        />
-        <SummaryTile
-          label={t("tExpense.list.summary.nondistributed")}
-          value={summary.nondistributed}
-        />
-        <SummaryTile
-          label={t("tExpense.list.summary.savings")}
-          value={summary.savings}
-        />
-        <SummaryTile
-          label={t("tExpense.list.summary.bank")}
-          value={summary.bankWithdrawal}
-        />
-        <Text className="w-full text-muted-foreground text-sm">
-          {t("tExpense.list.summary.yearHint", { year: summaryYear })}
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {t("tExpense.list.title")}
         </Text>
-      </View>
 
-      <RncGrid<TExpenseResponseDto, TExpenseSortOrderField, TExpenseListFilters>
-        id="t-expense-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[
-          {
-            field: TExpenseSortOrderField.REFERENCEDATE,
-            direction: "DESC",
-          },
-        ]}
-        initialPagination={{
-          type: "default",
-          pageSize: 10,
-          pageNumber: 0,
-          pageSizeOptions: [10, 25, 50],
-        }}
-        actions={actions}
-        filters={{ render: filters }}
-        toolbar={{
-          add: {
-            route: `/buildings/${buildingId}/current-expenses/new`,
-            label: t("tExpense.list.add"),
-          },
-          refresh: {},
-          reset: {},
-        }}
-        onNavigate={router.push}
-      />
-    </View>
+        <View className="gap-3 rounded-md border border-border p-4 md:flex-row md:flex-wrap">
+          <SummaryTile
+            label={t("tExpense.list.summary.capital")}
+            value={summary.capital}
+          />
+          <SummaryTile
+            label={t("tExpense.list.summary.monthly")}
+            value={summary.monthly}
+          />
+          <SummaryTile
+            label={t("tExpense.list.summary.nondistributed")}
+            value={summary.nondistributed}
+          />
+          <SummaryTile
+            label={t("tExpense.list.summary.savings")}
+            value={summary.savings}
+          />
+          <SummaryTile
+            label={t("tExpense.list.summary.bank")}
+            value={summary.bankWithdrawal}
+          />
+          <Text className="w-full text-muted-foreground text-sm">
+            {t("tExpense.list.summary.yearHint", { year: summaryYear })}
+          </Text>
+        </View>
+
+        <RncGrid<
+          TExpenseResponseDto,
+          TExpenseSortOrderField,
+          TExpenseListFilters
+        >
+          id="t-expense-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            {
+              field: TExpenseSortOrderField.REFERENCEDATE,
+              direction: "DESC",
+            },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 10,
+            pageNumber: 0,
+            pageSizeOptions: [10, 25, 50],
+          }}
+          actions={actions}
+          filters={{ render: filters }}
+          toolbar={{
+            add: {
+              disabled: !canCreate,
+              route: `/buildings/${buildingId}/current-expenses/new`,
+              label: t("tExpense.list.add"),
+            },
+            refresh: {},
+            reset: {},
+          }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }
 

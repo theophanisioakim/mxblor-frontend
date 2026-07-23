@@ -9,6 +9,7 @@ import {
   useUpdateContact,
 } from "@workspace/api-client"
 import { useTranslation } from "@workspace/i18n"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   Button,
@@ -21,6 +22,8 @@ import {
 import { useCallback, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { getApiErrorMessage } from "../admin/api-error-message"
+import { PermissionGuard } from "../permission-guard"
+import { crudPermissions, formPermissions } from "../screen-permissions"
 import {
   ContactFormFields,
   type ContactFormValues,
@@ -87,6 +90,8 @@ export function ContactFormScreen({ id }: Readonly<{ id: string }>) {
   const isCreateMode = id === "new"
   const entityId = isCreateMode ? undefined : id
 
+  const { canCreate, canUpdate } = useCrudPermissions(crudPermissions.contact)
+  const canSubmit = isCreateMode ? canCreate : canUpdate
   const createMutation = useCreateContact()
   const updateMutation = useUpdateContact()
   const [error, setError] = useState<string>()
@@ -175,44 +180,53 @@ export function ContactFormScreen({ id }: Readonly<{ id: string }>) {
   }
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        {isCreateMode ? t("contact.create.title") : t("contact.edit.title")}
-      </Text>
+    <PermissionGuard
+      permission={
+        isCreateMode
+          ? formPermissions.contact.create
+          : formPermissions.contact.edit
+      }
+    >
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          {isCreateMode ? t("contact.create.title") : t("contact.edit.title")}
+        </Text>
 
-      {error && (
-        <View className="rounded-md bg-destructive/10 p-3">
-          <Text className="text-destructive">{error}</Text>
-        </View>
-      )}
-
-      <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
-        <RncForm<ContactFormValues>
-          id="ContactFormScreen"
-          onSubmit={handleSubmit}
-          defaultValues={data ? toFormValues(data) : EMPTY_VALUES}
-        >
-          <View className="w-full gap-6">
-            <ContactFormFields />
-
-            <View className="flex-row gap-3">
-              <RncSubmitButton
-                label={
-                  isCreateMode
-                    ? t("contact.create.save")
-                    : t("contact.edit.save")
-                }
-              />
-              <Button
-                variant="outline"
-                onPress={() => router.replace(LIST_ROUTE)}
-              >
-                <Text>{t("contact.edit.cancel")}</Text>
-              </Button>
-            </View>
+        {error && (
+          <View className="rounded-md bg-destructive/10 p-3">
+            <Text className="text-destructive">{error}</Text>
           </View>
-        </RncForm>
+        )}
+
+        <View className="max-w-[600px] md:max-w-[900px] lg:max-w-[1200px]">
+          <RncForm<ContactFormValues>
+            id="ContactFormScreen"
+            onSubmit={handleSubmit}
+            defaultValues={data ? toFormValues(data) : EMPTY_VALUES}
+          >
+            <View className="w-full gap-6">
+              <ContactFormFields />
+
+              <View className="flex-row gap-3">
+                <RncSubmitButton
+                  disabled={!canSubmit}
+                  label={
+                    isCreateMode
+                      ? t("contact.create.save")
+                      : t("contact.edit.save")
+                  }
+                />
+                <Button
+                  variant="outline"
+                  onPress={() => router.replace(LIST_ROUTE)}
+                >
+                  <Text>{t("contact.edit.cancel")}</Text>
+                </Button>
+              </View>
+            </View>
+          </RncForm>
+        </View>
       </View>
-    </View>
+    </PermissionGuard>
   )
 }

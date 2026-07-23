@@ -6,6 +6,7 @@ import {
   SbfTimerSortOrderField,
   searchSbfTimers,
 } from "@workspace/api-client"
+import { useCrudPermissions } from "@workspace/providers"
 import { useRouter } from "@workspace/router"
 import {
   RncCheckbox,
@@ -20,11 +21,14 @@ import {
   View,
 } from "@workspace/ui"
 import { useCallback, useMemo } from "react"
+import { PermissionGuard } from "../../permission-guard"
+import { crudPermissions, viewPermissions } from "../../screen-permissions"
 
 type TimerListFilters = Omit<SbfTimerSearchRequestDto, "page" | "size" | "sort">
 
 export function TimerListScreen() {
   const router = useRouter()
+  const { canUpdate } = useCrudPermissions(crudPermissions.timer)
 
   const fetchData = useCallback(
     async (
@@ -191,35 +195,40 @@ export function TimerListScreen() {
     () => ({
       edit: {
         route: (row) => `/admin/timer/${row.id}`,
+        disabled: () => !canUpdate,
       },
     }),
-    []
+    [canUpdate]
   )
 
   return (
-    <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
-      <Text className="font-bold text-2xl text-foreground md:text-3xl">
-        Timers
-      </Text>
+    <PermissionGuard permission={viewPermissions.timer}>
+      <View className="w-full gap-4 self-center p-4 md:p-6 lg:py-8">
+        <Text className="font-bold text-2xl text-foreground md:text-3xl">
+          Timers
+        </Text>
 
-      <RncGrid<SbfTimerResponseDto, SbfTimerSortOrderField, TimerListFilters>
-        id="timer-list"
-        columns={columns}
-        fetchData={fetchData}
-        keyExtractor={(row) => row.id ?? ""}
-        addEditMode="default"
-        initialSort={[{ field: SbfTimerSortOrderField.KEY, direction: "ASC" }]}
-        initialPagination={{
-          type: "default",
-          pageSize: 20,
-          pageNumber: 0,
-          pageSizeOptions: [20, 50, 100],
-        }}
-        actions={actions}
-        filters={filters}
-        toolbar={{ refresh: {}, reset: {} }}
-        onNavigate={router.push}
-      />
-    </View>
+        <RncGrid<SbfTimerResponseDto, SbfTimerSortOrderField, TimerListFilters>
+          id="timer-list"
+          columns={columns}
+          fetchData={fetchData}
+          keyExtractor={(row) => row.id ?? ""}
+          addEditMode="default"
+          initialSort={[
+            { field: SbfTimerSortOrderField.KEY, direction: "ASC" },
+          ]}
+          initialPagination={{
+            type: "default",
+            pageSize: 20,
+            pageNumber: 0,
+            pageSizeOptions: [20, 50, 100],
+          }}
+          actions={actions}
+          filters={filters}
+          toolbar={{ refresh: {}, reset: {} }}
+          onNavigate={router.push}
+        />
+      </View>
+    </PermissionGuard>
   )
 }
